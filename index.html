@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Painel - Guepar vs RobÔ</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/@phosphor-icons/web"></script>
+<script>
+tailwind.config = { theme: { extend: { colors: { tech: { 900:'#0b1120', 800:'#151e2e', 700:'#1e293b', 600:'#334155', accent:'#00e5ff' } } } } }
+</script>
+<style>
+  .glow-dot { box-shadow: 0 0 8px #00e5ff, 0 0 12px #00e5ff; }
+  ::-webkit-scrollbar { width: 10px; }
+  ::-webkit-scrollbar-track { background: #0b1120; }
+  ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 6px; }
+</style>
+</head>
+<body class="bg-tech-900 text-white min-h-screen">
+
+<!-- ====================== TELA DE LOGIN ====================== -->
+<div id="tela-login" class="fixed inset-0 z-[60] flex items-center justify-center bg-tech-900">
+  <div class="bg-tech-800 p-10 rounded-xl border border-tech-accent/60 shadow-2xl w-[360px] text-center">
+    <h2 class="text-2xl font-bold text-tech-accent mb-1">Guepar <span class="text-sm text-gray-400 font-normal">vs</span> RobÔ</h2>
+    <p class="text-gray-400 text-sm mb-6">Acesso restrito</p>
+    <div class="space-y-3 text-left">
+      <input id="login-usuario" type="text" placeholder="Usuário" autocomplete="username"
+             class="w-full bg-tech-900 p-3 rounded-lg border border-tech-600 focus:border-tech-accent outline-none text-white">
+      <input id="login-senha" type="password" placeholder="Senha" autocomplete="current-password"
+             class="w-full bg-tech-900 p-3 rounded-lg border border-tech-600 focus:border-tech-accent outline-none text-white">
+      <button id="btn-entrar" class="w-full bg-tech-accent hover:bg-cyan-300 text-tech-900 font-bold p-3 rounded-lg transition-colors">Entrar</button>
+    </div>
+    <p id="login-erro" class="text-red-400 text-sm mt-3 h-5"></p>
+    <p class="text-gray-500 text-xs mt-4 leading-relaxed">
+      Login local, apenas para organizar o acesso ao painel. Não protege os dados de quem abrir o arquivo.
+    </p>
+  </div>
+</div>
+
+<!-- ====================== APP ====================== -->
+<div id="app" class="hidden min-h-screen flex">
+
+  <!-- Menu lateral -->
+  <aside class="w-64 bg-tech-800 border-r border-tech-700 flex flex-col shrink-0">
+    <div class="p-6 border-b border-tech-700 flex items-center">
+      <img src="guepar.jpeg" alt="" onerror="this.replaceWith(logoFallback())"
+           class="h-10 w-10 object-contain bg-white rounded-full mr-3">
+      <h1 class="text-xl font-bold text-tech-accent">Guepar <span class="text-sm text-gray-400 font-normal">vs</span> RobÔ</h1>
+    </div>
+    <nav class="flex-1 p-3 space-y-1 mt-4 text-[15px] font-medium pr-4">
+      <button data-tab="dashboard"   class="menu-btn w-full flex items-center gap-3 p-3 rounded-r-lg text-gray-400 hover:text-white hover:bg-tech-700/50 transition-all"><i class="ph ph-squares-four text-xl"></i> Dashboard</button>
+      <button data-tab="pecas"       class="menu-btn w-full flex items-center gap-3 p-3 rounded-r-lg text-gray-400 hover:text-white hover:bg-tech-700/50 transition-all"><i class="ph ph-cpu text-xl"></i> Peças do Robô</button>
+      <button data-tab="guepar"      class="menu-btn w-full flex items-center gap-3 p-3 rounded-r-lg text-gray-400 hover:text-white hover:bg-tech-700/50 transition-all"><i class="ph ph-wrench text-xl"></i> Guepar Uso</button>
+      <button data-tab="fornecedores" class="menu-btn w-full flex items-center gap-3 p-3 rounded-r-lg text-gray-400 hover:text-white hover:bg-tech-700/50 transition-all"><i class="ph ph-users text-xl"></i> Fornecedores</button>
+      <button data-tab="ia"          class="menu-btn w-full flex items-center gap-3 p-3 rounded-r-lg text-gray-400 hover:text-white hover:bg-tech-700/50 transition-all"><i class="ph ph-sparkle text-xl"></i> Assistente <span class="w-2 h-2 rounded-full bg-tech-accent ml-auto glow-dot"></span></button>
+    </nav>
+    <div class="p-4 border-t border-tech-700 space-y-1">
+      <button id="btn-exportar" class="w-full flex items-center gap-2 text-gray-400 hover:text-tech-accent p-2 rounded transition-all text-sm"><i class="ph ph-download-simple text-lg"></i> Baixar backup (.json)</button>
+      <button id="btn-importar" class="w-full flex items-center gap-2 text-gray-400 hover:text-tech-accent p-2 rounded transition-all text-sm"><i class="ph ph-upload-simple text-lg"></i> Restaurar backup</button>
+      <input id="file-importar" type="file" accept="application/json" class="hidden">
+      <button id="btn-sair" class="w-full flex items-center gap-2 text-gray-400 hover:text-red-400 p-2 rounded transition-all text-sm"><i class="ph ph-sign-out text-lg"></i> Sair do sistema</button>
+    </div>
+  </aside>
+
+  <!-- Conteúdo -->
+  <main class="flex-1 p-8 overflow-y-auto h-screen">
+
+    <!-- Dashboard -->
+    <section id="tab-dashboard" class="tab-content hidden">
+      <h2 class="text-3xl font-bold mb-8">Dashboard geral</h2>
+      <div id="cards-dashboard" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+      <div id="alertas-dashboard" class="mt-8"></div>
+    </section>
+
+    <!-- Peças -->
+    <section id="tab-pecas" class="tab-content hidden">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold">Peças do robô</h2>
+        <button onclick="abrirFormPeca()" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded font-bold transition-colors">+ Nova peça</button>
+      </div>
+      <div class="bg-tech-800 rounded-lg border border-tech-700 overflow-hidden shadow-lg">
+        <table class="w-full text-left">
+          <thead class="bg-tech-700/50"><tr>
+            <th class="p-4 text-gray-400 text-sm font-semibold">Cód.</th>
+            <th class="p-4 text-gray-400 text-sm font-semibold">Nome da peça</th>
+            <th class="p-4 text-gray-400 text-sm font-semibold">Estoque / mínimo</th>
+            <th class="p-4 text-gray-400 text-sm font-semibold">Status</th>
+            <th class="p-4 text-gray-400 text-sm font-semibold text-center">Ações</th>
+          </tr></thead>
+          <tbody id="tbody-pecas"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Guepar Uso -->
+    <section id="tab-guepar" class="tab-content hidden">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold">Guepar uso (materiais)</h2>
+        <button onclick="abrirFormGuepar()" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded font-bold transition-colors">+ Novo item</button>
+      </div>
+      <div class="bg-tech-800 rounded-lg border border-tech-700 overflow-hidden shadow-lg">
+        <table class="w-full text-left">
+          <thead class="bg-tech-700/50"><tr>
+            <th class="p-4 text-gray-400 text-sm font-semibold">Cód.</th>
+            <th class="p-4 text-gray-400 text-sm font-semibold">Nome do item</th>
+            <th class="p-4 text-gray-400 text-sm font-semibold">Qtd / mínimo</th>
+            <th class="p-4 text-gray-400 text-sm font-semibold">Status</th>
+            <th class="p-4 text-gray-400 text-sm font-semibold text-center">Ações</th>
+          </tr></thead>
+          <tbody id="tbody-guepar"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Fornecedores -->
+    <section id="tab-fornecedores" class="tab-content hidden">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold">Diretório de fornecedores</h2>
+        <button onclick="abrirFormForn()" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded font-bold transition-colors">+ Novo fornecedor</button>
+      </div>
+      <div class="bg-tech-800 rounded-lg border border-tech-700 overflow-hidden shadow-lg">
+        <table class="w-full text-left">
+          <thead class="bg-tech-700/50"><tr>
+            <th class="p-4 text-gray-400 text-sm font-semibold">Cód.</th>
+            <th class="p-4 text-gray-400 text-sm font-semibold">Empresa</th>
+            <th class="p-4 text-gray-400 text-sm font-semibold">CNPJ</th>
+            <th class="p-4 text-gray-400 text-sm font-semibold">Contato</th>
+            <th class="p-4 text-gray-400 text-sm font-semibold">Telefone</th>
+            <th class="p-4 text-gray-400 text-sm font-semibold text-center">Ações</th>
+          </tr></thead>
+          <tbody id="tbody-fornecedores"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Assistente -->
+    <section id="tab-ia" class="tab-content hidden flex-col h-[calc(100vh-100px)]">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-3xl font-bold text-tech-accent flex items-center gap-3"><i class="ph ph-sparkle"></i> Assistente de estoque</h2>
+        <button onclick="abrirModal('modalChave')" class="text-sm text-gray-400 hover:text-tech-accent flex items-center gap-2"><i class="ph ph-key"></i> <span id="status-chave">Modo local</span></button>
+      </div>
+      <div class="bg-tech-800 flex-1 rounded-xl border border-tech-700 shadow-2xl flex flex-col overflow-hidden">
+        <div id="chat-box" class="flex-1 p-6 overflow-y-auto"></div>
+        <div class="p-4 bg-tech-900 border-t border-tech-700 flex gap-3 items-center">
+          <input id="chat-input" type="text" placeholder="Pergunte sobre o estoque: o que falta, quantas peças, fornecedores..."
+                 class="flex-1 bg-tech-800 p-4 rounded-xl border border-tech-600 focus:border-tech-accent outline-none text-white">
+          <button id="btn-enviar" class="bg-tech-accent hover:bg-cyan-300 text-tech-900 px-6 py-4 rounded-xl font-bold transition-colors flex items-center gap-2">
+            Enviar <i class="ph ph-paper-plane-right font-bold"></i>
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ====================== MODAIS ====================== -->
+<div id="modalItem" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm p-4">
+  <div class="bg-tech-800 p-8 rounded-xl border border-tech-700 w-full max-w-[450px] shadow-2xl">
+    <h3 id="modalItem-titulo" class="text-2xl font-bold mb-6"></h3>
+    <div class="space-y-5">
+      <div>
+        <label class="block text-sm font-semibold text-gray-300 mb-2">Nome</label>
+        <input id="item-nome" type="text" class="w-full bg-tech-900 p-3 rounded-lg border border-tech-600 focus:border-tech-accent outline-none text-white">
+      </div>
+      <div class="flex gap-4">
+        <div class="flex-1">
+          <label class="block text-sm font-semibold text-gray-300 mb-2">Qtd. atual</label>
+          <input id="item-estoque" type="number" class="w-full bg-tech-900 p-3 rounded-lg border border-tech-600 focus:border-tech-accent outline-none text-white">
+        </div>
+        <div class="flex-1">
+          <label class="block text-sm font-semibold text-gray-300 mb-2">Alerta mínimo</label>
+          <input id="item-min" type="number" class="w-full bg-tech-900 p-3 rounded-lg border border-tech-600 focus:border-tech-accent outline-none text-white">
+        </div>
+      </div>
+    </div>
+    <p id="item-erro" class="text-red-400 text-sm mt-3 h-5"></p>
+    <div class="flex justify-end gap-3 mt-4">
+      <button onclick="fecharModal('modalItem')" class="px-5 py-2.5 rounded-lg bg-tech-700 hover:bg-tech-600 font-bold transition-colors">Cancelar</button>
+      <button id="item-salvar" class="px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 font-bold transition-colors">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div id="modalForn" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm p-4">
+  <div class="bg-tech-800 p-8 rounded-xl border border-tech-700 w-full max-w-[450px] shadow-2xl">
+    <h3 id="modalForn-titulo" class="text-2xl font-bold mb-6"></h3>
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm font-semibold text-gray-300 mb-1">Nome da empresa</label>
+        <input id="forn-nome" type="text" class="w-full bg-tech-900 p-2.5 rounded-lg border border-tech-600 focus:border-tech-accent outline-none text-white">
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-gray-300 mb-1">CNPJ</label>
+        <input id="forn-cnpj" type="text" placeholder="00.000.000/0001-00" class="w-full bg-tech-900 p-2.5 rounded-lg border border-tech-600 focus:border-tech-accent outline-none text-white">
+      </div>
+      <div class="flex gap-4">
+        <div class="flex-1">
+          <label class="block text-sm font-semibold text-gray-300 mb-1">Contato</label>
+          <input id="forn-contato" type="text" class="w-full bg-tech-900 p-2.5 rounded-lg border border-tech-600 focus:border-tech-accent outline-none text-white">
+        </div>
+        <div class="flex-1">
+          <label class="block text-sm font-semibold text-gray-300 mb-1">Telefone</label>
+          <input id="forn-telefone" type="text" class="w-full bg-tech-900 p-2.5 rounded-lg border border-tech-600 focus:border-tech-accent outline-none text-white">
+        </div>
+      </div>
+    </div>
+    <p id="forn-erro" class="text-red-400 text-sm mt-3 h-5"></p>
+    <div class="flex justify-end gap-3 mt-4">
+      <button onclick="fecharModal('modalForn')" class="px-5 py-2.5 rounded-lg bg-tech-700 hover:bg-tech-600 font-bold transition-colors">Cancelar</button>
+      <button id="forn-salvar" class="px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 font-bold transition-colors">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div id="modalChave" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm p-4">
+  <div class="bg-tech-800 p-8 rounded-xl border border-tech-700 w-full max-w-[480px] shadow-2xl">
+    <h3 class="text-2xl font-bold mb-2">Conectar o Gemini</h3>
+    <p class="text-gray-400 text-sm mb-5 leading-relaxed">
+      Sem chave, o assistente responde usando só os dados do painel. Com chave, ele passa as perguntas para o Gemini.
+      A chave fica na memória desta aba e some quando você fecha o navegador — mas a requisição sai do navegador do usuário, então só use chave restrita por domínio.
+    </p>
+    <input id="input-chave" type="password" placeholder="Chave da API do Google AI Studio"
+           class="w-full bg-tech-900 p-3 rounded-lg border border-tech-600 focus:border-tech-accent outline-none text-white">
+    <div class="flex justify-end gap-3 mt-6">
+      <button onclick="limparChave()" class="px-5 py-2.5 rounded-lg bg-tech-700 hover:bg-tech-600 font-bold transition-colors">Usar modo local</button>
+      <button onclick="salvarChave()" class="px-5 py-2.5 rounded-lg bg-tech-accent hover:bg-cyan-300 text-tech-900 font-bold transition-colors">Conectar</button>
+    </div>
+  </div>
+</div>
+
+<div id="modalConfirma" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm p-4">
+  <div class="bg-tech-800 p-8 rounded-xl border border-red-500/50 w-full max-w-[400px] shadow-2xl">
+    <h3 class="text-xl font-bold mb-3">Excluir registro</h3>
+    <p id="confirma-texto" class="text-gray-300 mb-6"></p>
+    <div class="flex justify-end gap-3">
+      <button onclick="fecharModal('modalConfirma')" class="px-5 py-2.5 rounded-lg bg-tech-700 hover:bg-tech-600 font-bold transition-colors">Manter</button>
+      <button id="confirma-ok" class="px-5 py-2.5 rounded-lg bg-red-600 hover:bg-red-500 font-bold transition-colors">Excluir</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="hidden fixed bottom-6 right-6 z-[70] bg-tech-800 border border-tech-accent text-white px-5 py-3 rounded-lg shadow-2xl"></div>
+
+<script>
+// =====================================================================
+// 1. PERSISTÊNCIA — substitui o SQLite
+// =====================================================================
+const CHAVE = 'guepar_robo_dados';
+
+const Banco = {
+  async ler() {
+    try {
+      if (window.storage) { const r = await window.storage.get(CHAVE); return r ? JSON.parse(r.value) : null; }
+      const bruto = localStorage.getItem(CHAVE);
+      return bruto ? JSON.parse(bruto) : null;
+    } catch (e) { return null; }
+  },
+  async gravar(dados) {
+    try {
+      if (window.storage) { await window.storage.set(CHAVE, JSON.stringify(dados)); return; }
+      localStorage.setItem(CHAVE, JSON.stringify(dados));
+    } catch (e) { toast('Não foi possível salvar. Baixe um backup para não perder os dados.'); }
+  }
+};
+
+// Dados iniciais, vindos do sistema_web.db
+const SEMENTE = {
+  usuarios: [ {usuario:'admin', senha:'1234'}, {usuario:'matheus', senha:'1234'} ],
+  pecas: [
+    {id:1, nome:'Bateria',  estoque:1,  min:1},
+    {id:2, nome:'Sensores', estoque:4,  min:0},
+    {id:3, nome:'modulo',   estoque:2,  min:0},
+    {id:4, nome:'Suporte',  estoque:4,  min:0},
+    {id:5, nome:'Rodinha',  estoque:12, min:12}
+  ],
+  guepar: [],
+  fornecedores: [
+    {id:1, nome:'Delta Limpeza de Vidros',        contato:'Tiago',           telefone:'21 99439-7564', cnpj:'48.501.713/0001-65'},
+    {id:2, nome:'Eco Boxes Pallets',              contato:'Amanda',          telefone:'19 97129-6722', cnpj:'19.749.735/0001-40'},
+    {id:3, nome:'Central de Embalagens Pallets',  contato:'Ralph',           telefone:'19 98234-4972', cnpj:'01.247.578/0001-00'},
+    {id:4, nome:'Total Plástico Pallets',         contato:'Marcella Bastos', telefone:'11 2267-3750',  cnpj:'07.965.311/0001-34'},
+    {id:5, nome:'Indumak Máquina Stretch',        contato:'Israel',          telefone:'47 9710-0489',  cnpj:'84.431.352/0001-91'},
+    {id:6, nome:'Força1 Locações',                contato:'Ivan',            telefone:'21 99999-2880', cnpj:'13.284.920/0001-20'}
+  ]
+};
+
+let dados = null;
+let sessao = null;
+let chaveGemini = '';
+
+const salvar = () => Banco.gravar(dados);
+const proximoId = lista => lista.reduce((m, i) => Math.max(m, i.id), 0) + 1;
+
+// =====================================================================
+// 2. UTILITÁRIOS
+// =====================================================================
+const $ = id => document.getElementById(id);
+const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num = v => { const n = parseInt(v, 10); return Number.isFinite(n) ? n : NaN; };
+
+function toast(msg) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.remove('hidden');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.add('hidden'), 2800);
+}
+
+function abrirModal(id) { $(id).classList.remove('hidden'); }
+function fecharModal(id) { $(id).classList.add('hidden'); }
+
+function logoFallback() {
+  const d = document.createElement('div');
+  d.className = 'h-10 w-10 rounded-full bg-white text-blue-700 font-black flex items-center justify-center mr-3 shrink-0';
+  d.textContent = 'G';
+  return d;
+}
+
+function confirmar(texto, aoConfirmar) {
+  $('confirma-texto').textContent = texto;
+  const btn = $('confirma-ok');
+  btn.onclick = () => { fecharModal('modalConfirma'); aoConfirmar(); };
+  abrirModal('modalConfirma');
+}
+
+function statusEstoque(item, rotulos) {
+  if (item.estoque <= 0) return `<span class="text-red-500 bg-red-500/10 px-2 py-1 rounded text-sm font-bold">${rotulos[0]}</span>`;
+  if (item.estoque <= item.min) return `<span class="text-yellow-500 bg-yellow-500/10 px-2 py-1 rounded text-sm font-bold">${rotulos[1]}</span>`;
+  return `<span class="text-green-500 bg-green-500/10 px-2 py-1 rounded text-sm font-bold">${rotulos[2]}</span>`;
+}
+
+// =====================================================================
+// 3. NAVEGAÇÃO
+// =====================================================================
+function mudarAba(nome) {
+  document.querySelectorAll('.tab-content').forEach(s => { s.classList.add('hidden'); s.classList.remove('flex'); });
+  const alvo = $('tab-' + nome);
+  alvo.classList.remove('hidden');
+  if (nome === 'ia') alvo.classList.add('flex');
+
+  document.querySelectorAll('.menu-btn').forEach(b => {
+    const ativo = b.dataset.tab === nome;
+    b.classList.toggle('bg-tech-700', ativo);
+    b.classList.toggle('border-l-4', ativo);
+    b.classList.toggle('border-tech-accent', ativo);
+    b.classList.toggle('text-tech-accent', ativo);
+    b.classList.toggle('text-gray-400', !ativo);
+  });
+  location.hash = nome;
+}
+
+document.querySelectorAll('.menu-btn').forEach(b => b.addEventListener('click', () => mudarAba(b.dataset.tab)));
+
+// =====================================================================
+// 4. RENDERIZAÇÃO
+// =====================================================================
+function renderTudo() {
+  renderDashboard();
+  renderPecas();
+  renderGuepar();
+  renderFornecedores();
+}
+
+function renderDashboard() {
+  const criticas = dados.pecas.filter(p => p.estoque <= p.min);
+  const criticosG = dados.guepar.filter(g => g.estoque <= g.min);
+
+  const card = (icone, titulo, valor, unidade, rodape) => `
+    <div class="bg-tech-800 p-6 rounded-lg border border-tech-700 shadow-lg relative overflow-hidden">
+      <div class="absolute top-0 right-0 p-4 opacity-10"><i class="ph ph-${icone} text-8xl"></i></div>
+      <div class="flex items-center gap-3 mb-2"><i class="ph ph-${icone} text-2xl text-tech-accent"></i><h3 class="text-lg font-bold text-gray-300">${titulo}</h3></div>
+      <p class="text-4xl font-bold mb-2">${valor} <span class="text-sm font-normal text-gray-400">${unidade}</span></p>
+      ${rodape}
+    </div>`;
+
+  const ok = t => `<p class="text-green-400 text-sm font-bold bg-green-500/10 inline-block px-2 py-1 rounded"><i class="ph ph-check-circle mr-1"></i>${t}</p>`;
+  const alertaVermelho = t => `<p class="text-red-400 text-sm font-bold bg-red-500/10 inline-block px-2 py-1 rounded"><i class="ph ph-warning mr-1"></i>${t}</p>`;
+  const alertaAmarelo  = t => `<p class="text-yellow-400 text-sm font-bold bg-yellow-500/10 inline-block px-2 py-1 rounded"><i class="ph ph-warning mr-1"></i>${t}</p>`;
+
+  $('cards-dashboard').innerHTML =
+    card('cpu', 'Peças do robô', dados.pecas.length, 'itens',
+      criticas.length ? alertaVermelho(` ${criticas.length} em alerta ou falta`) : ok(' Estoque saudável')) +
+    card('wrench', 'Materiais Guepar', dados.guepar.length, 'itens',
+      criticosG.length ? alertaAmarelo(` ${criticosG.length} precisam de reposição`) : ok(' Estoque saudável')) +
+    card('users', 'Fornecedores', dados.fornecedores.length, 'empresas',
+      `<p class="text-blue-400 text-sm font-bold bg-blue-500/10 inline-block px-2 py-1 rounded"><i class="ph ph-info mr-1"></i> Contatos ativos</p>`);
+
+  const faltando = [...criticas, ...criticosG];
+  $('alertas-dashboard').innerHTML = faltando.length ? `
+    <div class="bg-tech-800 border border-yellow-500/40 rounded-lg p-6">
+      <h3 class="font-bold text-yellow-400 mb-3 flex items-center gap-2"><i class="ph ph-warning-circle text-xl"></i> Repor com prioridade</h3>
+      <ul class="space-y-2">${faltando.map(i => `
+        <li class="flex justify-between border-b border-tech-700 pb-2 last:border-0">
+          <span>${esc(i.nome)}</span>
+          <span class="text-gray-400 text-sm">${i.estoque} em estoque · mínimo ${i.min}</span>
+        </li>`).join('')}</ul>
+    </div>` : '';
+}
+
+function renderPecas() {
+  const linhas = dados.pecas.map(p => `
+    <tr class="border-t border-tech-700 hover:bg-tech-700/30 transition-colors">
+      <td class="p-4 text-tech-accent font-mono">#P-${p.id}</td>
+      <td class="p-4 font-semibold">${esc(p.nome)}</td>
+      <td class="p-4">${p.estoque} <span class="text-gray-500 text-sm">/ mín ${p.min}</span></td>
+      <td class="p-4">${statusEstoque(p, ['Esgotado','Crítico','Saudável'])}</td>
+      <td class="p-4 flex gap-4 justify-center">
+        <button onclick="abrirFormPeca(${p.id})" class="text-blue-400 hover:text-blue-300 font-bold text-sm"><i class="ph ph-pencil-simple mr-1"></i>Editar</button>
+        <button onclick="excluirPeca(${p.id})" class="text-red-400 hover:text-red-300 font-bold text-sm"><i class="ph ph-trash mr-1"></i>Excluir</button>
+      </td>
+    </tr>`).join('');
+  $('tbody-pecas').innerHTML = linhas || vazio(5, 'Nenhuma peça cadastrada. Use “Nova peça” para começar.');
+}
+
+function renderGuepar() {
+  const linhas = dados.guepar.map(g => `
+    <tr class="border-t border-tech-700 hover:bg-tech-700/30 transition-colors">
+      <td class="p-4 text-tech-accent font-mono">#G-${g.id}</td>
+      <td class="p-4 font-semibold">${esc(g.nome)}</td>
+      <td class="p-4">${g.estoque} <span class="text-gray-500 text-sm">/ mín ${g.min}</span></td>
+      <td class="p-4">${statusEstoque(g, ['Falta','Repor','Ok'])}</td>
+      <td class="p-4 flex gap-4 justify-center">
+        <button onclick="abrirFormGuepar(${g.id})" class="text-blue-400 hover:text-blue-300 font-bold text-sm"><i class="ph ph-pencil-simple mr-1"></i>Editar</button>
+        <button onclick="excluirGuepar(${g.id})" class="text-red-400 hover:text-red-300 font-bold text-sm"><i class="ph ph-trash mr-1"></i>Excluir</button>
+      </td>
+    </tr>`).join('');
+  $('tbody-guepar').innerHTML = linhas || vazio(5, 'Nenhum material cadastrado ainda.');
+}
+
+function renderFornecedores() {
+  const linhas = dados.fornecedores.map(f => `
+    <tr class="border-t border-tech-700 hover:bg-tech-700/30 transition-colors">
+      <td class="p-4 text-tech-accent font-mono">#F-${f.id}</td>
+      <td class="p-4 font-semibold">${esc(f.nome)}</td>
+      <td class="p-4 text-gray-300">${esc(f.cnpj) || '-'}</td>
+      <td class="p-4">${esc(f.contato)}</td>
+      <td class="p-4">${esc(f.telefone)}</td>
+      <td class="p-4 flex gap-4 justify-center">
+        <button onclick="abrirFormForn(${f.id})" class="text-blue-400 hover:text-blue-300 font-bold text-sm"><i class="ph ph-pencil-simple mr-1"></i>Editar</button>
+        <button onclick="excluirForn(${f.id})" class="text-red-400 hover:text-red-300 font-bold text-sm"><i class="ph ph-trash mr-1"></i>Excluir</button>
+      </td>
+    </tr>`).join('');
+  $('tbody-fornecedores').innerHTML = linhas || vazio(6, 'Nenhum fornecedor cadastrado.');
+}
+
+const vazio = (cols, texto) => `<tr><td colspan="${cols}" class="p-8 text-center text-gray-400">${texto}</td></tr>`;
+
+// =====================================================================
+// 5. CRUD
+// =====================================================================
+function abrirFormItem(lista, id, titulos) {
+  const reg = id ? lista.find(i => i.id === id) : null;
+  $('modalItem-titulo').textContent = reg ? titulos.editar : titulos.novo;
+  $('modalItem-titulo').className = 'text-2xl font-bold mb-6 ' + (reg ? 'text-tech-accent' : 'text-white');
+  $('item-nome').value = reg ? reg.nome : '';
+  $('item-estoque').value = reg ? reg.estoque : '';
+  $('item-min').value = reg ? reg.min : '';
+  $('item-erro').textContent = '';
+
+  $('item-salvar').onclick = async () => {
+    const nome = $('item-nome').value.trim();
+    const estoque = num($('item-estoque').value);
+    const min = num($('item-min').value);
+    if (!nome) return $('item-erro').textContent = 'Informe o nome do item.';
+    if (Number.isNaN(estoque) || Number.isNaN(min)) return $('item-erro').textContent = 'Quantidade e mínimo precisam ser números.';
+    if (estoque < 0 || min < 0) return $('item-erro').textContent = 'Use valores iguais ou maiores que zero.';
+
+    if (reg) Object.assign(reg, { nome, estoque, min });
+    else lista.push({ id: proximoId(lista), nome, estoque, min });
+
+    await salvar();
+    fecharModal('modalItem');
+    renderTudo();
+    toast(reg ? 'Item atualizado.' : 'Item cadastrado.');
+  };
+  abrirModal('modalItem');
+  $('item-nome').focus();
+}
+
+const abrirFormPeca = id => abrirFormItem(dados.pecas, id, { novo:'Cadastrar peça do robô', editar:'Editar peça' });
+const abrirFormGuepar = id => abrirFormItem(dados.guepar, id, { novo:'Cadastrar material Guepar', editar:'Editar material' });
+
+function abrirFormForn(id) {
+  const reg = id ? dados.fornecedores.find(f => f.id === id) : null;
+  $('modalForn-titulo').textContent = reg ? 'Editar fornecedor' : 'Cadastrar fornecedor';
+  $('modalForn-titulo').className = 'text-2xl font-bold mb-6 ' + (reg ? 'text-tech-accent' : 'text-white');
+  $('forn-nome').value = reg ? reg.nome : '';
+  $('forn-cnpj').value = reg ? reg.cnpj : '';
+  $('forn-contato').value = reg ? reg.contato : '';
+  $('forn-telefone').value = reg ? reg.telefone : '';
+  $('forn-erro').textContent = '';
+
+  $('forn-salvar').onclick = async () => {
+    const nome = $('forn-nome').value.trim();
+    const contato = $('forn-contato').value.trim();
+    const telefone = $('forn-telefone').value.trim();
+    const cnpj = $('forn-cnpj').value.trim();
+    if (!nome) return $('forn-erro').textContent = 'Informe o nome da empresa.';
+    if (!contato || !telefone) return $('forn-erro').textContent = 'Contato e telefone são obrigatórios.';
+
+    if (reg) Object.assign(reg, { nome, contato, telefone, cnpj });
+    else dados.fornecedores.push({ id: proximoId(dados.fornecedores), nome, contato, telefone, cnpj });
+
+    await salvar();
+    fecharModal('modalForn');
+    renderTudo();
+    toast(reg ? 'Fornecedor atualizado.' : 'Fornecedor cadastrado.');
+  };
+  abrirModal('modalForn');
+  $('forn-nome').focus();
+}
+
+function excluir(lista, id, chaveLista) {
+  const reg = lista.find(i => i.id === id);
+  confirmar(`Remover “${reg.nome}” da lista? Isso não pode ser desfeito.`, async () => {
+    dados[chaveLista] = lista.filter(i => i.id !== id);
+    await salvar();
+    renderTudo();
+    toast('Registro excluído.');
+  });
+}
+const excluirPeca = id => excluir(dados.pecas, id, 'pecas');
+const excluirGuepar = id => excluir(dados.guepar, id, 'guepar');
+const excluirForn = id => excluir(dados.fornecedores, id, 'fornecedores');
+
+// =====================================================================
+// 6. BACKUP
+// =====================================================================
+$('btn-exportar').onclick = () => {
+  const blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `guepar-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+};
+
+$('btn-importar').onclick = () => $('file-importar').click();
+$('file-importar').onchange = e => {
+  const arquivo = e.target.files[0];
+  if (!arquivo) return;
+  const leitor = new FileReader();
+  leitor.onload = async () => {
+    try {
+      const novo = JSON.parse(leitor.result);
+      if (!Array.isArray(novo.pecas) || !Array.isArray(novo.fornecedores)) throw new Error('formato');
+      dados = { usuarios: novo.usuarios || SEMENTE.usuarios, pecas: novo.pecas, guepar: novo.guepar || [], fornecedores: novo.fornecedores };
+      await salvar();
+      renderTudo();
+      toast('Backup restaurado.');
+    } catch (err) { toast('Esse arquivo não é um backup válido do painel.'); }
+    e.target.value = '';
+  };
+  leitor.readAsText(arquivo);
+};
+
+// =====================================================================
+// 7. ASSISTENTE
+// =====================================================================
+function addMensagem(html, lado) {
+  const box = $('chat-box');
+  const div = document.createElement('div');
+  div.className = `flex mb-4 ${lado === 'usuario' ? 'justify-end' : 'justify-start'}`;
+  div.innerHTML = lado === 'usuario'
+    ? `<div class="bg-blue-600 p-4 rounded-xl rounded-tr-none max-w-[80%] shadow-md">${html}</div>`
+    : `<div class="bg-tech-900 border border-tech-700 p-4 rounded-xl rounded-tl-none max-w-[90%] text-gray-300 shadow-lg">${html}</div>`;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+  return div;
+}
+
+function contexto() {
+  const p = dados.pecas, g = dados.guepar;
+  return {
+    pecas: p, guepar: g, fornecedores: dados.fornecedores,
+    faltando: [...p, ...g].filter(i => i.estoque <= i.min).map(i => i.nome)
+  };
+}
+
+function respostaLocal(pergunta) {
+  const c = contexto();
+  const q = pergunta.toLowerCase();
+  const lista = arr => arr.map(i => `• ${esc(i.nome)} — ${i.estoque} un. (mínimo ${i.min})`).join('<br>');
+
+  if (/(falta|repor|acaband|crítico|critico|alerta|comprar)/.test(q)) {
+    return c.faltando.length
+      ? `Precisam de reposição agora:<br>${c.faltando.map(n => '• ' + esc(n)).join('<br>')}`
+      : 'Nada abaixo do mínimo. Todo o estoque está acima do nível de alerta.';
+  }
+  if (/(fornecedor|contato|telefone|cnpj)/.test(q)) {
+    return `São ${c.fornecedores.length} fornecedores cadastrados:<br>` +
+      c.fornecedores.map(f => `• ${esc(f.nome)} — ${esc(f.contato)}, ${esc(f.telefone)}`).join('<br>');
+  }
+  if (/(peça|peca|robô|robo)/.test(q)) {
+    return c.pecas.length ? `Peças do robô:<br>${lista(c.pecas)}` : 'Nenhuma peça cadastrada ainda.';
+  }
+  if (/(guepar|material|materiais|uso)/.test(q)) {
+    return c.guepar.length ? `Materiais Guepar:<br>${lista(c.guepar)}` : 'A lista de materiais Guepar está vazia.';
+  }
+  if (/(relatório|relatorio|resumo|geral|situação|situacao)/.test(q)) {
+    return `Resumo do estoque:<br>• ${c.pecas.length} peças do robô<br>• ${c.guepar.length} materiais Guepar<br>• ${c.fornecedores.length} fornecedores<br>` +
+      (c.faltando.length ? `<br>Em alerta: ${c.faltando.map(esc).join(', ')}.` : '<br>Nenhum item abaixo do mínimo.');
+  }
+  return `Sem chave da API, eu respondo com base no que está cadastrado. Tente: “o que está faltando”, “resumo do estoque”, “listar peças”, “materiais guepar” ou “fornecedores”.`;
+}
+
+async function perguntarGemini(pergunta) {
+  const c = contexto();
+  const prompt = `Você é o assistente do painel de estoque "Guepar vs RobÔ".
+Peças do robô: ${JSON.stringify(c.pecas)}
+Materiais Guepar: ${JSON.stringify(c.guepar)}
+Fornecedores: ${JSON.stringify(c.fornecedores)}
+Itens abaixo do mínimo: ${c.faltando.join(', ') || 'nenhum'}
+Pergunta: ${pergunta}
+Responda em português do Brasil, de forma direta.`;
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(chaveGemini)}`;
+  const r = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+  });
+  if (!r.ok) {
+    const detalhe = await r.text();
+    throw new Error(`O Google recusou a requisição (${r.status}). ${detalhe.slice(0, 200)}`);
+  }
+  const j = await r.json();
+  return j?.candidates?.[0]?.content?.parts?.[0]?.text ?? 'O Gemini respondeu vazio.';
+}
+
+async function enviarMensagem() {
+  const input = $('chat-input');
+  const msg = input.value.trim();
+  if (!msg) return;
+  addMensagem(esc(msg), 'usuario');
+  input.value = '';
+
+  const pensando = addMensagem('<span class="italic text-gray-400">Consultando o estoque...</span>', 'ia');
+  try {
+    const texto = chaveGemini ? (await perguntarGemini(msg)).replace(/\n/g, '<br>') : respostaLocal(msg);
+    pensando.remove();
+    addMensagem(texto, 'ia');
+  } catch (e) {
+    pensando.remove();
+    addMensagem(`<span class="text-red-400">${esc(e.message)}</span><br><span class="text-gray-400 text-sm">Enquanto isso, o modo local continua funcionando.</span>`, 'ia');
+  }
+}
+
+$('btn-enviar').onclick = enviarMensagem;
+$('chat-input').addEventListener('keydown', e => { if (e.key === 'Enter') enviarMensagem(); });
+
+function salvarChave() {
+  chaveGemini = $('input-chave').value.trim();
+  $('status-chave').textContent = chaveGemini ? 'Gemini conectado' : 'Modo local';
+  fecharModal('modalChave');
+  toast(chaveGemini ? 'Gemini conectado nesta aba.' : 'Continuando no modo local.');
+}
+function limparChave() {
+  chaveGemini = '';
+  $('input-chave').value = '';
+  $('status-chave').textContent = 'Modo local';
+  fecharModal('modalChave');
+}
+
+// =====================================================================
+// 8. LOGIN E INICIALIZAÇÃO
+// =====================================================================
+async function entrar() {
+  const u = $('login-usuario').value.trim();
+  const s = $('login-senha').value;
+  const achou = dados.usuarios.find(x => x.usuario === u && x.senha === s);
+  if (!achou) { $('login-erro').textContent = 'Usuário ou senha incorretos.'; return; }
+  sessao = u;
+  $('login-erro').textContent = '';
+  $('login-senha').value = '';
+  $('tela-login').classList.add('hidden');
+  $('app').classList.remove('hidden');
+  renderTudo();
+  mudarAba((location.hash || '#dashboard').slice(1));
+  addMensagem(`Olá, ${esc(u)}. Tenho acesso a tudo que está cadastrado aqui. Pergunte o que está faltando ou peça um resumo do estoque.`, 'ia');
+}
+
+$('btn-entrar').onclick = entrar;
+['login-usuario','login-senha'].forEach(id => $(id).addEventListener('keydown', e => { if (e.key === 'Enter') entrar(); }));
+
+$('btn-sair').onclick = () => {
+  sessao = null;
+  $('app').classList.add('hidden');
+  $('tela-login').classList.remove('hidden');
+  $('chat-box').innerHTML = '';
+  $('login-usuario').focus();
+};
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') document.querySelectorAll('[id^="modal"]').forEach(m => m.classList.add('hidden'));
+});
+
+(async function iniciar() {
+  const salvos = await Banco.ler();
+  dados = salvos || structuredClone(SEMENTE);
+  if (!salvos) await salvar();
+  $('login-usuario').focus();
+})();
+</script>
+</body>
+</html>
