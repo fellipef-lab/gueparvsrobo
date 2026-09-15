@@ -37,7 +37,7 @@ tailwind.config = { theme: { extend: { colors: { tech: { 900:'#0b1120', 800:'#15
 
 <!-- ====================== TELA DE LOGIN ====================== -->
 <div id="tela-login" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-tech-900 p-4">
-  <div class="bg-tech-800 p-10 rounded-xl border border-tech-accent/60 shadow-2xl w-full max-w-[360px] text-center">
+  <div class="bg-tech-800 p-6 sm:p-10 rounded-xl border border-tech-accent/60 shadow-2xl w-full max-w-[360px] text-center">
     <h2 class="text-2xl font-bold text-tech-accent mb-1">Guepar <span class="text-sm text-gray-400 font-normal">vs</span> RobÔ</h2>
     <p class="text-gray-400 text-sm mb-6">Acesso restrito</p>
     <div class="space-y-3 text-left">
@@ -55,15 +55,31 @@ tailwind.config = { theme: { extend: { colors: { tech: { 900:'#0b1120', 800:'#15
 </div>
 
 <!-- ====================== APP ====================== -->
-<div id="app" class="hidden min-h-screen flex">
+<div id="app" class="hidden min-h-screen md:flex">
 
-  <aside class="w-64 bg-tech-800 border-r border-tech-700 flex flex-col shrink-0">
-    <div class="p-6 border-b border-tech-700 flex items-center">
+  <!-- Barra superior — só em telas pequenas -->
+  <div class="md:hidden sticky top-0 z-40 bg-tech-800 border-b border-tech-700 flex items-center justify-between px-4 py-3">
+    <div class="flex items-center gap-2">
       <img src="guepar.jpeg" alt="" onerror="this.replaceWith(logoFallback())"
-           class="h-10 w-10 object-contain bg-white rounded-full mr-3">
-      <h1 class="text-xl font-bold text-tech-accent">Guepar <span class="text-sm text-gray-400 font-normal">vs</span> RobÔ</h1>
+           class="h-8 w-8 object-contain bg-white rounded-full">
+      <span class="font-bold text-tech-accent text-sm">Guepar <span class="text-gray-400 font-normal">vs</span> RobÔ</span>
     </div>
-    <nav class="flex-1 p-3 space-y-1 mt-4 text-[15px] font-medium pr-4">
+    <button id="btn-menu-mobile" class="text-2xl text-gray-300 p-1"><i class="ph ph-list"></i></button>
+  </div>
+
+  <!-- Fundo escuro atrás do menu, só quando aberto no celular -->
+  <div id="overlay-menu" class="hidden fixed inset-0 bg-black/60 z-40 md:hidden"></div>
+
+  <aside id="sidebar" class="hidden md:flex fixed md:static inset-y-0 left-0 z-50 w-64 bg-tech-800 border-r border-tech-700 flex-col shrink-0">
+    <div class="p-6 border-b border-tech-700 flex items-center justify-between">
+      <div class="flex items-center">
+        <img src="guepar.jpeg" alt="" onerror="this.replaceWith(logoFallback())"
+             class="h-10 w-10 object-contain bg-white rounded-full mr-3">
+        <h1 class="text-xl font-bold text-tech-accent">Guepar <span class="text-sm text-gray-400 font-normal">vs</span> RobÔ</h1>
+      </div>
+      <button id="btn-fechar-menu" class="md:hidden text-2xl text-gray-400 p-1"><i class="ph ph-x"></i></button>
+    </div>
+    <nav class="flex-1 p-3 space-y-1 mt-4 text-[15px] font-medium pr-4 overflow-y-auto">
       <button data-tab="dashboard"    class="menu-btn w-full flex items-center gap-3 p-3 rounded-r-lg text-gray-400 hover:text-white hover:bg-tech-700/50 transition-all"><i class="ph ph-squares-four text-xl"></i> Dashboard</button>
       <button data-tab="pecas"        class="menu-btn w-full flex items-center gap-3 p-3 rounded-r-lg text-gray-400 hover:text-white hover:bg-tech-700/50 transition-all"><i class="ph ph-cpu text-xl"></i> Peças do Robô</button>
       <button data-tab="guepar"       class="menu-btn w-full flex items-center gap-3 p-3 rounded-r-lg text-gray-400 hover:text-white hover:bg-tech-700/50 transition-all"><i class="ph ph-wrench text-xl"></i> Guepar Uso</button>
@@ -80,21 +96,21 @@ tailwind.config = { theme: { extend: { colors: { tech: { 900:'#0b1120', 800:'#15
     </div>
   </aside>
 
-  <main class="flex-1 p-8 overflow-y-auto h-screen">
+  <main class="flex-1 p-4 md:p-8 overflow-y-auto md:h-screen">
 
     <section id="tab-dashboard" class="tab-content hidden">
-      <h2 class="text-3xl font-bold mb-8">Dashboard geral</h2>
-      <div id="cards-dashboard" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
-      <div id="alertas-dashboard" class="mt-8"></div>
+      <h2 class="text-2xl md:text-3xl font-bold mb-6 md:mb-8">Dashboard geral</h2>
+      <div id="cards-dashboard" class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6"></div>
+      <div id="alertas-dashboard" class="mt-6 md:mt-8"></div>
     </section>
 
     <section id="tab-pecas" class="tab-content hidden">
-      <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-bold">Peças do robô</h2>
+      <div class="flex flex-wrap gap-3 justify-between items-center mb-6">
+        <h2 class="text-xl md:text-2xl font-bold">Peças do robô</h2>
         <button onclick="abrirFormPeca()" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded font-bold transition-colors">+ Nova peça</button>
       </div>
-      <div class="bg-tech-800 rounded-lg border border-tech-700 overflow-hidden shadow-lg">
-        <table class="w-full text-left">
+      <div class="bg-tech-800 rounded-lg border border-tech-700 shadow-lg overflow-x-auto">
+        <table class="w-full min-w-[640px] text-left">
           <thead class="bg-tech-700/50"><tr>
             <th class="p-4 text-gray-400 text-sm font-semibold">Cód.</th>
             <th class="p-4 text-gray-400 text-sm font-semibold">Nome da peça</th>
@@ -108,12 +124,12 @@ tailwind.config = { theme: { extend: { colors: { tech: { 900:'#0b1120', 800:'#15
     </section>
 
     <section id="tab-guepar" class="tab-content hidden">
-      <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-bold">Guepar uso (materiais)</h2>
+      <div class="flex flex-wrap gap-3 justify-between items-center mb-6">
+        <h2 class="text-xl md:text-2xl font-bold">Guepar uso (materiais)</h2>
         <button onclick="abrirFormGuepar()" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded font-bold transition-colors">+ Novo item</button>
       </div>
-      <div class="bg-tech-800 rounded-lg border border-tech-700 overflow-hidden shadow-lg">
-        <table class="w-full text-left">
+      <div class="bg-tech-800 rounded-lg border border-tech-700 shadow-lg overflow-x-auto">
+        <table class="w-full min-w-[640px] text-left">
           <thead class="bg-tech-700/50"><tr>
             <th class="p-4 text-gray-400 text-sm font-semibold">Cód.</th>
             <th class="p-4 text-gray-400 text-sm font-semibold">Nome do item</th>
@@ -127,12 +143,12 @@ tailwind.config = { theme: { extend: { colors: { tech: { 900:'#0b1120', 800:'#15
     </section>
 
     <section id="tab-fornecedores" class="tab-content hidden">
-      <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-bold">Diretório de fornecedores</h2>
+      <div class="flex flex-wrap gap-3 justify-between items-center mb-6">
+        <h2 class="text-xl md:text-2xl font-bold">Diretório de fornecedores</h2>
         <button onclick="abrirFormForn()" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded font-bold transition-colors">+ Novo fornecedor</button>
       </div>
-      <div class="bg-tech-800 rounded-lg border border-tech-700 overflow-hidden shadow-lg">
-        <table class="w-full text-left">
+      <div class="bg-tech-800 rounded-lg border border-tech-700 shadow-lg overflow-x-auto">
+        <table class="w-full min-w-[720px] text-left">
           <thead class="bg-tech-700/50"><tr>
             <th class="p-4 text-gray-400 text-sm font-semibold">Cód.</th>
             <th class="p-4 text-gray-400 text-sm font-semibold">Empresa</th>
@@ -146,15 +162,15 @@ tailwind.config = { theme: { extend: { colors: { tech: { 900:'#0b1120', 800:'#15
       </div>
     </section>
 
-    <section id="tab-ia" class="tab-content hidden flex-col h-[calc(100vh-100px)]">
-      <h2 class="text-3xl font-bold text-tech-accent flex items-center gap-3 mb-6"><i class="ph ph-sparkle"></i> Assistente de estoque</h2>
+    <section id="tab-ia" class="tab-content hidden flex-col h-[calc(100vh-160px)] md:h-[calc(100vh-100px)]">
+      <h2 class="text-2xl md:text-3xl font-bold text-tech-accent flex items-center gap-3 mb-4 md:mb-6"><i class="ph ph-sparkle"></i> Assistente de estoque</h2>
       <div class="bg-tech-800 flex-1 rounded-xl border border-tech-700 shadow-2xl flex flex-col overflow-hidden">
-        <div id="chat-box" class="flex-1 p-6 overflow-y-auto"></div>
-        <div class="p-4 bg-tech-900 border-t border-tech-700 flex gap-3 items-center">
-          <input id="chat-input" type="text" placeholder="Pergunte sobre o estoque: o que falta, quantas peças, fornecedores..."
-                 class="flex-1 bg-tech-800 p-4 rounded-xl border border-tech-600 focus:border-tech-accent outline-none text-white">
-          <button id="btn-enviar" class="bg-tech-accent hover:bg-cyan-300 text-tech-900 px-6 py-4 rounded-xl font-bold transition-colors flex items-center gap-2">
-            Enviar <i class="ph ph-paper-plane-right font-bold"></i>
+        <div id="chat-box" class="flex-1 p-4 md:p-6 overflow-y-auto"></div>
+        <div class="p-3 md:p-4 bg-tech-900 border-t border-tech-700 flex gap-2 md:gap-3 items-center">
+          <input id="chat-input" type="text" placeholder="Pergunte sobre o estoque..."
+                 class="flex-1 min-w-0 bg-tech-800 p-3 md:p-4 rounded-xl border border-tech-600 focus:border-tech-accent outline-none text-white text-sm md:text-base">
+          <button id="btn-enviar" class="bg-tech-accent hover:bg-cyan-300 text-tech-900 px-4 md:px-6 py-3 md:py-4 rounded-xl font-bold transition-colors flex items-center gap-2 shrink-0">
+            <span class="hidden sm:inline">Enviar</span> <i class="ph ph-paper-plane-right font-bold"></i>
           </button>
         </div>
       </div>
@@ -165,7 +181,7 @@ tailwind.config = { theme: { extend: { colors: { tech: { 900:'#0b1120', 800:'#15
 
 <!-- ====================== MODAIS ====================== -->
 <div id="modalItem" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm p-4">
-  <div class="bg-tech-800 p-8 rounded-xl border border-tech-700 w-full max-w-[450px] shadow-2xl">
+  <div class="bg-tech-800 p-6 sm:p-8 rounded-xl border border-tech-700 w-full max-w-[450px] shadow-2xl">
     <h3 id="modalItem-titulo" class="text-2xl font-bold mb-6"></h3>
     <div class="space-y-5">
       <div>
@@ -192,7 +208,7 @@ tailwind.config = { theme: { extend: { colors: { tech: { 900:'#0b1120', 800:'#15
 </div>
 
 <div id="modalForn" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm p-4">
-  <div class="bg-tech-800 p-8 rounded-xl border border-tech-700 w-full max-w-[450px] shadow-2xl">
+  <div class="bg-tech-800 p-6 sm:p-8 rounded-xl border border-tech-700 w-full max-w-[450px] shadow-2xl">
     <h3 id="modalForn-titulo" class="text-2xl font-bold mb-6"></h3>
     <div class="space-y-4">
       <div>
@@ -366,8 +382,26 @@ function mudarAba(nome) {
     b.classList.toggle('text-gray-400', !ativo);
   });
   location.hash = nome;
+  fecharMenuMobile();
 }
 document.querySelectorAll('.menu-btn').forEach(b => b.addEventListener('click', () => mudarAba(b.dataset.tab)));
+
+function abrirMenuMobile() {
+  $('sidebar').classList.remove('hidden');
+  $('sidebar').classList.add('flex');
+  $('overlay-menu').classList.remove('hidden');
+}
+function fecharMenuMobile() {
+  if (window.innerWidth >= 768) return; // no desktop o menu fica sempre visível
+  $('sidebar').classList.add('hidden');
+  $('sidebar').classList.remove('flex');
+  $('overlay-menu').classList.add('hidden');
+}
+$('btn-menu-mobile')?.addEventListener('click', abrirMenuMobile);
+$('btn-fechar-menu')?.addEventListener('click', fecharMenuMobile);
+$('overlay-menu')?.addEventListener('click', fecharMenuMobile);
+window.addEventListener('resize', () => { if (window.innerWidth >= 768) $('overlay-menu').classList.add('hidden'); });
+
 
 // =====================================================================
 // 5. RENDERIZAÇÃO
