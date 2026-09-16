@@ -84,6 +84,7 @@ tailwind.config = { theme: { extend: { colors: { tech: { 900:'#0b1120', 800:'#15
       <button data-tab="pecas"        class="menu-btn w-full flex items-center gap-3 p-3 rounded-r-lg text-gray-400 hover:text-white hover:bg-tech-700/50 transition-all"><i class="ph ph-cpu text-xl"></i> Peças do Robô</button>
       <button data-tab="guepar"       class="menu-btn w-full flex items-center gap-3 p-3 rounded-r-lg text-gray-400 hover:text-white hover:bg-tech-700/50 transition-all"><i class="ph ph-wrench text-xl"></i> Guepar Uso</button>
       <button data-tab="fornecedores" class="menu-btn w-full flex items-center gap-3 p-3 rounded-r-lg text-gray-400 hover:text-white hover:bg-tech-700/50 transition-all"><i class="ph ph-users text-xl"></i> Fornecedores</button>
+      <button data-tab="manutencoes"  class="menu-btn w-full flex items-center gap-3 p-3 rounded-r-lg text-gray-400 hover:text-white hover:bg-tech-700/50 transition-all"><i class="ph ph-calendar text-xl"></i> Manutenções</button>
       <button data-tab="ia"           class="menu-btn w-full flex items-center gap-3 p-3 rounded-r-lg text-gray-400 hover:text-white hover:bg-tech-700/50 transition-all"><i class="ph ph-sparkle text-xl"></i> Assistente <span class="w-2 h-2 rounded-full bg-tech-accent ml-auto glow-dot"></span></button>
     </nav>
     <div class="p-4 border-t border-tech-700">
@@ -160,6 +161,36 @@ tailwind.config = { theme: { extend: { colors: { tech: { 900:'#0b1120', 800:'#15
           <tbody id="tbody-fornecedores"></tbody>
         </table>
       </div>
+    </section>
+
+    <!-- ================= SEÇÃO: MANUTENÇÕES ================= -->
+    <section id="tab-manutencoes" class="tab-content hidden">
+        <div class="flex flex-wrap gap-3 justify-between items-center mb-6">
+            <div>
+                <h2 class="text-xl md:text-2xl font-bold">Manutenções</h2>
+                <p class="text-tech-accent text-sm mt-1 font-semibold">Controle de Validade e Revisões</p>
+            </div>
+            <button onclick="abrirModalManutencao()" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded font-bold transition-colors">
+                + Nova Manutenção
+            </button>
+        </div>
+
+        <div class="bg-tech-800 rounded-xl border border-tech-700 shadow-lg overflow-x-auto">
+            <table class="w-full min-w-[640px] text-left border-collapse">
+                <thead class="bg-tech-700/50">
+                    <tr>
+                        <th class="p-4 text-gray-400 text-sm font-semibold">Nome</th>
+                        <th class="p-4 text-gray-400 text-sm font-semibold">Tipo</th>
+                        <th class="p-4 text-gray-400 text-sm font-semibold">Última troca</th>
+                        <th class="p-4 text-gray-400 text-sm font-semibold">Validade (Status)</th>
+                        <th class="p-4 text-gray-400 text-sm font-semibold text-center">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="tabela-manutencoes" class="divide-y divide-gray-800">
+                    <!-- Linhas geradas pelo JS -->
+                </tbody>
+            </table>
+        </div>
     </section>
 
     <section id="tab-ia" class="tab-content hidden flex-col h-[calc(100vh-160px)] md:h-[calc(100vh-100px)]">
@@ -251,444 +282,47 @@ tailwind.config = { theme: { extend: { colors: { tech: { 900:'#0b1120', 800:'#15
 
 <div id="toast" class="hidden fixed bottom-6 right-6 z-[80] bg-tech-800 border border-tech-accent px-5 py-3 rounded-lg shadow-2xl max-w-[340px]"></div>
 
-<script>
-// =====================================================================
-// 1. CONEXÃO — Project Settings → API, no painel do Supabase
-// =====================================================================
-const SUPABASE_URL      = 'https://vmqkutpgigftsbangesu.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZtcWt1dHBnaWdmdHNiYW5nZXN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk0NTM4NzQsImV4cCI6MjEwNTAyOTg3NH0.Arl5q4Z7R0Ju_mRpWN7VvItt13zetK7SheMcMoj-S5Q';
+<!-- ================= MODAL: MANUTENÇÃO ================= -->
+<div id="modal-manutencao" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+    <div class="bg-tech-800 p-6 rounded-xl border border-tech-700 shadow-2xl w-full max-w-md">
+        <h3 class="text-xl font-bold mb-4 text-tech-accent flex items-center gap-2">
+            <i class="ph ph-wrench"></i> <span id="modal-manutencao-titulo">Agendar Manutenção</span>
+        </h3>
+        
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm text-gray-400 mb-1">Nome/Identificação</label>
+                <input type="text" id="manu-nome" placeholder="Ex: Robô Solda 01" class="w-full bg-tech-900 border border-gray-700 rounded p-2 text-white outline-none focus:border-tech-accent">
+            </div>
+            
+            <div>
+                <label class="block text-sm text-gray-400 mb-1">Tipo de Manutenção</label>
+                <select id="manu-tipo" class="w-full bg-tech-900 border border-gray-700 rounded p-2 text-white outline-none focus:border-tech-accent">
+                    <option value="bateria">Bateria</option>
+                    <option value="rodinha">Rodinha</option>
+                    <option value="graxa">Graxa</option>
+                </select>
+            </div>
 
-let sb = null;
+            <div>
+                <label class="block text-sm text-gray-400 mb-1">Última troca</label>
+                <input type="date" id="manu-ultima-troca" class="w-full bg-tech-900 border border-gray-700 rounded p-2 text-white outline-none focus:border-tech-accent">
+            </div>
 
-// Cache local só para renderizar; a fonte da verdade é o Postgres.
-let dados = { pecas: [], guepar: [], fornecedores: [] };
-let usuario = null;
+            <div>
+                <label class="block text-sm text-gray-400 mb-1">Data de Validade</label>
+                <input type="date" id="manu-validade" class="w-full bg-tech-900 border border-gray-700 rounded p-2 text-white outline-none focus:border-tech-accent">
+            </div>
+        </div>
+        <p id="manu-erro" class="text-red-400 text-sm mt-3 min-h-[20px]"></p>
 
-// =====================================================================
-// 2. UTILITÁRIOS
-// =====================================================================
-const $ = id => document.getElementById(id);
-const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const num = v => { const n = parseInt(v, 10); return Number.isFinite(n) ? n : NaN; };
-const vazio = (cols, texto) => `<tr><td colspan="${cols}" class="p-8 text-center text-gray-400">${texto}</td></tr>`;
+        <div class="flex justify-end gap-3 mt-2">
+            <button onclick="fecharModalManutencao()" class="px-5 py-2.5 rounded bg-gray-700 hover:bg-gray-600 transition-colors">Cancelar</button>
+            <button onclick="salvarManutencao()" class="px-5 py-2.5 rounded bg-blue-600 text-white font-bold hover:bg-blue-500 transition-colors">Salvar</button>
+        </div>
+    </div>
+</div>
 
-function toast(msg) {
-  const t = $('toast');
-  t.textContent = msg;
-  t.classList.remove('hidden');
-  clearTimeout(t._timer);
-  t._timer = setTimeout(() => t.classList.add('hidden'), 3200);
-}
-
-const abrirModal = id => $(id).classList.remove('hidden');
-const fecharModal = id => $(id).classList.add('hidden');
-
-function logoFallback() {
-  const d = document.createElement('div');
-  d.className = 'h-10 w-10 rounded-full bg-white text-blue-700 font-black flex items-center justify-center mr-3 shrink-0';
-  d.textContent = 'G';
-  return d;
-}
-
-function confirmar(texto, aoConfirmar) {
-  $('confirma-texto').textContent = texto;
-  $('confirma-ok').onclick = () => { fecharModal('modalConfirma'); aoConfirmar(); };
-  abrirModal('modalConfirma');
-}
-
-function conexao(estado, texto) {
-  const cores = { ok: 'bg-green-400', erro: 'bg-red-500', esperando: 'bg-yellow-400' };
-  $('ponto-conexao').className = `w-2 h-2 rounded-full shrink-0 ${cores[estado]}`;
-  $('texto-conexao').textContent = texto;
-}
-
-// Traduz o erro do Postgres para algo acionável.
-function explicarErro(erro) {
-  const m = erro?.message || 'Erro desconhecido';
-  if (/JWT|not authenticated|session/i.test(m)) return 'Sua sessão expirou. Entre de novo.';
-  if (/row-level security|policy/i.test(m))     return 'O banco recusou a operação. Confira se o RLS do schema.sql foi aplicado.';
-  if (/Failed to fetch|NetworkError/i.test(m))  return 'Sem resposta do Supabase. Verifique a internet e a URL do projeto.';
-  if (/does not exist|relation/i.test(m))       return 'Tabela não encontrada. Rode o schema.sql no SQL Editor.';
-  return m;
-}
-
-function statusEstoque(item, rotulos) {
-  if (item.estoque <= 0) return `<span class="text-red-500 bg-red-500/10 px-2 py-1 rounded text-sm font-bold">${rotulos[0]}</span>`;
-  if (item.estoque <= item.min_estoque) return `<span class="text-yellow-500 bg-yellow-500/10 px-2 py-1 rounded text-sm font-bold">${rotulos[1]}</span>`;
-  return `<span class="text-green-500 bg-green-500/10 px-2 py-1 rounded text-sm font-bold">${rotulos[2]}</span>`;
-}
-
-// =====================================================================
-// 3. ACESSO AOS DADOS
-// =====================================================================
-async function carregarTudo() {
-  const [p, g, f] = await Promise.all([
-    sb.from('pecas').select('*').order('id'),
-    sb.from('guepar_uso').select('*').order('id'),
-    sb.from('fornecedores').select('*').order('id')
-  ]);
-  const falha = p.error || g.error || f.error;
-  if (falha) { conexao('erro', 'Falha ao carregar'); toast(explicarErro(falha)); return; }
-
-  dados = { pecas: p.data, guepar: g.data, fornecedores: f.data };
-  renderTudo();
-  conexao('ok', 'Sincronizado');
-}
-
-const TABELA = { pecas: 'pecas', guepar: 'guepar_uso', fornecedores: 'fornecedores' };
-
-async function inserir(chave, registro) {
-  const { error } = await sb.from(TABELA[chave]).insert(registro);
-  if (error) { toast(explicarErro(error)); return false; }
-  await carregarTudo(); return true;
-}
-async function atualizar(chave, id, registro) {
-  const { error } = await sb.from(TABELA[chave]).update(registro).eq('id', id);
-  if (error) { toast(explicarErro(error)); return false; }
-  await carregarTudo(); return true;
-}
-async function remover(chave, id) {
-  const { error } = await sb.from(TABELA[chave]).delete().eq('id', id);
-  if (error) { toast(explicarErro(error)); return false; }
-  await carregarTudo(); return true;
-}
-
-// Mudança feita em qualquer máquina aparece aqui sem recarregar a página.
-function ouvirMudancas() {
-  sb.channel('painel-guepar')
-    .on('postgres_changes', { event: '*', schema: 'public' }, carregarTudo)
-    .subscribe(status => {
-      if (status === 'SUBSCRIBED') conexao('ok', 'Sincronizado em tempo real');
-      if (status === 'CHANNEL_ERROR') conexao('esperando', 'Tempo real indisponível');
-    });
-}
-
-// =====================================================================
-// 4. NAVEGAÇÃO
-// =====================================================================
-function mudarAba(nome) {
-  if (!$('tab-' + nome)) nome = 'dashboard';
-  document.querySelectorAll('.tab-content').forEach(s => { s.classList.add('hidden'); s.classList.remove('flex'); });
-  const alvo = $('tab-' + nome);
-  alvo.classList.remove('hidden');
-  if (nome === 'ia') alvo.classList.add('flex');
-
-  document.querySelectorAll('.menu-btn').forEach(b => {
-    const ativo = b.dataset.tab === nome;
-    b.classList.toggle('bg-tech-700', ativo);
-    b.classList.toggle('border-l-4', ativo);
-    b.classList.toggle('border-tech-accent', ativo);
-    b.classList.toggle('text-tech-accent', ativo);
-    b.classList.toggle('text-gray-400', !ativo);
-  });
-  location.hash = nome;
-  fecharMenuMobile();
-}
-document.querySelectorAll('.menu-btn').forEach(b => b.addEventListener('click', () => mudarAba(b.dataset.tab)));
-
-function abrirMenuMobile() {
-  $('sidebar').classList.remove('hidden');
-  $('sidebar').classList.add('flex');
-  $('overlay-menu').classList.remove('hidden');
-}
-function fecharMenuMobile() {
-  if (window.innerWidth >= 768) return; // no desktop o menu fica sempre visível
-  $('sidebar').classList.add('hidden');
-  $('sidebar').classList.remove('flex');
-  $('overlay-menu').classList.add('hidden');
-}
-$('btn-menu-mobile')?.addEventListener('click', abrirMenuMobile);
-$('btn-fechar-menu')?.addEventListener('click', fecharMenuMobile);
-$('overlay-menu')?.addEventListener('click', fecharMenuMobile);
-window.addEventListener('resize', () => { if (window.innerWidth >= 768) $('overlay-menu').classList.add('hidden'); });
-
-
-// =====================================================================
-// 5. RENDERIZAÇÃO
-// =====================================================================
-function renderTudo() { renderDashboard(); renderPecas(); renderGuepar(); renderFornecedores(); }
-
-function renderDashboard() {
-  const criticas  = dados.pecas.filter(p => p.estoque <= p.min_estoque);
-  const criticosG = dados.guepar.filter(g => g.estoque <= g.min_estoque);
-
-  const card = (icone, titulo, valor, unidade, rodape) => `
-    <div class="bg-tech-800 p-6 rounded-lg border border-tech-700 shadow-lg relative overflow-hidden">
-      <div class="absolute top-0 right-0 p-4 opacity-10"><i class="ph ph-${icone} text-8xl"></i></div>
-      <div class="flex items-center gap-3 mb-2"><i class="ph ph-${icone} text-2xl text-tech-accent"></i><h3 class="text-lg font-bold text-gray-300">${titulo}</h3></div>
-      <p class="text-4xl font-bold mb-2">${valor} <span class="text-sm font-normal text-gray-400">${unidade}</span></p>
-      ${rodape}
-    </div>`;
-
-  const ok = t => `<p class="text-green-400 text-sm font-bold bg-green-500/10 inline-block px-2 py-1 rounded"><i class="ph ph-check-circle mr-1"></i>${t}</p>`;
-  const alertaVermelho = t => `<p class="text-red-400 text-sm font-bold bg-red-500/10 inline-block px-2 py-1 rounded"><i class="ph ph-warning mr-1"></i>${t}</p>`;
-  const alertaAmarelo  = t => `<p class="text-yellow-400 text-sm font-bold bg-yellow-500/10 inline-block px-2 py-1 rounded"><i class="ph ph-warning mr-1"></i>${t}</p>`;
-
-  $('cards-dashboard').innerHTML =
-    card('cpu', 'Peças do robô', dados.pecas.length, 'itens',
-      criticas.length ? alertaVermelho(` ${criticas.length} em alerta ou falta`) : ok(' Estoque saudável')) +
-    card('wrench', 'Materiais Guepar', dados.guepar.length, 'itens',
-      criticosG.length ? alertaAmarelo(` ${criticosG.length} precisam de reposição`) : ok(' Estoque saudável')) +
-    card('users', 'Fornecedores', dados.fornecedores.length, 'empresas',
-      `<p class="text-blue-400 text-sm font-bold bg-blue-500/10 inline-block px-2 py-1 rounded"><i class="ph ph-info mr-1"></i> Contatos ativos</p>`);
-
-  const faltando = [...criticas, ...criticosG];
-  $('alertas-dashboard').innerHTML = faltando.length ? `
-    <div class="bg-tech-800 border border-yellow-500/40 rounded-lg p-6">
-      <h3 class="font-bold text-yellow-400 mb-3 flex items-center gap-2"><i class="ph ph-warning-circle text-xl"></i> Repor com prioridade</h3>
-      <ul class="space-y-2">${faltando.map(i => `
-        <li class="flex justify-between border-b border-tech-700 pb-2 last:border-0">
-          <span>${esc(i.nome)}</span>
-          <span class="text-gray-400 text-sm">${i.estoque} em estoque · mínimo ${i.min_estoque}</span>
-        </li>`).join('')}</ul>
-    </div>` : '';
-}
-
-function linhaItem(item, prefixo, rotulos, editar, excluir) {
-  return `<tr class="border-t border-tech-700 hover:bg-tech-700/30 transition-colors">
-    <td class="p-4 text-tech-accent font-mono">#${prefixo}-${item.id}</td>
-    <td class="p-4 font-semibold">${esc(item.nome)}</td>
-    <td class="p-4">${item.estoque} <span class="text-gray-500 text-sm">/ mín ${item.min_estoque}</span></td>
-    <td class="p-4">${statusEstoque(item, rotulos)}</td>
-    <td class="p-4 flex gap-4 justify-center">
-      <button onclick="${editar}(${item.id})" class="text-blue-400 hover:text-blue-300 font-bold text-sm"><i class="ph ph-pencil-simple mr-1"></i>Editar</button>
-      <button onclick="${excluir}(${item.id})" class="text-red-400 hover:text-red-300 font-bold text-sm"><i class="ph ph-trash mr-1"></i>Excluir</button>
-    </td></tr>`;
-}
-
-function renderPecas() {
-  const html = dados.pecas.map(p => linhaItem(p, 'P', ['Esgotado','Crítico','Saudável'], 'abrirFormPeca', 'excluirPeca')).join('');
-  $('tbody-pecas').innerHTML = html || vazio(5, 'Nenhuma peça cadastrada. Use “Nova peça” para começar.');
-}
-function renderGuepar() {
-  const html = dados.guepar.map(g => linhaItem(g, 'G', ['Falta','Repor','Ok'], 'abrirFormGuepar', 'excluirGuepar')).join('');
-  $('tbody-guepar').innerHTML = html || vazio(5, 'Nenhum material cadastrado ainda.');
-}
-function renderFornecedores() {
-  const html = dados.fornecedores.map(f => `
-    <tr class="border-t border-tech-700 hover:bg-tech-700/30 transition-colors">
-      <td class="p-4 text-tech-accent font-mono">#F-${f.id}</td>
-      <td class="p-4 font-semibold">${esc(f.nome)}</td>
-      <td class="p-4 text-gray-300">${esc(f.cnpj) || '-'}</td>
-      <td class="p-4">${esc(f.contato)}</td>
-      <td class="p-4">${esc(f.telefone)}</td>
-      <td class="p-4 flex gap-4 justify-center">
-        <button onclick="abrirFormForn(${f.id})" class="text-blue-400 hover:text-blue-300 font-bold text-sm"><i class="ph ph-pencil-simple mr-1"></i>Editar</button>
-        <button onclick="excluirForn(${f.id})" class="text-red-400 hover:text-red-300 font-bold text-sm"><i class="ph ph-trash mr-1"></i>Excluir</button>
-      </td>
-    </tr>`).join('');
-  $('tbody-fornecedores').innerHTML = html || vazio(6, 'Nenhum fornecedor cadastrado.');
-}
-
-// =====================================================================
-// 6. FORMULÁRIOS
-// =====================================================================
-function abrirFormItem(chave, id, titulos) {
-  const reg = id ? dados[chave].find(i => i.id === id) : null;
-  $('modalItem-titulo').textContent = reg ? titulos.editar : titulos.novo;
-  $('modalItem-titulo').className = 'text-2xl font-bold mb-6 ' + (reg ? 'text-tech-accent' : 'text-white');
-  $('item-nome').value    = reg ? reg.nome : '';
-  $('item-estoque').value = reg ? reg.estoque : '';
-  $('item-min').value     = reg ? reg.min_estoque : '';
-  $('item-erro').textContent = '';
-
-  $('item-salvar').onclick = async () => {
-    const nome = $('item-nome').value.trim();
-    const estoque = num($('item-estoque').value);
-    const min_estoque = num($('item-min').value);
-    if (!nome) return $('item-erro').textContent = 'Informe o nome do item.';
-    if (Number.isNaN(estoque) || Number.isNaN(min_estoque)) return $('item-erro').textContent = 'Quantidade e mínimo precisam ser números.';
-    if (estoque < 0 || min_estoque < 0) return $('item-erro').textContent = 'Use valores iguais ou maiores que zero.';
-
-    const btn = $('item-salvar'); btn.disabled = true; btn.textContent = 'Salvando...';
-    const ok = reg
-      ? await atualizar(chave, reg.id, { nome, estoque, min_estoque })
-      : await inserir(chave, { nome, estoque, min_estoque });
-    btn.disabled = false; btn.textContent = 'Salvar';
-    if (ok) { fecharModal('modalItem'); toast(reg ? 'Item atualizado.' : 'Item cadastrado.'); }
-  };
-  abrirModal('modalItem');
-  $('item-nome').focus();
-}
-
-const abrirFormPeca   = id => abrirFormItem('pecas',  id, { novo:'Cadastrar peça do robô',    editar:'Editar peça' });
-const abrirFormGuepar = id => abrirFormItem('guepar', id, { novo:'Cadastrar material Guepar', editar:'Editar material' });
-
-function abrirFormForn(id) {
-  const reg = id ? dados.fornecedores.find(f => f.id === id) : null;
-  $('modalForn-titulo').textContent = reg ? 'Editar fornecedor' : 'Cadastrar fornecedor';
-  $('modalForn-titulo').className = 'text-2xl font-bold mb-6 ' + (reg ? 'text-tech-accent' : 'text-white');
-  $('forn-nome').value     = reg ? reg.nome : '';
-  $('forn-cnpj').value     = reg ? (reg.cnpj || '') : '';
-  $('forn-contato').value  = reg ? (reg.contato || '') : '';
-  $('forn-telefone').value = reg ? (reg.telefone || '') : '';
-  $('forn-erro').textContent = '';
-
-  $('forn-salvar').onclick = async () => {
-    const registro = {
-      nome: $('forn-nome').value.trim(),
-      cnpj: $('forn-cnpj').value.trim(),
-      contato: $('forn-contato').value.trim(),
-      telefone: $('forn-telefone').value.trim()
-    };
-    if (!registro.nome) return $('forn-erro').textContent = 'Informe o nome da empresa.';
-    if (!registro.contato || !registro.telefone) return $('forn-erro').textContent = 'Contato e telefone são obrigatórios.';
-
-    const btn = $('forn-salvar'); btn.disabled = true; btn.textContent = 'Salvando...';
-    const ok = reg ? await atualizar('fornecedores', reg.id, registro) : await inserir('fornecedores', registro);
-    btn.disabled = false; btn.textContent = 'Salvar';
-    if (ok) { fecharModal('modalForn'); toast(reg ? 'Fornecedor atualizado.' : 'Fornecedor cadastrado.'); }
-  };
-  abrirModal('modalForn');
-  $('forn-nome').focus();
-}
-
-function pedirExclusao(chave, id) {
-  const reg = dados[chave].find(i => i.id === id);
-  confirmar(`Remover “${reg.nome}” do banco? Isso apaga o registro para todos.`, async () => {
-    if (await remover(chave, id)) toast('Registro excluído.');
-  });
-}
-const excluirPeca   = id => pedirExclusao('pecas', id);
-const excluirGuepar = id => pedirExclusao('guepar', id);
-const excluirForn   = id => pedirExclusao('fornecedores', id);
-
-// =====================================================================
-// 7. ASSISTENTE
-// =====================================================================
-function addMensagem(html, lado) {
-  const box = $('chat-box');
-  const div = document.createElement('div');
-  div.className = `flex mb-4 ${lado === 'usuario' ? 'justify-end' : 'justify-start'}`;
-  div.innerHTML = lado === 'usuario'
-    ? `<div class="bg-blue-600 p-4 rounded-xl rounded-tr-none max-w-[80%] shadow-md">${html}</div>`
-    : `<div class="bg-tech-900 border border-tech-700 p-4 rounded-xl rounded-tl-none max-w-[90%] text-gray-300 shadow-lg">${html}</div>`;
-  box.appendChild(div);
-  box.scrollTop = box.scrollHeight;
-  return div;
-}
-
-function contexto() {
-  const todos = [...dados.pecas, ...dados.guepar];
-  return {
-    pecas: dados.pecas, guepar: dados.guepar, fornecedores: dados.fornecedores,
-    faltando: todos.filter(i => i.estoque <= i.min_estoque).map(i => i.nome)
-  };
-}
-
-function respostaLocal(pergunta) {
-  const c = contexto();
-  const q = pergunta.toLowerCase();
-  const lista = arr => arr.map(i => `• ${esc(i.nome)} — ${i.estoque} un. (mínimo ${i.min_estoque})`).join('<br>');
-
-  if (/(falta|repor|acaband|crítico|critico|alerta|comprar)/.test(q))
-    return c.faltando.length
-      ? `Precisam de reposição agora:<br>${c.faltando.map(n => '• ' + esc(n)).join('<br>')}`
-      : 'Nada abaixo do mínimo. Todo o estoque está acima do nível de alerta.';
-  if (/(fornecedor|contato|telefone|cnpj)/.test(q))
-    return `São ${c.fornecedores.length} fornecedores cadastrados:<br>` +
-      c.fornecedores.map(f => `• ${esc(f.nome)} — ${esc(f.contato)}, ${esc(f.telefone)}`).join('<br>');
-  if (/(peça|peca|robô|robo)/.test(q))
-    return c.pecas.length ? `Peças do robô:<br>${lista(c.pecas)}` : 'Nenhuma peça cadastrada ainda.';
-  if (/(guepar|material|materiais|uso)/.test(q))
-    return c.guepar.length ? `Materiais Guepar:<br>${lista(c.guepar)}` : 'A lista de materiais Guepar está vazia.';
-  if (/(relatório|relatorio|resumo|geral|situação|situacao)/.test(q))
-    return `Resumo do estoque:<br>• ${c.pecas.length} peças do robô<br>• ${c.guepar.length} materiais Guepar<br>• ${c.fornecedores.length} fornecedores<br>` +
-      (c.faltando.length ? `<br>Em alerta: ${c.faltando.map(esc).join(', ')}.` : '<br>Nenhum item abaixo do mínimo.');
-  return 'Consigo responder com base no que está cadastrado. Tente: “o que está faltando”, “resumo do estoque”, “listar peças”, “materiais guepar” ou “fornecedores”.';
-}
-
-// Chama a Edge Function, que guarda a chave do Gemini no servidor.
-// Se a função não estiver publicada, cai no modo local sem quebrar.
-async function enviarMensagem() {
-  const input = $('chat-input');
-  const msg = input.value.trim();
-  if (!msg) return;
-  addMensagem(esc(msg), 'usuario');
-  input.value = '';
-
-  const pensando = addMensagem('<span class="italic text-gray-400">Consultando o estoque...</span>', 'ia');
-  try {
-    const { data, error } = await sb.functions.invoke('ia', { body: { mensagem: msg, contexto: contexto() } });
-    pensando.remove();
-    if (error || !data?.resposta) addMensagem(respostaLocal(msg), 'ia');
-    else addMensagem(esc(data.resposta).replace(/\n/g, '<br>'), 'ia');
-  } catch (e) {
-    pensando.remove();
-    addMensagem(respostaLocal(msg), 'ia');
-  }
-}
-$('btn-enviar').onclick = enviarMensagem;
-$('chat-input').addEventListener('keydown', e => { if (e.key === 'Enter') enviarMensagem(); });
-
-// =====================================================================
-// 8. AUTENTICAÇÃO
-// =====================================================================
-async function entrar() {
-  const email = $('login-email').value.trim();
-  const senha = $('login-senha').value;
-  if (!email || !senha) { $('login-erro').textContent = 'Preencha e-mail e senha.'; return; }
-
-  const btn = $('btn-entrar'); btn.disabled = true; btn.textContent = 'Entrando...';
-  const { error } = await sb.auth.signInWithPassword({ email, password: senha });
-  btn.disabled = false; btn.textContent = 'Entrar';
-
-  if (error) {
-    $('login-erro').textContent = /Invalid login/i.test(error.message)
-      ? 'E-mail ou senha incorretos.'
-      : /Email not confirmed/i.test(error.message)
-        ? 'Esse e-mail ainda não foi confirmado no Supabase.'
-        : explicarErro(error);
-  }
-}
-$('btn-entrar').onclick = entrar;
-['login-email','login-senha'].forEach(id => $(id).addEventListener('keydown', e => { if (e.key === 'Enter') entrar(); }));
-$('btn-sair').onclick = () => sb.auth.signOut();
-
-function mostrarApp() {
-  $('tela-login').classList.add('hidden');
-  $('app').classList.remove('hidden');
-  $('usuario-atual').textContent = usuario.email;
-  $('chat-box').innerHTML = '';
-  addMensagem('Estou lendo direto do banco. Pergunte o que está faltando ou peça um resumo do estoque.', 'ia');
-  mudarAba((location.hash || '#dashboard').slice(1));
-  carregarTudo();
-  ouvirMudancas();
-}
-
-function mostrarLogin() {
-  $('app').classList.add('hidden');
-  $('tela-login').classList.remove('hidden');
-  $('login-senha').value = '';
-  $('login-erro').textContent = '';
-  $('login-email').focus();
-}
-
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') document.querySelectorAll('[id^="modal"]').forEach(m => m.classList.add('hidden'));
-});
-
-// =====================================================================
-// 9. INICIALIZAÇÃO
-// =====================================================================
-(function iniciar() {
-  if (SUPABASE_URL.startsWith('COLE') || SUPABASE_ANON_KEY.startsWith('COLE')) {
-    $('tela-config').classList.remove('hidden');
-    return;
-  }
-  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-  // A sessão fica guardada pelo próprio SDK, então recarregar não desloga.
-  sb.auth.onAuthStateChange((evento, sessao) => {
-    usuario = sessao?.user ?? null;
-    if (usuario) mostrarApp(); else mostrarLogin();
-  });
-
-  sb.auth.getSession().then(({ data }) => {
-    usuario = data.session?.user ?? null;
-    if (usuario) mostrarApp(); else mostrarLogin();
-  });
-})();
-</script>
+<script type="module" src="js/main.js"></script>
 </body>
 </html>

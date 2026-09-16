@@ -16,7 +16,7 @@ create table if not exists public.guepar_uso (
   id          bigint generated always as identity primary key,
   nome        text    not null,
   estoque     integer not null default 0 check (estoque >= 0),
-  min_estoque integer not null default 0 check (min_estoque >= 0),
+  marca integer not null default 0 check (marca >= 0),
   criado_em   timestamptz not null default now()
 );
 
@@ -29,17 +29,27 @@ create table if not exists public.fornecedores (
   criado_em timestamptz not null default now()
 );
 
+create table if not exists public.manutencoes (
+  id            bigint generated always as identity primary key,
+  nome          text not null,
+  tipo          text not null default 'bateria',
+  ultima_troca  date,
+  validade      date not null,
+  criado_em     timestamptz not null default now()
+);
+
 -- ---------- Segurança em nível de linha ----------
 -- Sem isto, a chave anon publicada no HTML daria acesso livre ao banco.
 alter table public.pecas        enable row level security;
 alter table public.guepar_uso   enable row level security;
 alter table public.fornecedores enable row level security;
+alter table public.manutencoes  enable row level security;
 
 -- Quem estiver logado lê e escreve; quem não estiver não enxerga nada.
 do $$
 declare t text;
 begin
-  foreach t in array array['pecas','guepar_uso','fornecedores'] loop
+  foreach t in array array['pecas','guepar_uso','fornecedores','manutencoes'] loop
     execute format('drop policy if exists "acesso_autenticado" on public.%I', t);
     execute format(
       'create policy "acesso_autenticado" on public.%I
@@ -54,6 +64,7 @@ end $$;
 alter publication supabase_realtime add table public.pecas;
 alter publication supabase_realtime add table public.guepar_uso;
 alter publication supabase_realtime add table public.fornecedores;
+alter publication supabase_realtime add table public.manutencoes;
 
 -- ---------- Dados que já existiam no sistema_web.db ----------
 insert into public.pecas (nome, estoque, min_estoque) values
