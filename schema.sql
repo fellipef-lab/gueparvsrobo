@@ -16,7 +16,7 @@ create table if not exists public.guepar_uso (
   id          bigint generated always as identity primary key,
   nome        text    not null,
   estoque     integer not null default 0 check (estoque >= 0),
-  marca integer not null default 0 check (marca >= 0),
+  marca       text,
   criado_em   timestamptz not null default now()
 );
 
