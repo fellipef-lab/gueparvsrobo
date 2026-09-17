@@ -8,7 +8,7 @@ import { $, esc } from './utils.js';
 export function renderDashboard() {
   const { dados } = state;
   const criticas  = dados.pecas.filter(p => p.estoque <= p.min_estoque);
-  const criticosG = dados.guepar.filter(g => g.estoque <= g.min_estoque);
+  const criticosG = dados.guepar.filter(g => g.estoque <= 0);
 
   const card = (icone, titulo, valor, unidade, rodape) => `
     <div class="bg-tech-800 p-6 rounded-lg border border-tech-700 shadow-lg relative overflow-hidden">
@@ -37,7 +37,7 @@ export function renderDashboard() {
       <ul class="space-y-2">${faltando.map(i => `
         <li class="flex justify-between border-b border-tech-700 pb-2 last:border-0">
           <span>${esc(i.nome)}</span>
-          <span class="text-gray-400 text-sm">${i.estoque} em estoque · mínimo ${i.min_estoque}</span>
+          <span class="text-gray-400 text-sm">${i.estoque} em estoque${i.min_estoque != null ? ' · mínimo ' + i.min_estoque : ''}</span>
         </li>`).join('')}</ul>
     </div>` : '';
 }

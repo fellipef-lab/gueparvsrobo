@@ -19,17 +19,19 @@ export function addMensagem(html, lado) {
 
 function contexto() {
   const { dados } = state;
-  const todos = [...dados.pecas, ...dados.guepar];
+  const faltandoPecas  = dados.pecas.filter(p => p.estoque <= p.min_estoque).map(p => p.nome);
+  const faltandoGuepar = dados.guepar.filter(g => g.estoque <= 0).map(g => g.nome);
   return {
     pecas: dados.pecas, guepar: dados.guepar, fornecedores: dados.fornecedores,
-    faltando: todos.filter(i => i.estoque <= i.min_estoque).map(i => i.nome)
+    faltando: [...faltandoPecas, ...faltandoGuepar]
   };
 }
 
 function respostaLocal(pergunta) {
   const c = contexto();
   const q = pergunta.toLowerCase();
-  const lista = arr => arr.map(i => `• ${esc(i.nome)} — ${i.estoque} un. (mínimo ${i.min_estoque})`).join('<br>');
+  const listaPecas  = arr => arr.map(i => `• ${esc(i.nome)} — ${i.estoque} un. (mínimo ${i.min_estoque})`).join('<br>');
+  const listaGuepar = arr => arr.map(i => `• ${esc(i.nome)}${i.marca ? ' (' + esc(i.marca) + ')' : ''} — ${i.estoque} un.`).join('<br>');
 
   if (/(falta|repor|acaband|crítico|critico|alerta|comprar)/.test(q))
     return c.faltando.length
@@ -39,9 +41,9 @@ function respostaLocal(pergunta) {
     return `São ${c.fornecedores.length} fornecedores cadastrados:<br>` +
       c.fornecedores.map(f => `• ${esc(f.nome)} — ${esc(f.contato)}, ${esc(f.telefone)}`).join('<br>');
   if (/(peça|peca|robô|robo)/.test(q))
-    return c.pecas.length ? `Peças do robô:<br>${lista(c.pecas)}` : 'Nenhuma peça cadastrada ainda.';
+    return c.pecas.length ? `Peças do robô:<br>${listaPecas(c.pecas)}` : 'Nenhuma peça cadastrada ainda.';
   if (/(guepar|material|materiais|uso)/.test(q))
-    return c.guepar.length ? `Materiais Guepar:<br>${lista(c.guepar)}` : 'A lista de materiais Guepar está vazia.';
+    return c.guepar.length ? `Materiais Guepar:<br>${listaGuepar(c.guepar)}` : 'A lista de materiais Guepar está vazia.';
   if (/(relatório|relatorio|resumo|geral|situação|situacao)/.test(q))
     return `Resumo do estoque:<br>• ${c.pecas.length} peças do robô<br>• ${c.guepar.length} materiais Guepar<br>• ${c.fornecedores.length} fornecedores<br>` +
       (c.faltando.length ? `<br>Em alerta: ${c.faltando.map(esc).join(', ')}.` : '<br>Nenhum item abaixo do mínimo.');
