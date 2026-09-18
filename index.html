@@ -100,8 +100,26 @@ tailwind.config = { theme: { extend: { colors: { tech: { 900:'#0b1120', 800:'#15
   <main class="flex-1 p-4 md:p-8 overflow-y-auto md:h-screen">
 
     <section id="tab-dashboard" class="tab-content hidden">
-      <h2 class="text-2xl md:text-3xl font-bold mb-6 md:mb-8">Dashboard geral</h2>
-      <div id="cards-dashboard" class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6"></div>
+
+      <!-- Cabeçalho + acesso rápido ao relatório -->
+      <div class="flex flex-wrap gap-4 justify-between items-end mb-6 md:mb-8">
+        <div>
+          <h2 class="text-2xl md:text-3xl font-bold">Dashboard geral</h2>
+          <p class="text-gray-400 text-sm mt-1">Manutenções e Guepar uso em destaque — é o que pede atenção no dia a dia.</p>
+        </div>
+        <button onclick="gerarRelatorioGeral()"
+                class="bg-tech-accent hover:bg-cyan-300 text-tech-900 px-4 py-2.5 rounded-lg font-bold transition-colors flex items-center gap-2 shrink-0">
+          <i class="ph ph-file-text text-lg"></i> Relatório completo
+        </button>
+      </div>
+
+      <!-- Destaques: Manutenções + Guepar uso -->
+      <div id="cards-destaque" class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-4 md:mb-6"></div>
+
+      <!-- Secundários: Peças + Fornecedores -->
+      <div id="cards-secundarios" class="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6"></div>
+
+      <!-- Lista unificada de prioridades -->
       <div id="alertas-dashboard" class="mt-6 md:mt-8"></div>
     </section>
 
@@ -134,8 +152,7 @@ tailwind.config = { theme: { extend: { colors: { tech: { 900:'#0b1120', 800:'#15
           <thead class="bg-tech-700/50"><tr>
             <th class="p-4 text-gray-400 text-sm font-semibold">Cód.</th>
             <th class="p-4 text-gray-400 text-sm font-semibold">Nome do item</th>
-            <th class="p-4 text-gray-400 text-sm font-semibold">Marca</th>
-            <th class="p-4 text-gray-400 text-sm font-semibold">Qtd.</th>
+            <th class="p-4 text-gray-400 text-sm font-semibold">Qtd / mínimo</th>
             <th class="p-4 text-gray-400 text-sm font-semibold">Status</th>
             <th class="p-4 text-gray-400 text-sm font-semibold text-center">Ações</th>
           </tr></thead>
@@ -182,7 +199,6 @@ tailwind.config = { theme: { extend: { colors: { tech: { 900:'#0b1120', 800:'#15
                     <tr>
                         <th class="p-4 text-gray-400 text-sm font-semibold">Nome</th>
                         <th class="p-4 text-gray-400 text-sm font-semibold">Tipo</th>
-                        <th class="p-4 text-gray-400 text-sm font-semibold">Última troca</th>
                         <th class="p-4 text-gray-400 text-sm font-semibold">Validade (Status)</th>
                         <th class="p-4 text-gray-400 text-sm font-semibold text-center">Ações</th>
                     </tr>
@@ -239,32 +255,6 @@ tailwind.config = { theme: { extend: { colors: { tech: { 900:'#0b1120', 800:'#15
   </div>
 </div>
 
-<div id="modalGuepar" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm p-4">
-  <div class="bg-tech-800 p-6 sm:p-8 rounded-xl border border-tech-700 w-full max-w-[450px] shadow-2xl">
-    <h3 id="modalGuepar-titulo" class="text-2xl font-bold mb-6"></h3>
-    <div class="space-y-5">
-      <div>
-        <label class="block text-sm font-semibold text-gray-300 mb-2">Nome</label>
-        <input id="guepar-nome" type="text" class="w-full bg-tech-900 p-3 rounded-lg border border-tech-600 focus:border-tech-accent outline-none text-white">
-      </div>
-      <div>
-        <label class="block text-sm font-semibold text-gray-300 mb-2">Marca</label>
-        <input id="guepar-marca" type="text" class="w-full bg-tech-900 p-3 rounded-lg border border-tech-600 focus:border-tech-accent outline-none text-white">
-      </div>
-      <div>
-        <label class="block text-sm font-semibold text-gray-300 mb-2">Qtd. atual</label>
-        <input id="guepar-estoque" type="number" min="0" class="w-full bg-tech-900 p-3 rounded-lg border border-tech-600 focus:border-tech-accent outline-none text-white">
-      </div>
-    </div>
-    <p id="guepar-erro" class="text-red-400 text-sm mt-3 min-h-[20px]"></p>
-    <div class="flex justify-end gap-3 mt-4">
-      <button onclick="fecharModal('modalGuepar')" class="px-5 py-2.5 rounded-lg bg-tech-700 hover:bg-tech-600 font-bold transition-colors">Cancelar</button>
-      <button id="guepar-salvar" class="px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 font-bold transition-colors">Salvar</button>
-    </div>
-  </div>
-</div>
-
-
 <div id="modalForn" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm p-4">
   <div class="bg-tech-800 p-6 sm:p-8 rounded-xl border border-tech-700 w-full max-w-[450px] shadow-2xl">
     <h3 id="modalForn-titulo" class="text-2xl font-bold mb-6"></h3>
@@ -313,7 +303,7 @@ tailwind.config = { theme: { extend: { colors: { tech: { 900:'#0b1120', 800:'#15
 <div id="modal-manutencao" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
     <div class="bg-tech-800 p-6 rounded-xl border border-tech-700 shadow-2xl w-full max-w-md">
         <h3 class="text-xl font-bold mb-4 text-tech-accent flex items-center gap-2">
-            <i class="ph ph-wrench"></i> <span id="modal-manutencao-titulo">Agendar Manutenção</span>
+            <i class="ph ph-wrench"></i> Agendar Manutenção
         </h3>
         
         <div class="space-y-4">
@@ -332,18 +322,12 @@ tailwind.config = { theme: { extend: { colors: { tech: { 900:'#0b1120', 800:'#15
             </div>
 
             <div>
-                <label class="block text-sm text-gray-400 mb-1">Última troca</label>
-                <input type="date" id="manu-ultima-troca" class="w-full bg-tech-900 border border-gray-700 rounded p-2 text-white outline-none focus:border-tech-accent">
-            </div>
-
-            <div>
                 <label class="block text-sm text-gray-400 mb-1">Data de Validade</label>
                 <input type="date" id="manu-validade" class="w-full bg-tech-900 border border-gray-700 rounded p-2 text-white outline-none focus:border-tech-accent">
             </div>
         </div>
-        <p id="manu-erro" class="text-red-400 text-sm mt-3 min-h-[20px]"></p>
 
-        <div class="flex justify-end gap-3 mt-2">
+        <div class="flex justify-end gap-3 mt-6">
             <button onclick="fecharModalManutencao()" class="px-5 py-2.5 rounded bg-gray-700 hover:bg-gray-600 transition-colors">Cancelar</button>
             <button onclick="salvarManutencao()" class="px-5 py-2.5 rounded bg-blue-600 text-white font-bold hover:bg-blue-500 transition-colors">Salvar</button>
         </div>

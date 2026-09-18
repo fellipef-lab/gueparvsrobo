@@ -16,7 +16,7 @@ create table if not exists public.guepar_uso (
   id          bigint generated always as identity primary key,
   nome        text    not null,
   estoque     integer not null default 0 check (estoque >= 0),
-  marca       text,
+  marca integer not null default 0 check (marca >= 0),
   criado_em   timestamptz not null default now()
 );
 
@@ -30,12 +30,11 @@ create table if not exists public.fornecedores (
 );
 
 create table if not exists public.manutencoes (
-  id            bigint generated always as identity primary key,
-  nome          text not null,
-  tipo          text not null default 'bateria',
-  ultima_troca  date,
-  validade      date not null,
-  criado_em     timestamptz not null default now()
+  id        bigint generated always as identity primary key,
+  nome      text not null,
+  tipo      text not null default 'bateria',
+  validade  date not null,
+  criado_em timestamptz not null default now()
 );
 
 -- ---------- Segurança em nível de linha ----------
