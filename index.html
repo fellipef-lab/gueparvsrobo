@@ -7,6 +7,7 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://unpkg.com/@phosphor-icons/web"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 tailwind.config = { theme: { extend: { colors: { tech: { 900:'#0b1120', 800:'#151e2e', 700:'#1e293b', 600:'#334155', accent:'#00e5ff' } } } } }
 </script>
@@ -15,145 +16,145 @@ tailwind.config = { theme: { extend: { colors: { tech: { 900:'#0b1120', 800:'#15
   ::-webkit-scrollbar { width: 10px; }
   ::-webkit-scrollbar-track { background: #0b1120; }
   ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 6px; }
+  @media print {
+    body * { visibility: hidden; }
+    #area-impressao, #area-impressao * { visibility: visible; }
+    #area-impressao { position: absolute; left: 0; top: 0; width: 100%; color: black !important; }
+  }
 </style>
 </head>
 <body class="bg-tech-900 text-white min-h-screen">
 
-<!-- ====================== CONFIGURAÇÃO PENDENTE ====================== -->
 <div id="tela-config" class="hidden fixed inset-0 z-[70] flex items-center justify-center bg-tech-900 p-4">
   <div class="bg-tech-800 p-8 rounded-xl border border-yellow-500/50 max-w-[520px] shadow-2xl">
     <h2 class="text-xl font-bold mb-3 flex items-center gap-2"><i class="ph ph-plugs text-yellow-400 text-2xl"></i> Falta conectar o Supabase</h2>
-    <p class="text-gray-300 text-sm leading-relaxed mb-4">
-      Abra este arquivo em um editor e preencha <code class="text-tech-accent">SUPABASE_URL</code> e
-      <code class="text-tech-accent">SUPABASE_ANON_KEY</code> no topo do script. Os dois valores estão no painel do
-      Supabase em <span class="text-white">Project Settings → API</span>.
-    </p>
-    <p class="text-gray-400 text-xs leading-relaxed">
-      A chave anon é pública por natureza e pode ficar no HTML. Quem protege o banco é o RLS do schema.sql,
-      não o sigilo dessa chave.
-    </p>
+    <p class="text-gray-300 text-sm leading-relaxed mb-4">Preencha SUPABASE_URL e SUPABASE_ANON_KEY no topo do script.</p>
   </div>
 </div>
 
-<!-- ====================== TELA DE LOGIN ====================== -->
 <div id="tela-login" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-tech-900 p-4">
   <div class="bg-tech-800 p-6 sm:p-10 rounded-xl border border-tech-accent/60 shadow-2xl w-full max-w-[360px] text-center">
     <h2 class="text-2xl font-bold text-tech-accent mb-1">Guepar <span class="text-sm text-gray-400 font-normal">vs</span> RobÔ</h2>
     <p class="text-gray-400 text-sm mb-6">Acesso restrito</p>
     <div class="space-y-3 text-left">
-      <input id="login-email" type="email" placeholder="E-mail" autocomplete="username"
-             class="w-full bg-tech-900 p-3 rounded-lg border border-tech-600 focus:border-tech-accent outline-none text-white">
-      <input id="login-senha" type="password" placeholder="Senha" autocomplete="current-password"
-             class="w-full bg-tech-900 p-3 rounded-lg border border-tech-600 focus:border-tech-accent outline-none text-white">
+      <input id="login-email" type="email" placeholder="E-mail" class="w-full bg-tech-900 p-3 rounded-lg border border-tech-600 focus:border-tech-accent outline-none text-white">
+      <input id="login-senha" type="password" placeholder="Senha" class="w-full bg-tech-900 p-3 rounded-lg border border-tech-600 focus:border-tech-accent outline-none text-white">
       <button id="btn-entrar" class="w-full bg-tech-accent hover:bg-cyan-300 text-tech-900 font-bold p-3 rounded-lg transition-colors">Entrar</button>
     </div>
     <p id="login-erro" class="text-red-400 text-sm mt-3 min-h-[20px]"></p>
-    <p class="text-gray-500 text-xs mt-4 leading-relaxed">
-      As contas são criadas no Supabase, em Authentication → Users.
-    </p>
   </div>
 </div>
 
-<!-- ====================== APP ====================== -->
 <div id="app" class="hidden min-h-screen md:flex">
-
-  <!-- Barra superior — só em telas pequenas -->
-  <div class="md:hidden sticky top-0 z-40 bg-tech-800 border-b border-tech-700 flex items-center justify-between px-4 py-3">
-    <div class="flex items-center gap-2">
-      <img src="guepar.jpeg" alt="" onerror="this.replaceWith(logoFallback())"
-           class="h-8 w-8 object-contain bg-white rounded-full">
-      <span class="font-bold text-tech-accent text-sm">Guepar <span class="text-gray-400 font-normal">vs</span> RobÔ</span>
-    </div>
-    <button id="btn-menu-mobile" class="text-2xl text-gray-300 p-1"><i class="ph ph-list"></i></button>
-  </div>
-
-  <!-- Fundo escuro atrás do menu, só quando aberto no celular -->
-  <div id="overlay-menu" class="hidden fixed inset-0 bg-black/60 z-40 md:hidden"></div>
-
   <aside id="sidebar" class="hidden md:flex fixed md:static inset-y-0 left-0 z-50 w-64 bg-tech-800 border-r border-tech-700 flex-col shrink-0">
     <div class="p-6 border-b border-tech-700 flex items-center justify-between">
       <div class="flex items-center">
-        <img src="guepar.jpeg" alt="" onerror="this.replaceWith(logoFallback())"
-             class="h-10 w-10 object-contain bg-white rounded-full mr-3">
+        <img src="guepar.jpeg" alt="" onerror="this.src='guepar1.png'" class="h-10 w-10 object-contain bg-white rounded-full mr-3">
         <h1 class="text-xl font-bold text-tech-accent">Guepar <span class="text-sm text-gray-400 font-normal">vs</span> RobÔ</h1>
       </div>
-      <button id="btn-fechar-menu" class="md:hidden text-2xl text-gray-400 p-1"><i class="ph ph-x"></i></button>
     </div>
     <nav class="flex-1 p-3 space-y-1 mt-4 text-[15px] font-medium pr-4 overflow-y-auto">
-      <button data-tab="dashboard"    class="menu-btn w-full flex items-center gap-3 p-3 rounded-r-lg text-gray-400 hover:text-white hover:bg-tech-700/50 transition-all"><i class="ph ph-squares-four text-xl"></i> Dashboard</button>
-      <button data-tab="pecas"        class="menu-btn w-full flex items-center gap-3 p-3 rounded-r-lg text-gray-400 hover:text-white hover:bg-tech-700/50 transition-all"><i class="ph ph-cpu text-xl"></i> Peças do Robô</button>
-      <button data-tab="guepar"       class="menu-btn w-full flex items-center gap-3 p-3 rounded-r-lg text-gray-400 hover:text-white hover:bg-tech-700/50 transition-all"><i class="ph ph-wrench text-xl"></i> Guepar Uso</button>
+      <button data-tab="dashboard" class="menu-btn w-full flex items-center gap-3 p-3 rounded-r-lg text-gray-400 hover:text-white hover:bg-tech-700/50 transition-all"><i class="ph ph-squares-four text-xl"></i> Dashboard</button>
+      <button data-tab="manutencoes" class="menu-btn w-full flex items-center gap-3 p-3 rounded-r-lg text-gray-400 hover:text-white hover:bg-tech-700/50 transition-all"><i class="ph ph-calendar text-xl"></i> Manutenções</button>
+      <button data-tab="guepar" class="menu-btn w-full flex items-center gap-3 p-3 rounded-r-lg text-gray-400 hover:text-white hover:bg-tech-700/50 transition-all"><i class="ph ph-wrench text-xl"></i> Guepar Uso</button>
+      <button data-tab="pecas" class="menu-btn w-full flex items-center gap-3 p-3 rounded-r-lg text-gray-400 hover:text-white hover:bg-tech-700/50 transition-all"><i class="ph ph-cpu text-xl"></i> Peças do Robô</button>
       <button data-tab="fornecedores" class="menu-btn w-full flex items-center gap-3 p-3 rounded-r-lg text-gray-400 hover:text-white hover:bg-tech-700/50 transition-all"><i class="ph ph-users text-xl"></i> Fornecedores</button>
-      <button data-tab="manutencoes"  class="menu-btn w-full flex items-center gap-3 p-3 rounded-r-lg text-gray-400 hover:text-white hover:bg-tech-700/50 transition-all"><i class="ph ph-calendar text-xl"></i> Manutenções</button>
-      <button data-tab="ia"           class="menu-btn w-full flex items-center gap-3 p-3 rounded-r-lg text-gray-400 hover:text-white hover:bg-tech-700/50 transition-all"><i class="ph ph-sparkle text-xl"></i> Assistente <span class="w-2 h-2 rounded-full bg-tech-accent ml-auto glow-dot"></span></button>
+      <button data-tab="ia" class="menu-btn w-full flex items-center gap-3 p-3 rounded-r-lg text-gray-400 hover:text-white hover:bg-tech-700/50 transition-all"><i class="ph ph-sparkle text-xl"></i> Assistente</button>
     </nav>
     <div class="p-4 border-t border-tech-700">
-      <div class="flex items-center gap-2 text-xs text-gray-500 mb-3">
-        <span id="ponto-conexao" class="w-2 h-2 rounded-full bg-gray-600 shrink-0"></span>
-        <span id="texto-conexao" class="truncate">Conectando...</span>
-      </div>
-      <p id="usuario-atual" class="text-sm text-gray-400 truncate mb-2"></p>
       <button id="btn-sair" class="w-full flex items-center gap-2 text-gray-400 hover:text-red-400 p-2 rounded transition-all text-sm"><i class="ph ph-sign-out text-lg"></i> Sair do sistema</button>
     </div>
   </aside>
 
   <main class="flex-1 p-4 md:p-8 overflow-y-auto md:h-screen">
-
+    
+    <!-- DASHBOARD INTEGRAL -->
     <section id="tab-dashboard" class="tab-content hidden">
-
-      <!-- Cabeçalho + acesso rápido ao relatório -->
-      <div class="flex flex-wrap gap-4 justify-between items-end mb-6 md:mb-8">
+      <div class="flex flex-wrap gap-4 justify-between items-center mb-6">
         <div>
-          <h2 class="text-2xl md:text-3xl font-bold">Dashboard geral</h2>
-          <p class="text-gray-400 text-sm mt-1">Manutenções e Guepar uso em destaque — é o que pede atenção no dia a dia.</p>
+          <h2 class="text-2xl md:text-3xl font-bold">Dashboard Geral</h2>
+          <p class="text-tech-accent text-sm font-semibold">Destaque Operacional: Manutenções e Guepar Uso</p>
         </div>
-        <button onclick="gerarRelatorioGeral()"
-                class="bg-tech-accent hover:bg-cyan-300 text-tech-900 px-4 py-2.5 rounded-lg font-bold transition-colors flex items-center gap-2 shrink-0">
-          <i class="ph ph-file-text text-lg"></i> Relatório completo
-        </button>
+        <div class="flex gap-2">
+          <button onclick="gerarRelatorio('tudo')" class="bg-tech-accent text-tech-900 px-4 py-2 rounded-lg font-bold hover:bg-cyan-300 transition-colors flex items-center gap-2">
+            <i class="ph ph-printer"></i> Relatório Geral
+          </button>
+        </div>
       </div>
 
-      <!-- Destaques: Manutenções + Guepar uso -->
-      <div id="cards-destaque" class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-4 md:mb-6"></div>
+      <!-- CARDS DE DESTAQUE PRINCIPAIS -->
+      <div id="cards-destaque-main" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6"></div>
 
-      <!-- Secundários: Peças + Fornecedores -->
-      <div id="cards-secundarios" class="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6"></div>
+      <!-- CARDS SECUNDÁRIOS -->
+      <div id="cards-secundarios-main" class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8"></div>
 
-      <!-- Lista unificada de prioridades -->
-      <div id="alertas-dashboard" class="mt-6 md:mt-8"></div>
+      <!-- PAINEL VISUAL DE MANUTENÇÕES -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div class="bg-tech-800 p-6 rounded-xl border border-tech-700 shadow-lg flex flex-col items-center">
+            <h3 class="text-lg font-bold text-tech-accent mb-4 w-full text-left flex items-center gap-2">
+                <i class="ph ph-chart-pie-slice text-xl"></i> Status de Validade de Manutenções
+            </h3>
+            <div class="relative w-full max-w-[260px] aspect-square">
+                <canvas id="grafico-manutencoes"></canvas>
+            </div>
+        </div>
+
+        <div class="bg-tech-800 p-6 rounded-xl border border-tech-700 shadow-lg">
+            <h3 class="text-lg font-bold text-tech-accent mb-4 flex items-center gap-2">
+                <i class="ph ph-warning-circle text-xl"></i> Alertas e Ações Prioritárias
+            </h3>
+            <div id="alertas-dashboard" class="space-y-3"></div>
+        </div>
+      </div>
     </section>
 
-    <section id="tab-pecas" class="tab-content hidden">
+    <!-- TABELA: MANUTENÇÕES -->
+    <section id="tab-manutencoes" class="tab-content hidden">
       <div class="flex flex-wrap gap-3 justify-between items-center mb-6">
-        <h2 class="text-xl md:text-2xl font-bold">Peças do robô</h2>
-        <button onclick="abrirFormPeca()" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded font-bold transition-colors">+ Nova peça</button>
+        <div>
+          <h2 class="text-xl md:text-2xl font-bold">Manutenções</h2>
+          <p class="text-gray-400 text-sm">Controle de preventivas, baterias e revisões</p>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="gerarRelatorio('manutencoes')" class="bg-tech-700 hover:bg-tech-600 px-3 py-2 rounded font-bold text-sm transition-colors flex items-center gap-1"><i class="ph ph-file-pdf"></i> Relatório</button>
+          <button onclick="abrirModalManutencao()" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded font-bold transition-colors">+ Nova Manutenção</button>
+        </div>
       </div>
-      <div class="bg-tech-800 rounded-lg border border-tech-700 shadow-lg overflow-x-auto">
+      <div class="bg-tech-800 rounded-xl border border-tech-700 shadow-lg overflow-x-auto">
         <table class="w-full min-w-[640px] text-left">
-          <thead class="bg-tech-700/50"><tr>
-            <th class="p-4 text-gray-400 text-sm font-semibold">Cód.</th>
-            <th class="p-4 text-gray-400 text-sm font-semibold">Nome da peça</th>
-            <th class="p-4 text-gray-400 text-sm font-semibold">Estoque / mínimo</th>
-            <th class="p-4 text-gray-400 text-sm font-semibold">Status</th>
-            <th class="p-4 text-gray-400 text-sm font-semibold text-center">Ações</th>
-          </tr></thead>
-          <tbody id="tbody-pecas"></tbody>
+          <thead class="bg-tech-700/50">
+            <tr>
+              <th class="p-4 text-gray-400 text-sm font-semibold">Equipamento/Nome</th>
+              <th class="p-4 text-gray-400 text-sm font-semibold">Tipo</th>
+              <th class="p-4 text-gray-400 text-sm font-semibold">Última Troca</th>
+              <th class="p-4 text-gray-400 text-sm font-semibold">Validade</th>
+              <th class="p-4 text-gray-400 text-sm font-semibold text-center">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tabela-manutencoes" class="divide-y divide-gray-800"></tbody>
         </table>
       </div>
     </section>
 
+    <!-- TABELA: GUEPAR USO -->
     <section id="tab-guepar" class="tab-content hidden">
       <div class="flex flex-wrap gap-3 justify-between items-center mb-6">
-        <h2 class="text-xl md:text-2xl font-bold">Guepar uso (materiais)</h2>
-        <button onclick="abrirFormGuepar()" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded font-bold transition-colors">+ Novo item</button>
+        <div>
+          <h2 class="text-xl md:text-2xl font-bold">Guepar Uso (Materiais)</h2>
+          <p class="text-gray-400 text-sm">Consumíveis e materiais de suporte</p>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="gerarRelatorio('guepar')" class="bg-tech-700 hover:bg-tech-600 px-3 py-2 rounded font-bold text-sm transition-colors flex items-center gap-1"><i class="ph ph-file-pdf"></i> Relatório</button>
+          <button onclick="abrirFormGuepar()" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded font-bold transition-colors">+ Novo Item</button>
+        </div>
       </div>
       <div class="bg-tech-800 rounded-lg border border-tech-700 shadow-lg overflow-x-auto">
         <table class="w-full min-w-[640px] text-left">
           <thead class="bg-tech-700/50"><tr>
             <th class="p-4 text-gray-400 text-sm font-semibold">Cód.</th>
-            <th class="p-4 text-gray-400 text-sm font-semibold">Nome do item</th>
-            <th class="p-4 text-gray-400 text-sm font-semibold">Qtd / mínimo</th>
-            <th class="p-4 text-gray-400 text-sm font-semibold">Status</th>
+            <th class="p-4 text-gray-400 text-sm font-semibold">Item</th>
+            <th class="p-4 text-gray-400 text-sm font-semibold">Marca</th>
+            <th class="p-4 text-gray-400 text-sm font-semibold">Qtd. Estoque</th>
             <th class="p-4 text-gray-400 text-sm font-semibold text-center">Ações</th>
           </tr></thead>
           <tbody id="tbody-guepar"></tbody>
@@ -161,10 +162,36 @@ tailwind.config = { theme: { extend: { colors: { tech: { 900:'#0b1120', 800:'#15
       </div>
     </section>
 
+    <!-- TABELA: PEÇAS DO ROBÔ -->
+    <section id="tab-pecas" class="tab-content hidden">
+      <div class="flex flex-wrap gap-3 justify-between items-center mb-6">
+        <h2 class="text-xl md:text-2xl font-bold">Peças do Robô</h2>
+        <div class="flex gap-2">
+          <button onclick="gerarRelatorio('pecas')" class="bg-tech-700 hover:bg-tech-600 px-3 py-2 rounded font-bold text-sm transition-colors flex items-center gap-1"><i class="ph ph-file-pdf"></i> Relatório</button>
+          <button onclick="abrirFormPeca()" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded font-bold transition-colors">+ Nova Peça</button>
+        </div>
+      </div>
+      <div class="bg-tech-800 rounded-lg border border-tech-700 shadow-lg overflow-x-auto">
+        <table class="w-full min-w-[640px] text-left">
+          <thead class="bg-tech-700/50"><tr>
+            <th class="p-4 text-gray-400 text-sm font-semibold">Cód.</th>
+            <th class="p-4 text-gray-400 text-sm font-semibold">Nome da peça</th>
+            <th class="p-4 text-gray-400 text-sm font-semibold">Estoque / Mínimo</th>
+            <th class="p-4 text-gray-400 text-sm font-semibold text-center">Ações</th>
+          </tr></thead>
+          <tbody id="tbody-pecas"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- TABELA: FORNECEDORES -->
     <section id="tab-fornecedores" class="tab-content hidden">
       <div class="flex flex-wrap gap-3 justify-between items-center mb-6">
-        <h2 class="text-xl md:text-2xl font-bold">Diretório de fornecedores</h2>
-        <button onclick="abrirFormForn()" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded font-bold transition-colors">+ Novo fornecedor</button>
+        <h2 class="text-xl md:text-2xl font-bold">Fornecedores</h2>
+        <div class="flex gap-2">
+          <button onclick="gerarRelatorio('fornecedores')" class="bg-tech-700 hover:bg-tech-600 px-3 py-2 rounded font-bold text-sm transition-colors flex items-center gap-1"><i class="ph ph-file-pdf"></i> Relatório</button>
+          <button onclick="abrirFormForn()" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded font-bold transition-colors">+ Novo Fornecedor</button>
+        </div>
       </div>
       <div class="bg-tech-800 rounded-lg border border-tech-700 shadow-lg overflow-x-auto">
         <table class="w-full min-w-[720px] text-left">
@@ -181,45 +208,14 @@ tailwind.config = { theme: { extend: { colors: { tech: { 900:'#0b1120', 800:'#15
       </div>
     </section>
 
-    <!-- ================= SEÇÃO: MANUTENÇÕES ================= -->
-    <section id="tab-manutencoes" class="tab-content hidden">
-        <div class="flex flex-wrap gap-3 justify-between items-center mb-6">
-            <div>
-                <h2 class="text-xl md:text-2xl font-bold">Manutenções</h2>
-                <p class="text-tech-accent text-sm mt-1 font-semibold">Controle de Validade e Revisões</p>
-            </div>
-            <button onclick="abrirModalManutencao()" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded font-bold transition-colors">
-                + Nova Manutenção
-            </button>
-        </div>
-
-        <div class="bg-tech-800 rounded-xl border border-tech-700 shadow-lg overflow-x-auto">
-            <table class="w-full min-w-[640px] text-left border-collapse">
-                <thead class="bg-tech-700/50">
-                    <tr>
-                        <th class="p-4 text-gray-400 text-sm font-semibold">Nome</th>
-                        <th class="p-4 text-gray-400 text-sm font-semibold">Tipo</th>
-                        <th class="p-4 text-gray-400 text-sm font-semibold">Validade (Status)</th>
-                        <th class="p-4 text-gray-400 text-sm font-semibold text-center">Ações</th>
-                    </tr>
-                </thead>
-                <tbody id="tabela-manutencoes" class="divide-y divide-gray-800">
-                    <!-- Linhas geradas pelo JS -->
-                </tbody>
-            </table>
-        </div>
-    </section>
-
-    <section id="tab-ia" class="tab-content hidden flex-col h-[calc(100vh-160px)] md:h-[calc(100vh-100px)]">
-      <h2 class="text-2xl md:text-3xl font-bold text-tech-accent flex items-center gap-3 mb-4 md:mb-6"><i class="ph ph-sparkle"></i> Assistente de estoque</h2>
+    <!-- TABELA: ASSISTENTE IA -->
+    <section id="tab-ia" class="tab-content hidden flex-col h-[calc(100vh-100px)]">
+      <h2 class="text-2xl font-bold text-tech-accent mb-4"><i class="ph ph-sparkle"></i> Assistente de Estoque</h2>
       <div class="bg-tech-800 flex-1 rounded-xl border border-tech-700 shadow-2xl flex flex-col overflow-hidden">
-        <div id="chat-box" class="flex-1 p-4 md:p-6 overflow-y-auto"></div>
-        <div class="p-3 md:p-4 bg-tech-900 border-t border-tech-700 flex gap-2 md:gap-3 items-center">
-          <input id="chat-input" type="text" placeholder="Pergunte sobre o estoque..."
-                 class="flex-1 min-w-0 bg-tech-800 p-3 md:p-4 rounded-xl border border-tech-600 focus:border-tech-accent outline-none text-white text-sm md:text-base">
-          <button id="btn-enviar" class="bg-tech-accent hover:bg-cyan-300 text-tech-900 px-4 md:px-6 py-3 md:py-4 rounded-xl font-bold transition-colors flex items-center gap-2 shrink-0">
-            <span class="hidden sm:inline">Enviar</span> <i class="ph ph-paper-plane-right font-bold"></i>
-          </button>
+        <div id="chat-box" class="flex-1 p-6 overflow-y-auto"></div>
+        <div class="p-4 bg-tech-900 border-t border-tech-700 flex gap-3">
+          <input id="chat-input" type="text" placeholder="Pergunte sobre o estoque..." class="flex-1 bg-tech-800 p-3 rounded-xl border border-tech-600 outline-none text-white">
+          <button id="btn-enviar" class="bg-tech-accent text-tech-900 px-6 py-3 rounded-xl font-bold">Enviar</button>
         </div>
       </div>
     </section>
@@ -227,112 +223,131 @@ tailwind.config = { theme: { extend: { colors: { tech: { 900:'#0b1120', 800:'#15
   </main>
 </div>
 
-<!-- ====================== MODAIS ====================== -->
-<div id="modalItem" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm p-4">
-  <div class="bg-tech-800 p-6 sm:p-8 rounded-xl border border-tech-700 w-full max-w-[450px] shadow-2xl">
-    <h3 id="modalItem-titulo" class="text-2xl font-bold mb-6"></h3>
-    <div class="space-y-5">
+<!-- ================= MODAIS DE CADASTRO E EDIÇÃO ================= -->
+
+<!-- MODAL: GUEPAR USO -->
+<div id="modalGuepar" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm p-4">
+  <div class="bg-tech-800 p-6 rounded-xl border border-tech-700 w-full max-w-[450px] shadow-2xl">
+    <h3 id="modalGuepar-titulo" class="text-2xl font-bold mb-6">Item Guepar Uso</h3>
+    <div class="space-y-4">
       <div>
-        <label class="block text-sm font-semibold text-gray-300 mb-2">Nome</label>
-        <input id="item-nome" type="text" class="w-full bg-tech-900 p-3 rounded-lg border border-tech-600 focus:border-tech-accent outline-none text-white">
+        <label class="block text-sm font-semibold text-gray-300 mb-1">Nome do Item</label>
+        <input id="guepar-nome" type="text" class="w-full bg-tech-900 p-3 rounded border border-tech-600 text-white outline-none">
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-gray-300 mb-1">Marca</label>
+        <input id="guepar-marca" type="text" class="w-full bg-tech-900 p-3 rounded border border-tech-600 text-white outline-none">
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-gray-300 mb-1">Quantidade em Estoque</label>
+        <input id="guepar-estoque" type="number" min="0" class="w-full bg-tech-900 p-3 rounded border border-tech-600 text-white outline-none">
+      </div>
+    </div>
+    <p id="guepar-erro" class="text-red-400 text-sm mt-3 min-h-[20px]"></p>
+    <div class="flex justify-end gap-3 mt-6">
+      <button onclick="fecharModal('modalGuepar')" class="px-5 py-2.5 rounded bg-tech-700 font-bold">Cancelar</button>
+      <button id="guepar-salvar" class="px-5 py-2.5 rounded bg-blue-600 font-bold">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: MANUTENÇÃO -->
+<div id="modal-manutencao" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm p-4">
+  <div class="bg-tech-800 p-6 rounded-xl border border-tech-700 w-full max-w-[450px] shadow-2xl">
+    <h3 id="modal-manutencao-titulo" class="text-2xl font-bold mb-6 text-tech-accent">Agendar Manutenção</h3>
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm text-gray-300 mb-1">Nome / Identificação do Equipamento</label>
+        <input id="manu-nome" type="text" placeholder="Ex: Robô Solda 01" class="w-full bg-tech-900 p-3 rounded border border-tech-600 text-white outline-none">
+      </div>
+      <div>
+        <label class="block text-sm text-gray-300 mb-1">Tipo de Manutenção</label>
+        <select id="manu-tipo" class="w-full bg-tech-900 p-3 rounded border border-tech-600 text-white outline-none">
+          <option value="bateria">Bateria</option>
+          <option value="rodinha">Rodinha</option>
+          <option value="graxa">Graxa</option>
+          <option value="geral">Revisão Geral</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm text-gray-300 mb-1">Data da Última Troca / Revisão</label>
+        <input id="manu-ultima-troca" type="date" class="w-full bg-tech-900 p-3 rounded border border-tech-600 text-white outline-none">
+      </div>
+      <div>
+        <label class="block text-sm text-gray-300 mb-1">Data de Validade / Próxima Revisão</label>
+        <input id="manu-validade" type="date" class="w-full bg-tech-900 p-3 rounded border border-tech-600 text-white outline-none">
+      </div>
+    </div>
+    <p id="manu-erro" class="text-red-400 text-sm mt-3 min-h-[20px]"></p>
+    <div class="flex justify-end gap-3 mt-6">
+      <button onclick="fecharModalManutencao()" class="px-5 py-2.5 rounded bg-tech-700 font-bold">Cancelar</button>
+      <button onclick="salvarManutencao()" class="px-5 py-2.5 rounded bg-blue-600 font-bold">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: PEÇAS DO ROBÔ -->
+<div id="modalItem" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm p-4">
+  <div class="bg-tech-800 p-6 rounded-xl border border-tech-700 w-full max-w-[450px] shadow-2xl">
+    <h3 id="modalItem-titulo" class="text-2xl font-bold mb-6">Peça do Robô</h3>
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm text-gray-300 mb-1">Nome</label>
+        <input id="item-nome" type="text" class="w-full bg-tech-900 p-3 rounded border border-tech-600 text-white outline-none">
       </div>
       <div class="flex gap-4">
         <div class="flex-1">
-          <label class="block text-sm font-semibold text-gray-300 mb-2">Qtd. atual</label>
-          <input id="item-estoque" type="number" min="0" class="w-full bg-tech-900 p-3 rounded-lg border border-tech-600 focus:border-tech-accent outline-none text-white">
+          <label class="block text-sm text-gray-300 mb-1">Qtd. Atual</label>
+          <input id="item-estoque" type="number" min="0" class="w-full bg-tech-900 p-3 rounded border border-tech-600 text-white outline-none">
         </div>
         <div class="flex-1">
-          <label class="block text-sm font-semibold text-gray-300 mb-2">Alerta mínimo</label>
-          <input id="item-min" type="number" min="0" class="w-full bg-tech-900 p-3 rounded-lg border border-tech-600 focus:border-tech-accent outline-none text-white">
+          <label class="block text-sm text-gray-300 mb-1">Qtd. Mínima</label>
+          <input id="item-min" type="number" min="0" class="w-full bg-tech-900 p-3 rounded border border-tech-600 text-white outline-none">
         </div>
       </div>
     </div>
     <p id="item-erro" class="text-red-400 text-sm mt-3 min-h-[20px]"></p>
-    <div class="flex justify-end gap-3 mt-4">
-      <button onclick="fecharModal('modalItem')" class="px-5 py-2.5 rounded-lg bg-tech-700 hover:bg-tech-600 font-bold transition-colors">Cancelar</button>
-      <button id="item-salvar" class="px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 font-bold transition-colors">Salvar</button>
+    <div class="flex justify-end gap-3 mt-6">
+      <button onclick="fecharModal('modalItem')" class="px-5 py-2.5 rounded bg-tech-700 font-bold">Cancelar</button>
+      <button id="item-salvar" class="px-5 py-2.5 rounded bg-blue-600 font-bold">Salvar</button>
     </div>
   </div>
 </div>
 
+<!-- MODAL: FORNECEDORES -->
 <div id="modalForn" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm p-4">
-  <div class="bg-tech-800 p-6 sm:p-8 rounded-xl border border-tech-700 w-full max-w-[450px] shadow-2xl">
-    <h3 id="modalForn-titulo" class="text-2xl font-bold mb-6"></h3>
-    <div class="space-y-4">
-      <div>
-        <label class="block text-sm font-semibold text-gray-300 mb-1">Nome da empresa</label>
-        <input id="forn-nome" type="text" class="w-full bg-tech-900 p-2.5 rounded-lg border border-tech-600 focus:border-tech-accent outline-none text-white">
-      </div>
-      <div>
-        <label class="block text-sm font-semibold text-gray-300 mb-1">CNPJ</label>
-        <input id="forn-cnpj" type="text" placeholder="00.000.000/0001-00" class="w-full bg-tech-900 p-2.5 rounded-lg border border-tech-600 focus:border-tech-accent outline-none text-white">
-      </div>
-      <div class="flex gap-4">
-        <div class="flex-1">
-          <label class="block text-sm font-semibold text-gray-300 mb-1">Contato</label>
-          <input id="forn-contato" type="text" class="w-full bg-tech-900 p-2.5 rounded-lg border border-tech-600 focus:border-tech-accent outline-none text-white">
-        </div>
-        <div class="flex-1">
-          <label class="block text-sm font-semibold text-gray-300 mb-1">Telefone</label>
-          <input id="forn-telefone" type="text" class="w-full bg-tech-900 p-2.5 rounded-lg border border-tech-600 focus:border-tech-accent outline-none text-white">
-        </div>
-      </div>
+  <div class="bg-tech-800 p-6 rounded-xl border border-tech-700 w-full max-w-[450px] shadow-2xl">
+    <h3 id="modalForn-titulo" class="text-2xl font-bold mb-6">Fornecedor</h3>
+    <div class="space-y-3">
+      <input id="forn-nome" type="text" placeholder="Empresa" class="w-full bg-tech-900 p-3 rounded border border-tech-600 text-white outline-none">
+      <input id="forn-cnpj" type="text" placeholder="CNPJ" class="w-full bg-tech-900 p-3 rounded border border-tech-600 text-white outline-none">
+      <input id="forn-contato" type="text" placeholder="Nome do Contato" class="w-full bg-tech-900 p-3 rounded border border-tech-600 text-white outline-none">
+      <input id="forn-telefone" type="text" placeholder="Telefone" class="w-full bg-tech-900 p-3 rounded border border-tech-600 text-white outline-none">
     </div>
     <p id="forn-erro" class="text-red-400 text-sm mt-3 min-h-[20px]"></p>
-    <div class="flex justify-end gap-3 mt-4">
-      <button onclick="fecharModal('modalForn')" class="px-5 py-2.5 rounded-lg bg-tech-700 hover:bg-tech-600 font-bold transition-colors">Cancelar</button>
-      <button id="forn-salvar" class="px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 font-bold transition-colors">Salvar</button>
+    <div class="flex justify-end gap-3 mt-6">
+      <button onclick="fecharModal('modalForn')" class="px-5 py-2.5 rounded bg-tech-700 font-bold">Cancelar</button>
+      <button id="forn-salvar" class="px-5 py-2.5 rounded bg-blue-600 font-bold">Salvar</button>
     </div>
   </div>
 </div>
 
+<!-- MODAL DE CONFIRMAÇÃO PARA EXCLUSÃO -->
 <div id="modalConfirma" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm p-4">
-  <div class="bg-tech-800 p-8 rounded-xl border border-red-500/50 w-full max-w-[400px] shadow-2xl">
+  <div class="bg-tech-800 p-6 rounded-xl border border-red-500/50 w-full max-w-[400px] shadow-2xl">
     <h3 class="text-xl font-bold mb-3">Excluir registro</h3>
     <p id="confirma-texto" class="text-gray-300 mb-6"></p>
     <div class="flex justify-end gap-3">
-      <button onclick="fecharModal('modalConfirma')" class="px-5 py-2.5 rounded-lg bg-tech-700 hover:bg-tech-600 font-bold transition-colors">Manter</button>
-      <button id="confirma-ok" class="px-5 py-2.5 rounded-lg bg-red-600 hover:bg-red-500 font-bold transition-colors">Excluir</button>
+      <button onclick="fecharModal('modalConfirma')" class="px-5 py-2.5 rounded bg-tech-700 font-bold">Cancelar</button>
+      <button id="confirma-ok" class="px-5 py-2.5 rounded bg-red-600 font-bold">Excluir</button>
     </div>
   </div>
 </div>
 
-<div id="toast" class="hidden fixed bottom-6 right-6 z-[80] bg-tech-800 border border-tech-accent px-5 py-3 rounded-lg shadow-2xl max-w-[340px]"></div>
+<div id="toast" class="hidden fixed bottom-6 right-6 z-[80] bg-tech-800 border border-tech-accent px-5 py-3 rounded-lg shadow-2xl"></div>
 
-<!-- ================= MODAL: MANUTENÇÃO ================= -->
-<div id="modal-manutencao" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-    <div class="bg-tech-800 p-6 rounded-xl border border-tech-700 shadow-2xl w-full max-w-md">
-        <h3 class="text-xl font-bold mb-4 text-tech-accent flex items-center gap-2">
-            <i class="ph ph-wrench"></i> Agendar Manutenção
-        </h3>
-        
-        <div class="space-y-4">
-            <div>
-                <label class="block text-sm text-gray-400 mb-1">Nome/Identificação</label>
-                <input type="text" id="manu-nome" placeholder="Ex: Robô Solda 01" class="w-full bg-tech-900 border border-gray-700 rounded p-2 text-white outline-none focus:border-tech-accent">
-            </div>
-            
-            <div>
-                <label class="block text-sm text-gray-400 mb-1">Tipo de Manutenção</label>
-                <select id="manu-tipo" class="w-full bg-tech-900 border border-gray-700 rounded p-2 text-white outline-none focus:border-tech-accent">
-                    <option value="bateria">Bateria</option>
-                    <option value="rodinha">Rodinha</option>
-                    <option value="graxa">Graxa</option>
-                </select>
-            </div>
-
-            <div>
-                <label class="block text-sm text-gray-400 mb-1">Data de Validade</label>
-                <input type="date" id="manu-validade" class="w-full bg-tech-900 border border-gray-700 rounded p-2 text-white outline-none focus:border-tech-accent">
-            </div>
-        </div>
-
-        <div class="flex justify-end gap-3 mt-6">
-            <button onclick="fecharModalManutencao()" class="px-5 py-2.5 rounded bg-gray-700 hover:bg-gray-600 transition-colors">Cancelar</button>
-            <button onclick="salvarManutencao()" class="px-5 py-2.5 rounded bg-blue-600 text-white font-bold hover:bg-blue-500 transition-colors">Salvar</button>
-        </div>
-    </div>
-</div>
+<!-- ÁREA DE IMPRESSÃO OCULTA PARA GERAR RELATÓRIOS -->
+<div id="area-impressao" class="hidden"></div>
 
 <script type="module" src="js/main.js"></script>
 </body>
