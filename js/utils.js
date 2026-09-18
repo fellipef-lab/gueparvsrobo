@@ -65,6 +65,17 @@ export function modalConfirma(texto, acao) {
   };
 }
 
+export function explicarErro(err) {
+  if (!err) return 'Ocorreu um erro desconhecido.';
+  if (typeof err === 'string') return err;
+  if (err.message) {
+    if (err.message.includes('Invalid login credentials')) return 'E-mail ou senha incorretos.';
+    if (err.message.includes('Email not confirmed')) return 'E-mail ainda não verificado.';
+    return err.message;
+  }
+  return 'Erro ao processar requisição.';
+}
+
 window.fecharModal = function(id) {
   const m = document.getElementById(id);
   if (m) m.classList.add('hidden');
