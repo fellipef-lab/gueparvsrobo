@@ -5,7 +5,7 @@ import { renderFornecedores } from './fornecedores.js';
 import { renderManutencoes } from './manutencoes.js';
 
 export const state = {
-  sb: null, // A instância do Supabase é definida em auth.js durante o iniciar()
+  sb: null,
   usuario: null,
   dados: {
     pecas: [],

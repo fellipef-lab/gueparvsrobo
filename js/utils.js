@@ -1,7 +1,3 @@
-// =====================================================================
-// UTILITÁRIOS — helpers pequenos e sem estado próprio
-// =====================================================================
-
 export const $ = id => document.getElementById(id);
 
 export const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));

@@ -1,6 +1,3 @@
-// =====================================================================
-// AUTENTICAÇÃO — login/logout e o bootstrap do cliente Supabase.
-// =====================================================================
 import { state } from './state.js';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js';
 import { $, explicarErro } from './utils.js';
