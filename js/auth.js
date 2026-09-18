@@ -35,7 +35,6 @@ export async function iniciar() {
     };
   }
 
-  // Verifica se já existe sessão ativa
   const { data: { session } } = await state.sb.auth.getSession();
   if (session) {
     await mostrarApp(session);
@@ -49,11 +48,11 @@ async function mostrarApp(session) {
   const telaApp = document.getElementById('tela-app');
   const usuarioEmail = document.getElementById('usuario-email');
 
+  // Garante a troca de telas ANTES de qualquer chamada assíncrona
   if (telaLogin) telaLogin.classList.add('hidden');
   if (telaApp) telaApp.classList.remove('hidden');
   if (usuarioEmail) usuarioEmail.textContent = session.user.email;
 
-  // Carrega os dados das tabelas e inicia a escuta em tempo real
   await carregarTudo();
   ouvirMudancas();
 }
