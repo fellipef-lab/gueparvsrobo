@@ -34,3 +34,12 @@ export function ativarAba(nomeAba) {
   if (nomeAba === 'fornecedores') renderFornecedores();
   if (nomeAba === 'manutencoes') renderManutencoes();
 }
+
+export function iniciarNav() {
+  document.querySelectorAll('.btn-aba').forEach(btn => {
+    btn.onclick = () => {
+      const aba = btn.getAttribute('data-aba');
+      if (aba) ativarAba(aba);
+    };
+  });
+}
