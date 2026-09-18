@@ -1,4 +1,3 @@
-import { supabase } from './auth.js';
 import { renderDashboard } from './dashboard.js';
 import { renderPecas } from './pecas.js';
 import { renderGuepar } from './guepar.js';
@@ -6,7 +5,8 @@ import { renderFornecedores } from './fornecedores.js';
 import { renderManutencoes } from './manutencoes.js';
 
 export const state = {
-  sb: supabase,
+  sb: null, // A instância do Supabase é definida em auth.js durante o iniciar()
+  usuario: null,
   dados: {
     pecas: [],
     guepar: [],
@@ -14,12 +14,13 @@ export const state = {
     manutencoes: []
   },
   async carregarTudo() {
+    if (!this.sb) return;
     try {
       const [p, g, f, m] = await Promise.all([
-        supabase.from('pecas').select('*').order('nome'),
-        supabase.from('guepar_uso').select('*').order('nome'),
-        supabase.from('fornecedores').select('*').order('nome'),
-        supabase.from('manutencoes').select('*').order('validade')
+        this.sb.from('pecas').select('*').order('nome'),
+        this.sb.from('guepar_uso').select('*').order('nome'),
+        this.sb.from('fornecedores').select('*').order('nome'),
+        this.sb.from('manutencoes').select('*').order('validade')
       ]);
 
       if (p.data) this.dados.pecas = p.data;
@@ -27,7 +28,6 @@ export const state = {
       if (f.data) this.dados.fornecedores = f.data;
       if (m.data) this.dados.manutencoes = m.data;
 
-      // Atualiza a interface
       if (typeof renderDashboard === 'function') renderDashboard();
       if (typeof renderPecas === 'function') renderPecas();
       if (typeof renderGuepar === 'function') renderGuepar();
