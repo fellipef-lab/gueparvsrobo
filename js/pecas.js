@@ -1,74 +1,43 @@
 import { state } from './state.js';
-import { $, esc, toast, abrirModal, fecharModal } from './utils.js';
-
-let idEditandoPeca = null;
+import { esc, statusEstoque } from './utils.js';
 
 export function renderPecas() {
-    const tbody = $('tbody-pecas');
-    if (!tbody) return;
+  const container = document.getElementById('aba-pecas');
+  if (!container) return;
 
-    tbody.innerHTML = (state.dados.pecas || []).map(p => `
-        <tr class="border-b border-tech-700 hover:bg-tech-700/30 transition-colors">
-            <td class="p-4 text-gray-400">#${p.id}</td>
-            <td class="p-4 font-semibold text-white">${esc(p.nome)}</td>
-            <td class="p-4 text-gray-300">${p.estoque} / <span class="text-gray-500">${p.min_estoque}</span></td>
-            <td class="p-4 text-center">
-                <button onclick="editarPeca(${p.id})" class="text-blue-400 hover:text-blue-300 p-1"><i class="ph ph-pencil text-lg"></i></button>
-                <button onclick="excluirPeca(${p.id})" class="text-red-400 hover:text-red-300 p-1 ml-2"><i class="ph ph-trash text-lg"></i></button>
-            </td>
-        </tr>
-    `).join('');
-}
+  const dados = state.dados.pecas || [];
 
-export function abrirFormPeca(item = null) {
-    idEditandoPeca = item ? item.id : null;
-    $('modalItem-titulo').textContent = item ? 'Editar Peça' : 'Nova Peça do Robô';
-    $('item-nome').value = item ? item.nome : '';
-    $('item-estoque').value = item ? item.estoque : 0;
-    $('item-min').value = item ? item.min_estoque : 0;
-    $('item-erro').textContent = '';
+  container.innerHTML = `
+    <div class="flex justify-between items-center bg-slate-900/90 border border-slate-800 p-6 rounded-2xl backdrop-blur-md">
+      <div>
+        <h1 class="text-2xl font-black text-white">Peças do Robô</h1>
+        <p class="text-sm text-gray-400">Inventário de componentes técnicos</p>
+      </div>
+    </div>
 
-    abrirModal('modalItem');
-}
-
-export function editarPeca(id) {
-    const item = state.dados.pecas.find(p => p.id === id);
-    if (item) abrirFormPeca(item);
-}
-
-export async function salvarPeca() {
-    const nome = $('item-nome').value.trim();
-    const estoque = Math.max(0, parseInt($('item-estoque').value) || 0);
-    const min_estoque = Math.max(0, parseInt($('item-min').value) || 0);
-
-    if (!nome) {
-        $('item-erro').textContent = 'Informe o nome da peça.';
-        return;
-    }
-
-    const payload = { nome, estoque, min_estoque };
-    let res = idEditandoPeca 
-        ? await state.sb.from('pecas').update(payload).eq('id', idEditandoPeca)
-        : await state.sb.from('pecas').insert([payload]);
-
-    if (res.error) {
-        $('item-erro').textContent = 'Erro ao salvar: ' + res.error.message;
-    } else {
-        fecharModal('modalItem');
-        toast('Peça salva!');
-        await state.carregarTudo();
-    }
-}
-
-export function excluirPeca(id) {
-    $('confirma-texto').textContent = 'Deseja excluir esta peça do robô?';
-    $('confirma-ok').onclick = async () => {
-        const { error } = await state.sb.from('pecas').delete().eq('id', id);
-        fecharModal('modalConfirma');
-        if (!error) {
-            toast('Peça removida!');
-            await state.carregarTudo();
-        }
-    };
-    abrirModal('modalConfirma');
+    <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 backdrop-blur-md">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm text-gray-300">
+          <thead class="bg-slate-800/60 text-xs uppercase text-gray-400 border-b border-slate-700">
+            <tr>
+              <th class="p-3">Peça</th>
+              <th class="p-3">Estoque Atual</th>
+              <th class="p-3">Estoque Mínimo</th>
+              <th class="p-3">Status</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800">
+            ${dados.map(p => `
+              <tr class="hover:bg-slate-800/30 transition">
+                <td class="p-3 font-semibold text-white">${esc(p.nome)}</td>
+                <td class="p-3 font-bold">${p.estoque}</td>
+                <td class="p-3 text-gray-400">${p.min_estoque}</td>
+                <td class="p-3">${statusEstoque(p, ['Esgotado', 'Crítico', 'OK'])}</td>
+              </tr>
+            `).join('') || `<tr><td colspan="4" class="p-4 text-center text-gray-400">Nenhuma peça cadastrada.</td></tr>`}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
 }
