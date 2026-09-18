@@ -1,76 +1,64 @@
-// =====================================================================
-// ASSISTENTE — chat que consulta a Edge Function de IA e cai num
-// modo de respostas locais se a função não estiver disponível.
-// =====================================================================
 import { state } from './state.js';
-import { $, esc } from './utils.js';
+import { $ } from './utils.js';
 
-export function addMensagem(html, lado) {
+export function addMensagem(texto, tipo = 'ia') {
   const box = $('chat-box');
+  if (!box) return;
+
   const div = document.createElement('div');
-  div.className = `flex mb-4 ${lado === 'usuario' ? 'justify-end' : 'justify-start'}`;
-  div.innerHTML = lado === 'usuario'
-    ? `<div class="bg-blue-600 p-4 rounded-xl rounded-tr-none max-w-[80%] shadow-md">${html}</div>`
-    : `<div class="bg-tech-900 border border-tech-700 p-4 rounded-xl rounded-tl-none max-w-[90%] text-gray-300 shadow-lg">${html}</div>`;
+  div.className = tipo === 'ia' 
+    ? 'bg-slate-800/80 text-gray-200 p-3 rounded-xl border border-slate-700/50 max-w-[85%]'
+    : 'bg-cyan-600 text-white p-3 rounded-xl max-w-[85%] ml-auto';
+  
+  div.textContent = texto;
   box.appendChild(div);
   box.scrollTop = box.scrollHeight;
-  return div;
 }
 
-function contexto() {
-  const { dados } = state;
-  const todos = [...dados.pecas, ...dados.guepar];
-  return {
-    pecas: dados.pecas, guepar: dados.guepar, fornecedores: dados.fornecedores,
-    faltando: todos.filter(i => i.estoque <= i.min_estoque).map(i => i.nome)
-  };
-}
+export function iniciarChat() {
+  const btnEnviar = $('btn-enviar-chat');
+  const inputChat = $('input-chat');
 
-function respostaLocal(pergunta) {
-  const c = contexto();
-  const q = pergunta.toLowerCase();
-  const lista = arr => arr.map(i => `• ${esc(i.nome)} — ${i.estoque} un. (mínimo ${i.min_estoque})`).join('<br>');
+  if (btnEnviar) {
+    btnEnviar.onclick = enviarMensagemChat;
+  }
 
-  if (/(falta|repor|acaband|crítico|critico|alerta|comprar)/.test(q))
-    return c.faltando.length
-      ? `Precisam de reposição agora:<br>${c.faltando.map(n => '• ' + esc(n)).join('<br>')}`
-      : 'Nada abaixo do mínimo. Todo o estoque está acima do nível de alerta.';
-  if (/(fornecedor|contato|telefone|cnpj)/.test(q))
-    return `São ${c.fornecedores.length} fornecedores cadastrados:<br>` +
-      c.fornecedores.map(f => `• ${esc(f.nome)} — ${esc(f.contato)}, ${esc(f.telefone)}`).join('<br>');
-  if (/(peça|peca|robô|robo)/.test(q))
-    return c.pecas.length ? `Peças do robô:<br>${lista(c.pecas)}` : 'Nenhuma peça cadastrada ainda.';
-  if (/(guepar|material|materiais|uso)/.test(q))
-    return c.guepar.length ? `Materiais Guepar:<br>${lista(c.guepar)}` : 'A lista de materiais Guepar está vazia.';
-  if (/(relatório|relatorio|resumo|geral|situação|situacao)/.test(q))
-    return `Resumo do estoque:<br>• ${c.pecas.length} peças do robô<br>• ${c.guepar.length} materiais Guepar<br>• ${c.fornecedores.length} fornecedores<br>` +
-      (c.faltando.length ? `<br>Em alerta: ${c.faltando.map(esc).join(', ')}.` : '<br>Nenhum item abaixo do mínimo.');
-  return 'Consigo responder com base no que está cadastrado. Tente: “o que está faltando”, “resumo do estoque”, “listar peças”, “materiais guepar” ou “fornecedores”.';
-}
-
-// Chama a Edge Function, que guarda a chave do Gemini no servidor.
-// Se a função não estiver publicada, cai no modo local sem quebrar.
-export async function enviarMensagem() {
-  const input = $('chat-input');
-  const msg = input.value.trim();
-  if (!msg) return;
-  addMensagem(esc(msg), 'usuario');
-  input.value = '';
-
-  const pensando = addMensagem('<span class="italic text-gray-400">Consultando o estoque...</span>', 'ia');
-  try {
-    const { data, error } = await state.sb.functions.invoke('ia', { body: { mensagem: msg, contexto: contexto() } });
-    pensando.remove();
-    if (error || !data?.resposta) addMensagem(respostaLocal(msg), 'ia');
-    else addMensagem(esc(data.resposta).replace(/\n/g, '<br>'), 'ia');
-  } catch (e) {
-    pensando.remove();
-    addMensagem(respostaLocal(msg), 'ia');
+  if (inputChat) {
+    inputChat.onkeydown = (e) => {
+      if (e.key === 'Enter') enviarMensagemChat();
+    };
   }
 }
 
-// Liga os eventos assim que o módulo é carregado.
-export function iniciarChat() {
-  $('btn-enviar').onclick = enviarMensagem;
-  $('chat-input').addEventListener('keydown', e => { if (e.key === 'Enter') enviarMensagem(); });
+export function enviarMensagemChat() {
+  const input = $('input-chat');
+  if (!input) return;
+  const txt = input.value.trim();
+  if (!txt) return;
+
+  addMensagem(txt, 'user');
+  input.value = '';
+
+  setTimeout(() => {
+    responderIA(txt);
+  }, 600);
+}
+
+function responderIA(pergunta) {
+  const p = pergunta.toLowerCase();
+  
+  if (p.includes('estoque') || p.includes('peça') || p.includes('peca')) {
+    const totalPecas = state.dados.pecas.length;
+    const baixas = state.dados.pecas.filter(x => x.estoque <= x.min_estoque).length;
+    addMensagem(`Temos ${totalPecas} peças cadastradas. ${baixas} estão com estoque igual ou abaixo do mínimo.`, 'ia');
+    return;
+  }
+
+  if (p.includes('manutenção') || p.includes('manutencao') || p.includes('troca')) {
+    const totalM = state.dados.manutencoes.length;
+    addMensagem(`Existem ${totalM} registros de manutenção configurados no sistema.`, 'ia');
+    return;
+  }
+
+  addMensagem('Entendi! Caso precise de informações sobre o estoque de peças ou manutenções, pode me perguntar.', 'ia');
 }
