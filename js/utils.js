@@ -1,7 +1,3 @@
-export function $(seletor) {   return document.querySelector(seletor); }  export function $$(seletor) {
-  return document.querySelectorAll(seletor);
-}
-
 export function esc(str) {
   if (!str) return '';
   return String(str)
@@ -10,6 +6,10 @@ export function esc(str) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
+}
+
+export function $(seletor) {   return document.querySelector(seletor); }  export function $$(seletor) {
+  return document.querySelectorAll(seletor);
 }
 
 export function toast(msg) {
