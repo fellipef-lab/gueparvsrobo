@@ -1,15 +1,12 @@
-import { iniciar } from './auth.js';
-import { iniciarNav, ativarAba } from './nav.js';
-import { carregarTudo } from './dados.js';
+import { state } from './state.js';
+import { iniciar as iniciarAuth } from './auth.js';
+import { initNav } from './nav.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
-  // Inicializa autenticação e estado do Supabase
-  await iniciar();
-
-  // Ativa os cliques nos botões do menu lateral
-  iniciarNav();
-
-  // Define Dashboard como inicial e carrega o banco
-  ativarAba('dashboard');
-  carregarTudo();
+  if (typeof supabase !== 'undefined') {
+    state.sb = supabase.createClient(state.SUPABASE_URL, state.SUPABASE_KEY);
+  }
+  
+  initNav();
+  await iniciarAuth();
 });
