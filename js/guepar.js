@@ -1,89 +1,74 @@
-// =====================================================================
-// GUEPAR — tudo que envolve a tabela `guepar_uso`: listar, renderizar,
-// abrir o formulário de cadastro/edição e excluir.
-// Este item não usa "qtd. mínima" (diferente de Peças) — só nome, marca
-// e quantidade em estoque.
-// =====================================================================
 import { state } from './state.js';
-import { $, num, esc, vazio, toast, abrirModal, fecharModal, confirmar, explicarErro } from './utils.js';
-import { carregarTudo } from './dados.js';
+import { $, esc, toast, abrirModal, fecharModal } from './utils.js';
 
-const TABELA = 'guepar_uso';
+let idEditandoGuepar = null;
 
-// ---------- Render ----------
 export function renderGuepar() {
-  const html = state.dados.guepar.map(linha).join('');
-  $('tbody-guepar').innerHTML = html || vazio(6, 'Nenhum material cadastrado ainda.');
+    const tbody = $('tbody-guepar');
+    if (!tbody) return;
+
+    tbody.innerHTML = (state.dados.guepar || []).map(g => `
+        <tr class="border-b border-tech-700 hover:bg-tech-700/30 transition-colors">
+            <td class="p-4 text-gray-400">#${g.id}</td>
+            <td class="p-4 font-semibold text-white">${esc(g.nome)}</td>
+            <td class="p-4 text-gray-300">${esc(g.marca || '-')}</td>
+            <td class="p-4 font-bold text-tech-accent">${g.estoque}</td>
+            <td class="p-4 text-center">
+                <button onclick="editarGuepar(${g.id})" class="text-blue-400 hover:text-blue-300 p-1"><i class="ph ph-pencil text-lg"></i></button>
+                <button onclick="excluirGuepar(${g.id})" class="text-red-400 hover:text-red-300 p-1 ml-2"><i class="ph ph-trash text-lg"></i></button>
+            </td>
+        </tr>
+    `).join('');
 }
 
-function statusGuepar(item) {
-  return item.estoque <= 0
-    ? '<span class="text-red-500 bg-red-500/10 px-2 py-1 rounded text-sm font-bold">Falta</span>'
-    : '<span class="text-green-500 bg-green-500/10 px-2 py-1 rounded text-sm font-bold">Ok</span>';
+export function abrirFormGuepar(item = null) {
+    idEditandoGuepar = item ? item.id : null;
+    $('modalGuepar-titulo').textContent = item ? 'Editar Item Guepar' : 'Novo Item Guepar';
+    $('guepar-nome').value = item ? item.nome : '';
+    $('guepar-marca').value = item ? item.marca || '' : '';
+    $('guepar-estoque').value = item ? item.estoque : 0;
+    $('guepar-erro').textContent = '';
+
+    abrirModal('modalGuepar');
 }
 
-function linha(item) {
-  return `<tr class="border-t border-tech-700 hover:bg-tech-700/30 transition-colors">
-    <td class="p-4 text-tech-accent font-mono">#G-${item.id}</td>
-    <td class="p-4 font-semibold">${esc(item.nome)}</td>
-    <td class="p-4 text-gray-300">${esc(item.marca) || '-'}</td>
-    <td class="p-4">${item.estoque}</td>
-    <td class="p-4">${statusGuepar(item)}</td>
-    <td class="p-4 flex gap-4 justify-center">
-      <button onclick="abrirFormGuepar(${item.id})" class="text-blue-400 hover:text-blue-300 font-bold text-sm"><i class="ph ph-pencil-simple mr-1"></i>Editar</button>
-      <button onclick="excluirGuepar(${item.id})" class="text-red-400 hover:text-red-300 font-bold text-sm"><i class="ph ph-trash mr-1"></i>Excluir</button>
-    </td></tr>`;
+export function editarGuepar(id) {
+    const item = state.dados.guepar.find(g => g.id === id);
+    if (item) abrirFormGuepar(item);
 }
 
-// ---------- Acesso a dados ----------
-async function inserir(registro) {
-  const { error } = await state.sb.from(TABELA).insert(registro);
-  if (error) { toast(explicarErro(error)); return false; }
-  await carregarTudo(); return true;
-}
-async function atualizar(id, registro) {
-  const { error } = await state.sb.from(TABELA).update(registro).eq('id', id);
-  if (error) { toast(explicarErro(error)); return false; }
-  await carregarTudo(); return true;
-}
-async function remover(id) {
-  const { error } = await state.sb.from(TABELA).delete().eq('id', id);
-  if (error) { toast(explicarErro(error)); return false; }
-  await carregarTudo(); return true;
-}
-
-// ---------- Formulário ----------
-export function abrirFormGuepar(id) {
-  const reg = id ? state.dados.guepar.find(i => i.id === id) : null;
-  $('modalGuepar-titulo').textContent = reg ? 'Editar material' : 'Cadastrar material Guepar';
-  $('modalGuepar-titulo').className = 'text-2xl font-bold mb-6 ' + (reg ? 'text-tech-accent' : 'text-white');
-  $('guepar-nome').value    = reg ? reg.nome : '';
-  $('guepar-marca').value   = reg ? (reg.marca || '') : '';
-  $('guepar-estoque').value = reg ? reg.estoque : '';
-  $('guepar-erro').textContent = '';
-
-  $('guepar-salvar').onclick = async () => {
+export async function salvarGuepar() {
     const nome = $('guepar-nome').value.trim();
     const marca = $('guepar-marca').value.trim();
-    const estoque = num($('guepar-estoque').value);
-    if (!nome) return $('guepar-erro').textContent = 'Informe o nome do item.';
-    if (Number.isNaN(estoque)) return $('guepar-erro').textContent = 'Quantidade precisa ser um número.';
-    if (estoque < 0) return $('guepar-erro').textContent = 'Use um valor igual ou maior que zero.';
+    const estoque = Math.max(0, parseInt($('guepar-estoque').value) || 0);
 
-    const btn = $('guepar-salvar'); btn.disabled = true; btn.textContent = 'Salvando...';
-    const registro = { nome, marca, estoque };
-    const ok = reg ? await atualizar(reg.id, registro) : await inserir(registro);
-    btn.disabled = false; btn.textContent = 'Salvar';
-    if (ok) { fecharModal('modalGuepar'); toast(reg ? 'Item atualizado.' : 'Item cadastrado.'); }
-  };
-  abrirModal('modalGuepar');
-  $('guepar-nome').focus();
+    if (!nome) {
+        $('guepar-erro').textContent = 'Informe o nome do item.';
+        return;
+    }
+
+    const payload = { nome, marca, estoque };
+    let res = idEditandoGuepar 
+        ? await state.sb.from('guepar_uso').update(payload).eq('id', idEditandoGuepar)
+        : await state.sb.from('guepar_uso').insert([payload]);
+
+    if (res.error) {
+        $('guepar-erro').textContent = 'Erro ao salvar: ' + res.error.message;
+    } else {
+        fecharModal('modalGuepar');
+        toast('Item salvo!');
+        await state.carregarTudo();
+    }
 }
 
-// ---------- Exclusão ----------
 export function excluirGuepar(id) {
-  const reg = state.dados.guepar.find(i => i.id === id);
-  confirmar(`Remover “${reg.nome}” do banco? Isso apaga o registro para todos.`, async () => {
-    if (await remover(id)) toast('Registro excluído.');
-  });
+    $('confirma-texto').textContent = 'Deseja excluir este item do Guepar Uso?';$('confirma-ok').onclick = async () => {
+        const { error } = await state.sb.from('guepar_uso').delete().eq('id', id);
+        fecharModal('modalConfirma');
+        if (!error) {
+            toast('Item removido!');
+            await state.carregarTudo();
+        }
+    };
+    abrirModal('modalConfirma');
 }

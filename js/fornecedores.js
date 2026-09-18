@@ -1,84 +1,77 @@
-// =====================================================================
-// FORNECEDORES — tudo que envolve a tabela `fornecedores`: listar,
-// renderizar, abrir o formulário de cadastro/edição e excluir.
-// =====================================================================
 import { state } from './state.js';
-import { $, esc, vazio, toast, abrirModal, fecharModal, confirmar, explicarErro } from './utils.js';
-import { carregarTudo } from './dados.js';
+import { $, esc, toast, abrirModal, fecharModal } from './utils.js';
 
-const TABELA = 'fornecedores';
+let idEditandoForn = null;
 
-// ---------- Render ----------
 export function renderFornecedores() {
-  const html = state.dados.fornecedores.map(linha).join('');
-  $('tbody-fornecedores').innerHTML = html || vazio(6, 'Nenhum fornecedor cadastrado.');
+    const tbody = $('tbody-fornecedores');
+    if (!tbody) return;
+
+    tbody.innerHTML = (state.dados.fornecedores || []).map(f => `
+        <tr class="border-b border-tech-700 hover:bg-tech-700/30 transition-colors">
+            <td class="p-4 text-gray-400">#${f.id}</td>
+            <td class="p-4 font-semibold text-white">${esc(f.nome)}</td>
+            <td class="p-4 text-gray-300">${esc(f.cnpj || '-')}</td>
+            <td class="p-4 text-gray-300">${esc(f.contato || '-')}</td>
+            <td class="p-4 text-gray-300">${esc(f.telefone || '-')}</td>
+            <td class="p-4 text-center">
+                <button onclick="editarForn(${f.id})" class="text-blue-400 hover:text-blue-300 p-1"><i class="ph ph-pencil text-lg"></i></button>
+                <button onclick="excluirForn(${f.id})" class="text-red-400 hover:text-red-300 p-1 ml-2"><i class="ph ph-trash text-lg"></i></button>
+            </td>
+        </tr>
+    `).join('');
 }
 
-function linha(f) {
-  return `<tr class="border-t border-tech-700 hover:bg-tech-700/30 transition-colors">
-    <td class="p-4 text-tech-accent font-mono">#F-${f.id}</td>
-    <td class="p-4 font-semibold">${esc(f.nome)}</td>
-    <td class="p-4 text-gray-300">${esc(f.cnpj) || '-'}</td>
-    <td class="p-4">${esc(f.contato)}</td>
-    <td class="p-4">${esc(f.telefone)}</td>
-    <td class="p-4 flex gap-4 justify-center">
-      <button onclick="abrirFormForn(${f.id})" class="text-blue-400 hover:text-blue-300 font-bold text-sm"><i class="ph ph-pencil-simple mr-1"></i>Editar</button>
-      <button onclick="excluirForn(${f.id})" class="text-red-400 hover:text-red-300 font-bold text-sm"><i class="ph ph-trash mr-1"></i>Excluir</button>
-    </td>
-  </tr>`;
+export function abrirFormForn(item = null) {
+    idEditandoForn = item ? item.id : null;
+    $('modalForn-titulo').textContent = item ? 'Editar Fornecedor' : 'Novo Fornecedor';
+    $('forn-nome').value = item ? item.nome : '';
+    $('forn-cnpj').value = item ? item.cnpj || '' : '';
+    $('forn-contato').value = item ? item.contato || '' : '';
+    $('forn-telefone').value = item ? item.telefone || '' : '';
+    $('forn-erro').textContent = '';
+
+    abrirModal('modalForn');
 }
 
-// ---------- Acesso a dados ----------
-async function inserir(registro) {
-  const { error } = await state.sb.from(TABELA).insert(registro);
-  if (error) { toast(explicarErro(error)); return false; }
-  await carregarTudo(); return true;
-}
-async function atualizar(id, registro) {
-  const { error } = await state.sb.from(TABELA).update(registro).eq('id', id);
-  if (error) { toast(explicarErro(error)); return false; }
-  await carregarTudo(); return true;
-}
-async function remover(id) {
-  const { error } = await state.sb.from(TABELA).delete().eq('id', id);
-  if (error) { toast(explicarErro(error)); return false; }
-  await carregarTudo(); return true;
+export function editarForn(id) {
+    const item = state.dados.fornecedores.find(f => f.id === id);
+    if (item) abrirFormForn(item);
 }
 
-// ---------- Formulário ----------
-export function abrirFormForn(id) {
-  const reg = id ? state.dados.fornecedores.find(f => f.id === id) : null;
-  $('modalForn-titulo').textContent = reg ? 'Editar fornecedor' : 'Cadastrar fornecedor';
-  $('modalForn-titulo').className = 'text-2xl font-bold mb-6 ' + (reg ? 'text-tech-accent' : 'text-white');
-  $('forn-nome').value     = reg ? reg.nome : '';
-  $('forn-cnpj').value     = reg ? (reg.cnpj || '') : '';
-  $('forn-contato').value  = reg ? (reg.contato || '') : '';
-  $('forn-telefone').value = reg ? (reg.telefone || '') : '';
-  $('forn-erro').textContent = '';
+export async function salvarForn() {
+    const nome = $('forn-nome').value.trim();
+    const cnpj = $('forn-cnpj').value.trim();
+    const contato = $('forn-contato').value.trim();
+    const telefone = $('forn-telefone').value.trim();
 
-  $('forn-salvar').onclick = async () => {
-    const registro = {
-      nome: $('forn-nome').value.trim(),
-      cnpj: $('forn-cnpj').value.trim(),
-      contato: $('forn-contato').value.trim(),
-      telefone: $('forn-telefone').value.trim()
-    };
-    if (!registro.nome) return $('forn-erro').textContent = 'Informe o nome da empresa.';
-    if (!registro.contato || !registro.telefone) return $('forn-erro').textContent = 'Contato e telefone são obrigatórios.';
+    if (!nome) {
+        $('forn-erro').textContent = 'Informe o nome da empresa.';
+        return;
+    }
 
-    const btn = $('forn-salvar'); btn.disabled = true; btn.textContent = 'Salvando...';
-    const ok = reg ? await atualizar(reg.id, registro) : await inserir(registro);
-    btn.disabled = false; btn.textContent = 'Salvar';
-    if (ok) { fecharModal('modalForn'); toast(reg ? 'Fornecedor atualizado.' : 'Fornecedor cadastrado.'); }
-  };
-  abrirModal('modalForn');
-  $('forn-nome').focus();
+    const payload = { nome, cnpj, contato, telefone };
+    let res = idEditandoForn 
+        ? await state.sb.from('fornecedores').update(payload).eq('id', idEditandoForn)
+        : await state.sb.from('fornecedores').insert([payload]);
+
+    if (res.error) {
+        $('forn-erro').textContent = 'Erro ao salvar: ' + res.error.message;
+    } else {
+        fecharModal('modalForn');
+        toast('Fornecedor salvo!');
+        await state.carregarTudo();
+    }
 }
 
-// ---------- Exclusão ----------
 export function excluirForn(id) {
-  const reg = state.dados.fornecedores.find(i => i.id === id);
-  confirmar(`Remover “${reg.nome}” do banco? Isso apaga o registro para todos.`, async () => {
-    if (await remover(id)) toast('Registro excluído.');
-  });
+    $('confirma-texto').textContent = 'Deseja excluir este fornecedor?';$('confirma-ok').onclick = async () => {
+        const { error } = await state.sb.from('fornecedores').delete().eq('id', id);
+        fecharModal('modalConfirma');
+        if (!error) {
+            toast('Fornecedor removido!');
+            await state.carregarTudo();
+        }
+    };
+    abrirModal('modalConfirma');
 }

@@ -1,45 +1,32 @@
-// =====================================================================
-// NAVEGAÇÃO — troca de aba e menu lateral no celular.
-// =====================================================================
-import { $ } from './utils.js';
+import { renderDashboard } from './dashboard.js';
 
-export function mudarAba(nome) {
-  if (!$('tab-' + nome)) nome = 'dashboard';
-  document.querySelectorAll('.tab-content').forEach(s => { s.classList.add('hidden'); s.classList.remove('flex'); });
-  const alvo = $('tab-' + nome);
-  alvo.classList.remove('hidden');
-  if (nome === 'ia') alvo.classList.add('flex');
+export function ativarAba(tabName) {
+    const btns = document.querySelectorAll('.menu-btn');
+    const tabs = document.querySelectorAll('.tab-content');
 
-  document.querySelectorAll('.menu-btn').forEach(b => {
-    const ativo = b.dataset.tab === nome;
-    b.classList.toggle('bg-tech-700', ativo);
-    b.classList.toggle('border-l-4', ativo);
-    b.classList.toggle('border-tech-accent', ativo);
-    b.classList.toggle('text-tech-accent', ativo);
-    b.classList.toggle('text-gray-400', !ativo);
-  });
-  location.hash = nome;
-  fecharMenuMobile();
+    tabs.forEach(t => t.classList.add('hidden'));
+    btns.forEach(b => b.classList.remove('bg-tech-700/50', 'text-white'));
+
+    const targetTab = document.getElementById(`tab-${tabName}`);
+    const targetBtn = document.querySelector(`.menu-btn[data-tab="${tabName}"]`);
+
+    if (targetTab) targetTab.classList.remove('hidden');
+    if (targetBtn) targetBtn.classList.add('bg-tech-700/50', 'text-white');
+
+    if (tabName === 'dashboard') {
+        renderDashboard();
+    }
 }
 
-export function abrirMenuMobile() {
-  $('sidebar').classList.remove('hidden');
-  $('sidebar').classList.add('flex');
-  $('overlay-menu').classList.remove('hidden');
-}
-
-export function fecharMenuMobile() {
-  if (window.innerWidth >= 768) return; // no desktop o menu fica sempre visível
-  $('sidebar').classList.add('hidden');
-  $('sidebar').classList.remove('flex');
-  $('overlay-menu').classList.add('hidden');
-}
-
-// Liga os eventos assim que o módulo é carregado.
 export function iniciarNav() {
-  document.querySelectorAll('.menu-btn').forEach(b => b.addEventListener('click', () => mudarAba(b.dataset.tab)));
-  $('btn-menu-mobile')?.addEventListener('click', abrirMenuMobile);
-  $('btn-fechar-menu')?.addEventListener('click', fecharMenuMobile);
-  $('overlay-menu')?.addEventListener('click', fecharMenuMobile);
-  window.addEventListener('resize', () => { if (window.innerWidth >= 768) $('overlay-menu').classList.add('hidden'); });
+    const btns = document.querySelectorAll('.menu-btn');
+
+    btns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tabName = btn.getAttribute('data-tab');
+            ativarAba(tabName);
+        });
+    });
+
+    ativarAba('dashboard');
 }
