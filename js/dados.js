@@ -26,7 +26,7 @@ export async function carregarTudo() {
 
     conexao('ok', 'Sincronizado');
 
-    // Renderiza o dashboard e todas as telas
+    // Renderiza todas as abas sem travar
     renderDashboard();
     if (typeof renderPecas === 'function') renderPecas();
     if (typeof renderGuepar === 'function') renderGuepar();
@@ -42,15 +42,14 @@ export async function carregarTudo() {
 export function ouvirMudancas() {
   if (!state.sb) return;
 
-  // Encadeamento correto: primeiro o .on() e APENAS no final o .subscribe()
-  state.sb
-    .channel('mudancas-schema')
-    .on(
-      'postgres_changes',
-      { event: '*', schema: 'public' },
-      () => {
+  try {
+    const canal = state.sb.channel('mudancas-schema');
+    canal
+      .on('postgres_changes', { event: '*', schema: 'public' }, () => {
         carregarTudo();
-      }
-    )
-    .subscribe();
+      })
+      .subscribe();
+  } catch (e) {
+    console.warn('Realtime indisponível ou já ativo:', e);
+  }
 }
