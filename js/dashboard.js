@@ -1,106 +1,104 @@
 import { state } from './state.js';
-import { $, esc } from './utils.js';
+import { esc, statusEstoque } from './utils.js';
 
 export function renderDashboard() {
-    const { dados } = state;
+  const container = document.getElementById('aba-dashboard');
+  if (!container) return;
 
-    // 1. Destaques Operacionais
-    const manutencoesCriticas = (dados.manutencoes || []).filter(m => {
-        const diff = Math.ceil((new Date(m.validade + 'T00:00:00') - new Date().setHours(0,0,0,0)) / (1000 * 60 * 60 * 24));
-        return diff <= 7;
-    });
+  const pecas = state.dados.pecas || [];
+  const guepar = state.dados.guepar || [];
+  const manutencoes = state.dados.manutencoes || [];
+  const fornecedores = state.dados.fornecedores || [];
 
-    const gueparZerar = (dados.guepar || []).filter(g => Number(g.estoque) === 0);
+  const totalPecas = pecas.length;
+  const pecasCriticas = pecas.filter(p => Number(p.estoque) <= Number(p.min_estoque)).length;
+  const totalGuepar = guepar.length;
+  const totalManutencoes = manutencoes.length;
 
-    const cardDestaque = (icone, titulo, valor, sub, cor) => `
-        <div class="bg-tech-800 p-6 rounded-xl border border-${cor}-500/40 shadow-xl">
-            <div class="flex items-center justify-between mb-4">
-                <span class="text-gray-400 font-bold text-lg">${titulo}</span>
-                <div class="p-3 bg-tech-900 rounded-lg text-${cor}-400 text-2xl"><i class="ph ph-${icone}"></i></div>
-            </div>
-            <p class="text-4xl font-extrabold text-white mb-2">${valor}</p>
-            <p class="text-sm text-gray-400">${sub}</p>
+  container.innerHTML = `
+    <!-- CARDS DE RESUMO -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div class="bg-slate-900/90 border border-slate-800 p-5 rounded-2xl backdrop-blur-md">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-xs font-semibold text-gray-400 uppercase">Peças do Robô</p>
+            <h3 class="text-3xl font-black text-white mt-1">${totalPecas}</h3>
+          </div>
+          <div class="p-3 bg-cyan-500/10 text-cyan-400 rounded-xl">
+            <i class="ph ph-cpu text-2xl"></i>
+          </div>
         </div>
-    `;
+        <p class="text-xs text-gray-400 mt-3"><span class="text-yellow-400 font-bold">${pecasCriticas}</span> com estoque crítico</p>
+      </div>
 
-    const elDestaque = $('cards-destaque-main');
-    if (elDestaque) {
-        elDestaque.innerHTML = 
-            cardDestaque('calendar-check', 'Manutenções Registradas', (dados.manutencoes || []).length, 
-                manutencoesCriticas.length ? `<span class="text-red-400 font-bold">${manutencoesCriticas.length} vencidas ou em alerta</span>` : 'Todas em dia', 'cyan') +
-            cardDestaque('wrench', 'Itens Guepar Uso', (dados.guepar || []).length, 
-                gueparZerar.length ? `<span class="text-yellow-400 font-bold">${gueparZerar.length} zerados no estoque</span>` : 'Estoque regular', 'yellow');
-    }
+      <div class="bg-slate-900/90 border border-slate-800 p-5 rounded-2xl backdrop-blur-md">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-xs font-semibold text-gray-400 uppercase">Guepar Uso</p>
+            <h3 class="text-3xl font-black text-white mt-1">${totalGuepar}</h3>
+          </div>
+          <div class="p-3 bg-blue-500/10 text-blue-400 rounded-xl">
+            <i class="ph ph-wrench text-2xl"></i>
+          </div>
+        </div>
+        <p class="text-xs text-gray-400 mt-3">Itens cadastrados</p>
+      </div>
 
-    // 2. Cards Secundários
-    const pecasCriticas = (dados.pecas || []).filter(p => p.estoque <= p.min_estoque);
-    const elSecundarios = $('cards-secundarios-main');
-    if (elSecundarios) {
-        elSecundarios.innerHTML = `
-            <div class="bg-tech-800 p-4 rounded-lg border border-tech-700">
-                <p class="text-gray-400 text-sm">Peças do Robô</p>
-                <p class="text-2xl font-bold">${(dados.pecas || []).length} <span class="text-xs text-gray-500">(${pecasCriticas.length} em alerta)</span></p>
-            </div>
-            <div class="bg-tech-800 p-4 rounded-lg border border-tech-700">
-                <p class="text-gray-400 text-sm">Fornecedores Cadastrados</p>
-                <p class="text-2xl font-bold">${(dados.fornecedores || []).length}</p>
-            </div>
-        `;
-    }
+      <div class="bg-slate-900/90 border border-slate-800 p-5 rounded-2xl backdrop-blur-md">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-xs font-semibold text-gray-400 uppercase">Manutenções</p>
+            <h3 class="text-3xl font-black text-white mt-1">${totalManutencoes}</h3>
+          </div>
+          <div class="p-3 bg-amber-500/10 text-amber-400 rounded-xl">
+            <i class="ph ph-calendar-check text-2xl"></i>
+          </div>
+        </div>
+        <p class="text-xs text-gray-400 mt-3">Registros de controle</p>
+      </div>
 
-    renderizarGraficoManutencoes(state.sb);
-    renderizarAlertasUnificados();
-}
+      <div class="bg-slate-900/90 border border-slate-800 p-5 rounded-2xl backdrop-blur-md">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-xs font-semibold text-gray-400 uppercase">Fornecedores</p>
+            <h3 class="text-3xl font-black text-white mt-1">${fornecedores.length}</h3>
+          </div>
+          <div class="p-3 bg-emerald-500/10 text-emerald-400 rounded-xl">
+            <i class="ph ph-users-three text-2xl"></i>
+          </div>
+        </div>
+        <p class="text-xs text-gray-400 mt-3">Parceiros ativos</p>
+      </div>
+    </div>
 
-let graficoManutencoes = null;
-export async function renderizarGraficoManutencoes(supabase) {
-    if (!supabase) return;
-    const { data } = await supabase.from('manutencoes').select('validade');
-    if (!data) return;
-
-    let noPrazo = 0, venceLogo = 0, vencido = 0;
-    const hoje = new Date();
-    hoje.setHours(0,0,0,0);
-
-    data.forEach(item => {
-        const diff = Math.ceil((new Date(item.validade + 'T00:00:00') - hoje) / (1000 * 60 * 60 * 24));
-        if (diff < 0) vencido++;
-        else if (diff <= 7) venceLogo++;
-        else noPrazo++;
-    });
-
-    const ctx = document.getElementById('grafico-manutencoes');
-    if (!ctx) return;
-    if (graficoManutencoes) graficoManutencoes.destroy();
-
-    graficoManutencoes = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: ['No Prazo', 'Vence em 7 dias', 'Vencido'],
-            datasets: [{ data: [noPrazo, venceLogo, vencido], backgroundColor: ['#22c55e', '#facc15', '#ef4444'], borderWidth: 0 }]
-        },
-        options: { responsive: true, cutout: '70%', plugins: { legend: { position: 'bottom', labels: { color: '#9ca3af' } } } }
-    });
-}
-
-function renderizarAlertasUnificados() {
-    const { dados } = state;
-    const lista = [];
-
-    (dados.manutencoes || []).forEach(m => {
-        const diff = Math.ceil((new Date(m.validade + 'T00:00:00') - new Date().setHours(0,0,0,0)) / (1000 * 60 * 60 * 24));
-        if (diff < 0) lista.push(`<li class="text-red-400 font-medium"><i class="ph ph-warning"></i> Manutenção Vencida: <b>${esc(m.nome)}</b></li>`);
-        else if (diff <= 7) lista.push(`<li class="text-yellow-400 font-medium"><i class="ph ph-clock"></i> Manutenção próxima do fim: <b>${esc(m.nome)}</b> (${diff} dias)</li>`);
-    });
-
-    (dados.guepar || []).forEach(g => {
-        if (Number(g.estoque) === 0) lista.push(`<li class="text-yellow-400 font-medium"><i class="ph ph-package"></i> Material Guepar Zerado: <b>${esc(g.nome)}</b></li>`);
-    });
-
-    const elAlertas = $('alertas-dashboard');
-    if (elAlertas) {
-        elAlertas.innerHTML = lista.length 
-            ? `<ul class="space-y-2 bg-tech-900 p-4 rounded-lg border border-tech-700">${lista.join('')}</ul>`
-            : '<p class="text-gray-400 text-sm">Nenhum alerta crítico pendente no momento.</p>';
-    }
+    <!-- TABELA RESUMO DE PEÇAS CRÍTICAS -->
+    <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 backdrop-blur-md">
+      <h2 class="text-lg font-bold text-white mb-4 flex items-center space-x-2">
+        <i class="ph ph-warning-circle text-yellow-400 text-xl"></i>
+        <span>Alerta de Estoque Crítico</span>
+      </h2>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm text-gray-300">
+          <thead class="bg-slate-800/60 text-xs uppercase text-gray-400 border-b border-slate-700">
+            <tr>
+              <th class="p-3">Item</th>
+              <th class="p-3">Atual</th>
+              <th class="p-3">Mínimo</th>
+              <th class="p-3">Status</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800">
+            ${pecas.filter(p => Number(p.estoque) <= Number(p.min_estoque)).map(p => `
+              <tr class="hover:bg-slate-800/30 transition">
+                <td class="p-3 font-semibold text-white">${esc(p.nome)}</td>
+                <td class="p-3 font-mono">${p.estoque}</td>
+                <td class="p-3 font-mono text-gray-400">${p.min_estoque}</td>
+                <td class="p-3">${statusEstoque(p, ['Esgotado', 'Crítico', 'OK'])}</td>
+              </tr>
+            `).join('') || `<tr><td colspan="4" class="p-4 text-center text-gray-400">Nenhum item com estoque crítico no momento!</td></tr>`}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
 }
