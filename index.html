@@ -5,16 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Guepar vs RobÔ - Painel de Controle</title>
   
-  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- Phosphor Icons CDN -->
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
-  
-  <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <!-- Supabase JS Client CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <script>
@@ -55,7 +48,7 @@
         <p class="text-xs text-gray-400">Acesse sua conta para gerenciar estoque e manutenções</p>
       </div>
 
-      <form id="form-login" class="space-y-4">
+      <form id="form-login" onsubmit="entrarDireto(event)" class="space-y-4">
         <div>
           <label class="block text-xs uppercase font-bold text-gray-400 mb-1 tracking-wider">E-mail</label>
           <input type="email" id="login-email" value="fellipe.f@grupodime.com.br" required class="w-full bg-slate-800/80 border border-slate-700/80 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition text-sm">
@@ -66,7 +59,7 @@
           <input type="password" id="login-senha" value="123456" required class="w-full bg-slate-800/80 border border-slate-700/80 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition text-sm">
         </div>
 
-        <button type="submit" id="btn-login" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3.5 rounded-xl transition shadow-lg shadow-cyan-950/50 flex items-center justify-center space-x-2 text-sm">
+        <button type="submit" id="btn-login" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3.5 rounded-xl transition shadow-lg shadow-cyan-950/50 flex items-center justify-center space-x-2 text-sm cursor-pointer">
           <span>Entrar no Sistema</span>
           <i class="ph ph-arrow-right text-lg"></i>
         </button>
@@ -75,14 +68,13 @@
     </div>
   </div>
 
-  <!-- APLICAÇÃO PRINCIPAL (SISTEMA) -->
+  <!-- APLICAÇÃO PRINCIPAL -->
   <div id="tela-app" class="hidden min-h-screen flex flex-col md:flex-row bg-slate-950">
     
-    <!-- BARRA LATERAL (SIDEBAR) -->
+    <!-- BARRA LATERAL -->
     <aside class="w-full md:w-64 bg-slate-900/80 border-r border-slate-800/80 p-5 flex flex-col justify-between shrink-0 backdrop-blur-md">
       <div class="space-y-6">
         
-        <!-- LOGO -->
         <div class="flex items-center space-x-3 px-2">
           <div class="p-2 bg-cyan-500/10 text-cyan-400 rounded-xl border border-cyan-500/20">
             <i class="ph ph-robot text-2xl"></i>
@@ -95,27 +87,27 @@
 
         <!-- MENU DE NAVEGAÇÃO -->
         <nav class="space-y-1">
-          <a href="#dashboard" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-xl font-bold text-sm transition text-cyan-400 bg-cyan-500/10 border border-cyan-500/20" data-aba="dashboard">
+          <a href="#dashboard" onclick="mudarAba('dashboard')" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-xl font-bold text-sm transition text-cyan-400 bg-cyan-500/10 border border-cyan-500/20" id="nav-dashboard">
             <i class="ph ph-squares-four text-lg"></i>
             <span>Dashboard</span>
           </a>
 
-          <a href="#manutencoes" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-xl font-semibold text-sm transition text-gray-400 hover:text-white hover:bg-slate-800/50" data-aba="manutencoes">
+          <a href="#manutencoes" onclick="mudarAba('manutencoes')" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-xl font-semibold text-sm transition text-gray-400 hover:text-white hover:bg-slate-800/50" id="nav-manutencoes">
             <i class="ph ph-wrench text-lg"></i>
             <span>Manutenções</span>
           </a>
 
-          <a href="#guepar" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-xl font-semibold text-sm transition text-gray-400 hover:text-white hover:bg-slate-800/50" data-aba="guepar">
+          <a href="#guepar" onclick="mudarAba('guepar')" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-xl font-semibold text-sm transition text-gray-400 hover:text-white hover:bg-slate-800/50" id="nav-guepar">
             <i class="ph ph-package text-lg"></i>
             <span>Guepar Uso</span>
           </a>
 
-          <a href="#pecas" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-xl font-semibold text-sm transition text-gray-400 hover:text-white hover:bg-slate-800/50" data-aba="pecas">
+          <a href="#pecas" onclick="mudarAba('pecas')" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-xl font-semibold text-sm transition text-gray-400 hover:text-white hover:bg-slate-800/50" id="nav-pecas">
             <i class="ph ph-cpu text-lg"></i>
             <span>Peças do Robô</span>
           </a>
 
-          <a href="#fornecedores" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-xl font-semibold text-sm transition text-gray-400 hover:text-white hover:bg-slate-800/50" data-aba="fornecedores">
+          <a href="#fornecedores" onclick="mudarAba('fornecedores')" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-xl font-semibold text-sm transition text-gray-400 hover:text-white hover:bg-slate-800/50" id="nav-fornecedores">
             <i class="ph ph-users-three text-lg"></i>
             <span>Fornecedores</span>
           </a>
@@ -123,70 +115,68 @@
 
       </div>
 
-      <!-- RODAPÉ DA SIDEBAR -->
+      <!-- RODAPÉ -->
       <div class="pt-6 border-t border-slate-800/80 space-y-4">
-        
-        <!-- STATUS CONEXÃO -->
         <div class="flex items-center space-x-2 px-2">
           <div id="ponto-conexao" class="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
           <span id="texto-conexao" class="text-xs text-gray-400 font-medium">Sincronizado</span>
         </div>
 
-        <!-- USUÁRIO / SAIR -->
         <div class="bg-slate-800/40 p-3 rounded-xl border border-slate-800 flex items-center justify-between">
           <div class="truncate mr-2">
-            <p id="usuario-email" class="text-xs font-bold text-white truncate"></p>
+            <p id="usuario-email" class="text-xs font-bold text-white truncate">fellipe.f@grupodime.com.br</p>
           </div>
-          <button id="btn-sair" title="Sair do sistema" class="text-gray-400 hover:text-red-400 p-1.5 transition rounded-lg hover:bg-slate-800">
+          <button onclick="window.location.reload()" title="Sair do sistema" class="text-gray-400 hover:text-red-400 p-1.5 transition rounded-lg hover:bg-slate-800 cursor-pointer">
             <i class="ph ph-sign-out text-lg"></i>
           </button>
         </div>
-
       </div>
     </aside>
 
-    <!-- CONTEÚDO PRINCIPAL (MUDANÇA DE ABAS) -->
+    <!-- CONTEÚDO PRINCIPAL -->
     <main class="flex-1 p-6 md:p-10 overflow-y-auto space-y-6">
-      
-      <!-- ABA 1: DASHBOARD -->
       <div id="aba-dashboard" class="aba-conteudo space-y-6"></div>
-
-      <!-- ABA 2: MANUTENÇÕES -->
       <div id="aba-manutencoes" class="aba-conteudo hidden space-y-6"></div>
-
-      <!-- ABA 3: GUEPAR USO -->
       <div id="aba-guepar" class="aba-conteudo hidden space-y-6"></div>
-
-      <!-- ABA 4: PEÇAS DO ROBÔ -->
       <div id="aba-pecas" class="aba-conteudo hidden space-y-6"></div>
-
-      <!-- ABA 5: FORNECEDORES -->
       <div id="aba-fornecedores" class="aba-conteudo hidden space-y-6"></div>
-
     </main>
 
   </div>
 
-  <!-- CONTAINER PARA MODAIS DE CRUD DINÂMICOS -->
   <div id="container-modais"></div>
 
-  <!-- MODAL GLOBAL DE CONFIRMAÇÃO -->
-  <div id="modalConfirma" class="fixed inset-0 bg-slate-950/80 hidden flex items-center justify-center p-4 z-50 backdrop-blur-sm">
-    <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl max-w-sm w-full space-y-4 shadow-2xl text-center">
-      <div class="inline-flex items-center justify-center p-3 bg-red-500/10 text-red-400 rounded-full mb-1">
-        <i class="ph ph-warning text-3xl"></i>
-      </div>
-      <h3 class="text-base font-bold text-white">Confirmar Ação</h3>
-      <p id="confirma-texto" class="text-xs text-gray-400"></p>
-      <div class="flex justify-center space-x-3 pt-2">
-        <button onclick="fecharModal('modalConfirma')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-gray-300 rounded-xl text-xs font-semibold transition">Cancelar</button>
-        <button id="confirma-ok" class="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-xl text-xs font-semibold transition">Confirmar Exclusão</button>
-      </div>
-    </div>
-  </div>
+  <!-- SCRIPT DIRETO SEM DEPENDÊNCIAS DE PASTA -->
+  <script type="module">
+    import { state } from './state.js';
+    import { carregarTudo } from './dados.js';
 
-  <!-- SCRIPT INICIALIZADOR MÓDULO JS -->
-  <script type="module" src="./js/main.js"></script>
+    window.entrarDireto = async function(e) {
+      if (e) e.preventDefault();
+      
+      document.getElementById('tela-login').classList.add('hidden');
+      document.getElementById('tela-app').classList.remove('hidden');
+
+      if (typeof supabase !== 'undefined' && !state.sb) {
+        state.sb = supabase.createClient(state.SUPABASE_URL, state.SUPABASE_KEY);
+      }
+
+      await carregarTudo();
+    };
+
+    window.mudarAba = function(nomeAba) {
+      document.querySelectorAll('.aba-conteudo').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.nav-item').forEach(el => {
+        el.className = "nav-item flex items-center space-x-3 px-4 py-3 rounded-xl font-semibold text-sm transition text-gray-400 hover:text-white hover:bg-slate-800/50";
+      });
+
+      const abaTarget = document.getElementById(`aba-${nomeAba}`);
+      const navTarget = document.getElementById(`nav-${nomeAba}`);
+
+      if (abaTarget) abaTarget.classList.remove('hidden');
+      if (navTarget) navTarget.className = "nav-item flex items-center space-x-3 px-4 py-3 rounded-xl font-bold text-sm transition text-cyan-400 bg-cyan-500/10 border border-cyan-500/20";
+    };
+  </script>
 
 </body>
 </html>
