@@ -62,7 +62,7 @@ export function modalConfirma(texto, acao) {
 
   btnOk.onclick = () => {
     modal.classList.add('hidden');
-    acao();
+    label: acao();
   };
 }
 
