@@ -1,103 +1,122 @@
 import { state } from './state.js';
-import { esc } from './utils.js';
 
-export function gerarRelatorio(tipo = 'tudo') {
-    const area = document.getElementById('area-impressao');
-    if (!area) return;
+function escLocal(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
 
-    const dataHoje = new Date().toLocaleDateString('pt-BR');
-    let html = `
-        <div style="font-family: Arial, sans-serif; padding: 20px; color: #111; background: #fff;">
-            <h1 style="text-align: center; margin-bottom: 5px;">Painel Guepar vs RobÔ</h1>
-            <p style="text-align: center; color: #555; margin-top: 0;">Relatório de Estoque e Manutenção — Gerado em ${dataHoje}</p>
-            <hr style="margin: 20px 0; border: 0; border-top: 1px solid #ccc;">
+export function gerarRelatorio(tipo) {
+  const dados = state.dados[tipo] || [];
+  const titulos = {
+    manutencoes: 'Relatório de Manutenções',
+    pecas: 'Relatório de Peças do Robô',
+    guepar: 'Relatório Guepar Uso',
+    fornecedores: 'Relatório de Fornecedores'
+  };
+
+  const win = window.open('', '_blank');
+  if (!win) return;
+
+  let tabelaHTML = '';
+
+  if (tipo === 'manutencoes') {
+    tabelaHTML = `
+      <table>
+        <thead>
+          <tr><th>Equipamento</th><th>Tipo</th><th>Última Troca</th><th>Validade</th></tr>
+        </thead>
+        <tbody>
+          ${dados.map(m => `
+            <tr>
+              <td>${escLocal(m.nome)}</td>
+              <td>${escLocal(m.tipo || '-')}</td>
+              <td>${m.ultima_troca ? m.ultima_troca.split('-').reverse().join('/') : '-'}</td>
+              <td>${m.validade ? m.validade.split('-').reverse().join('/') : '-'}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
     `;
+  } else if (tipo === 'pecas') {
+    tabelaHTML = `
+      <table>
+        <thead>
+          <tr><th>Peça</th><th>Estoque Atual</th><th>Estoque Mínimo</th></tr>
+        </thead>
+        <tbody>
+          ${dados.map(p => `
+            <tr>
+              <td>${escLocal(p.nome)}</td>
+              <td>${p.estoque}</td>
+              <td>${p.min_estoque}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  } else if (tipo === 'guepar') {
+    tabelaHTML = `
+      <table>
+        <thead>
+          <tr><th>Item</th><th>Marca</th><th>Estoque</th></tr>
+        </thead>
+        <tbody>
+          ${dados.map(g => `
+            <tr>
+              <td>${escLocal(g.nome)}</td>
+              <td>${escLocal(g.marca || '-')}</td>
+              <td>${g.estoque}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  } else if (tipo === 'fornecedores') {
+    tabelaHTML = `
+      <table>
+        <thead>
+          <tr><th>Empresa</th><th>CNPJ</th><th>Contato</th><th>Telefone</th></tr>
+        </thead>
+        <tbody>
+          ${dados.map(f => `
+            <tr>
+              <td>${escLocal(f.nome)}</td>
+              <td>${escLocal(f.cnpj || '-')}</td>
+              <td>${escLocal(f.contato || '-')}</td>
+              <td>${escLocal(f.telefone || '-')}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  }
 
-    if (tipo === 'tudo' || tipo === 'manutencoes') {
-        html += `
-            <h2 style="color: #007acc; border-bottom: 2px solid #007acc; padding-bottom: 4px;">1. Controle de Manutenções</h2>
-            <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;" border="1" cellpadding="8">
-                <thead style="background: #f0f0f0;">
-                    <tr><th>Equipamento</th><th>Tipo</th><th>Última Troca</th><th>Validade</th></tr>
-                </thead>
-                <tbody>
-                    ${(state.dados.manutencoes || []).map(m => `
-                        <tr>
-                            <td>${esc(m.nome)}</td>
-                            <td style="text-transform: capitalize;">${esc(m.tipo)}</td>
-                            <td>${m.ultima_troca ? m.ultima_troca.split('-').reverse().join('/') : '-'}</td>
-                            <td>${m.validade ? m.validade.split('-').reverse().join('/') : '-'}</td>
-                        </tr>
-                    `).join('')}
-                </tbody>
-            </table>
-        `;
-    }
-
-    if (tipo === 'tudo' || tipo === 'guepar') {
-        html += `
-            <h2 style="color: #007acc; border-bottom: 2px solid #007acc; padding-bottom: 4px;">2. Materiais Guepar Uso</h2>
-            <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;" border="1" cellpadding="8">
-                <thead style="background: #f0f0f0;">
-                    <tr><th>Item</th><th>Marca</th><th>Estoque</th></tr>
-                </thead>
-                <tbody>
-                    ${(state.dados.guepar || []).map(g => `
-                        <tr>
-                            <td>${esc(g.nome)}</td>
-                            <td>${esc(g.marca || '-')}</td>
-                            <td><b>${g.estoque}</b></td>
-                        </tr>
-                    `).join('')}
-                </tbody>
-            </table>
-        `;
-    }
-
-    if (tipo === 'tudo' || tipo === 'pecas') {
-        html += `
-            <h2 style="color: #007acc; border-bottom: 2px solid #007acc; padding-bottom: 4px;">3. Peças do Robô</h2>
-            <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;" border="1" cellpadding="8">
-                <thead style="background: #f0f0f0;">
-                    <tr><th>Peça</th><th>Qtd Atual</th><th>Qtd Mínima</th></tr>
-                </thead>
-                <tbody>
-                    ${(state.dados.pecas || []).map(p => `
-                        <tr>
-                            <td>${esc(p.nome)}</td>
-                            <td>${p.estoque}</td>
-                            <td>${p.min_estoque}</td>
-                        </tr>
-                    `).join('')}
-                </tbody>
-            </table>
-        `;
-    }
-
-    if (tipo === 'tudo' || tipo === 'fornecedores') {
-        html += `
-            <h2 style="color: #007acc; border-bottom: 2px solid #007acc; padding-bottom: 4px;">4. Diretório de Fornecedores</h2>
-            <table style="width: 100%; border-collapse: collapse;" border="1" cellpadding="8">
-                <thead style="background: #f0f0f0;">
-                    <tr><th>Empresa</th><th>CNPJ</th><th>Contato</th><th>Telefone</th></tr>
-                </thead>
-                <tbody>
-                    ${(state.dados.fornecedores || []).map(f => `
-                        <tr>
-                            <td>${esc(f.nome)}</td>
-                            <td>${esc(f.cnpj || '-')}</td>
-                            <td>${esc(f.contato || '-')}</td>
-                            <td>${esc(f.telefone || '-')}</td>
-                        </tr>
-                    `).join('')}
-                </tbody>
-            </table>
-        `;
-    }
-
-    html += `</div>`;
-    area.innerHTML = html;
-    area.classList.remove('hidden');
-    window.print();
-    area.classList.add('hidden');
+  win.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>${titulos[tipo] || 'Relatório'}</title>
+      <style>
+        body { font-family: sans-serif; padding: 20px; color: #333; }
+        h1 { border-bottom: 2px solid #0891b2; padding-bottom: 8px; color: #0891b2; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; font-size: 14px; }
+        th { background-color: #f1f5f9; font-weight: bold; }
+        tr:nth-child(even) { background-color: #f8fafc; }
+      </style>
+    </head>
+    <body>
+      <h1>${titulos[tipo] || 'Relatório'}</h1>
+      <p>Gerado em: ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR')}</p>
+      ${tabelaHTML}
+      <script>window.print();</script>
+    </body>
+    </html>
+  `);
+  win.document.close();
 }
