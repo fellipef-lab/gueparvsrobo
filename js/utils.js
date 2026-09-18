@@ -1,58 +1,67 @@
-export const $ = id => document.getElementById(id);
-
-export const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-
-export const num = v => { const n = parseInt(v, 10); return Number.isFinite(n) ? n : NaN; };
-
-export const vazio = (cols, texto) => `<tr><td colspan="${cols}" class="p-8 text-center text-gray-400">${texto}</td></tr>`;
+export function esc(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
 
 export function toast(msg) {
-  const t = $('toast');
-  if (!t) return;
-  t.textContent = msg;
-  t.classList.remove('hidden');
-  clearTimeout(t._timer);
-  t._timer = setTimeout(() => t.classList.add('hidden'), 3200);
+  const el = document.getElementById('toast');
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.remove('hidden');
+  setTimeout(() => el.classList.add('hidden'), 3000);
 }
 
-export const abrirModal = id => { const el = $(id); if (el) el.classList.remove('hidden'); };
-export const fecharModal = id => { const el = $(id); if (el) el.classList.add('hidden'); };
-
-export function logoFallback() {
-  const d = document.createElement('div');
-  d.className = 'h-10 w-10 rounded-full bg-white text-blue-700 font-black flex items-center justify-center mr-3 shrink-0';
-  d.textContent = 'G';
-  return d;
-}
-
-export function confirmar(texto, aoConfirmar) {
-  const elTexto = $('confirma-texto');
-  const elOk = $('confirma-ok');
-  if (elTexto) elTexto.textContent = texto;
-  if (elOk) elOk.onclick = () => { fecharModal('modalConfirma'); aoConfirmar(); };
-  abrirModal('modalConfirma');
-}
-
-export function conexao(estado, texto) {
-  const cores = { ok: 'bg-green-400', erro: 'bg-red-500', esperando: 'bg-yellow-400' };
-  const ponto = $('ponto-conexao');
-  const txt = $('texto-conexao');
+export function conexao(status, msg) {
+  const ponto = document.getElementById('ponto-conexao');
+  const texto = document.getElementById('texto-conexao');
   
-  if (ponto) ponto.className = `w-2 h-2 rounded-full shrink-0 ${cores[estado] || 'bg-gray-500'}`;
-  if (txt) txt.textContent = texto;
+  if (ponto) {
+    ponto.className = 'w-2 h-2 rounded-full shrink-0 ' + 
+      (status === 'ok' ? 'bg-emerald-500' : status === 'esperando' ? 'bg-yellow-500 animate-pulse' : 'bg-red-500');
+  }
+  if (texto) {
+    texto.textContent = msg;
+  }
 }
 
-export function explicarErro(erro) {
-  const m = erro?.message || 'Erro desconhecido';
-  if (/JWT|not authenticated|session/i.test(m)) return 'Sua sessão expirou. Entre de novo.';
-  if (/row-level security|policy/i.test(m))     return 'O banco recusou a operação. Confira se o RLS do schema.sql foi aplicado.';
-  if (/Failed to fetch|NetworkError/i.test(m))  return 'Sem resposta do Supabase. Verifique a internet e a URL do projeto.';
-  if (/does not exist|relation/i.test(m))       return 'Tabela não encontrada. Rode o schema.sql no SQL Editor.';
-  return m;
+export function statusEstoque(item, labels = ['Esgotado', 'Crítico', 'OK']) {
+  const est = Number(item.estoque || 0);
+  const min = Number(item.min_estoque || 0);
+
+  if (est <= 0) {
+    return `<span class="px-2 py-0.5 rounded-full text-xs font-bold bg-red-500/20 text-red-400 border border-red-500/30">${labels[0]}</span>`;
+  }
+  if (est <= min) {
+    return `<span class="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">${labels[1]}</span>`;
+  }
+  return `<span class="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">${labels[2]}</span>`;
 }
 
-export function statusEstoque(item, rotulos) {
-  if (item.estoque <= 0) return `<span class="text-red-500 bg-red-500/10 px-2 py-1 rounded text-sm font-bold">${rotulos[0]}</span>`;
-  if (item.estoque <= item.min_estoque) return `<span class="text-yellow-500 bg-yellow-500/10 px-2 py-1 rounded text-sm font-bold">${rotulos[1]}</span>`;
-  return `<span class="text-green-500 bg-green-500/10 px-2 py-1 rounded text-sm font-bold">${rotulos[2]}</span>`;
+export function modalConfirma(texto, acao) {
+  const modal = document.getElementById('modalConfirma');
+  const txt = document.getElementById('confirma-texto');
+  const btnOk = document.getElementById('confirma-ok');
+
+  if (!modal || !txt || !btnOk) {
+    if (confirm(texto)) acao();
+    return;
+  }
+
+  txt.textContent = texto;
+  modal.classList.remove('hidden');
+
+  btnOk.onclick = () => {
+    modal.classList.add('hidden');
+    acao();
+  };
 }
+
+window.fecharModal = function(id) {
+  const m = document.getElementById(id);
+  if (m) m.classList.add('hidden');
+};
