@@ -1,5 +1,6 @@
 import { state } from './state.js';
 
+// Função de escape local para não depender do utils.js
 function escLocal(str) {
   if (!str) return '';
   return String(str)
