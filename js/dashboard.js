@@ -1,5 +1,6 @@
 import { state } from './state.js';
 import { esc, statusEstoque } from './utils.js';
+import { gerarRelatorio } from './relatorios.js';
 
 let chartInstancia = null;
 
@@ -18,6 +19,18 @@ export function renderDashboard() {
   const totalManutencoes = manutencoes.length;
 
   container.innerHTML = `
+    <!-- HEADER DA ABA COM BOTÃO DE RELATÓRIO -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-900/90 border border-slate-800 p-6 rounded-2xl backdrop-blur-md">
+      <div>
+        <h1 class="text-2xl font-black text-white">Dashboard Geral</h1>
+        <p class="text-sm text-gray-400">Resumo em tempo real do sistema Guepar vs RobÔ</p>
+      </div>
+      <button id="btn-imprimir-geral" class="flex items-center space-x-2 bg-cyan-600 hover:bg-cyan-500 text-white font-bold px-4 py-2.5 rounded-xl transition shadow-lg shadow-cyan-900/30">
+        <i class="ph ph-printer text-lg"></i>
+        <span>Gerar Relatório Geral</span>
+      </button>
+    </div>
+
     <!-- CARDS DE RESUMO -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       <div class="bg-slate-900/90 border border-slate-800 p-5 rounded-2xl backdrop-blur-md">
@@ -73,104 +86,83 @@ export function renderDashboard() {
       </div>
     </div>
 
-    <!-- SEÇÃO DO GRÁFICO DE ESTOQUE -->
-    <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 backdrop-blur-md">
-      <h2 class="text-lg font-bold text-white mb-4 flex items-center space-x-2">
-        <i class="ph ph-chart-bar text-cyan-400 text-xl"></i>
-        <span>Níveis de Estoque x Mínimo Exigido</span>
-      </h2>
-      <div class="w-full h-72">
-        <canvas id="graficoEstoque"></canvas>
+    <!-- GRÁFICO E TABELA DE ESTOQUE CRÍTICO -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- GRÁFICO DE VISÃO GERAL (DONUT/DOUGHNUT) -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 backdrop-blur-md flex flex-col items-center justify-center">
+        <h2 class="text-lg font-bold text-white mb-4 w-full text-left flex items-center space-x-2">
+          <i class="ph ph-chart-donut text-cyan-400 text-xl"></i>
+          <span>Distribuição de Dados</span>
+        </h2>
+        <div class="w-full h-64 relative flex items-center justify-center">
+          <canvas id="graficoDashboard"></canvas>
+        </div>
       </div>
-    </div>
 
-    <!-- TABELA RESUMO DE PEÇAS CRÍTICAS -->
-    <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 backdrop-blur-md">
-      <h2 class="text-lg font-bold text-white mb-4 flex items-center space-x-2">
-        <i class="ph ph-warning-circle text-yellow-400 text-xl"></i>
-        <span>Alerta de Estoque Crítico</span>
-      </h2>
-      <div class="overflow-x-auto">
-        <table class="w-full text-left text-sm text-gray-300">
-          <thead class="bg-slate-800/60 text-xs uppercase text-gray-400 border-b border-slate-700">
-            <tr>
-              <th class="p-3">Item</th>
-              <th class="p-3">Atual</th>
-              <th class="p-3">Mínimo</th>
-              <th class="p-3">Status</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-800">
-            ${pecas.filter(p => Number(p.estoque) <= Number(p.min_estoque)).map(p => `
-              <tr class="hover:bg-slate-800/30 transition">
-                <td class="p-3 font-semibold text-white">${esc(p.nome)}</td>
-                <td class="p-3 font-mono">${p.estoque}</td>
-                <td class="p-3 font-mono text-gray-400">${p.min_estoque}</td>
-                <td class="p-3">${statusEstoque(p, ['Esgotado', 'Crítico', 'OK'])}</td>
+      <!-- TABELA RESUMO DE PEÇAS CRÍTICAS -->
+      <div class="lg:col-span-2 bg-slate-900/90 border border-slate-800 rounded-2xl p-6 backdrop-blur-md">
+        <h2 class="text-lg font-bold text-white mb-4 flex items-center space-x-2">
+          <i class="ph ph-warning-circle text-yellow-400 text-xl"></i>
+          <span>Alerta de Estoque Crítico</span>
+        </h2>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm text-gray-300">
+            <thead class="bg-slate-800/60 text-xs uppercase text-gray-400 border-b border-slate-700">
+              <tr>
+                <th class="p-3">Item</th>
+                <th class="p-3">Atual</th>
+                <th class="p-3">Mínimo</th>
+                <th class="p-3">Status</th>
               </tr>
-            `).join('') || `<tr><td colspan="4" class="p-4 text-center text-gray-400">Nenhum item com estoque crítico no momento!</td></tr>`}
-          </tbody>
-        </table>
+            </thead>
+            <tbody class="divide-y divide-slate-800">
+              ${pecas.filter(p => Number(p.estoque) <= Number(p.min_estoque)).map(p => `
+                <tr class="hover:bg-slate-800/30 transition">
+                  <td class="p-3 font-semibold text-white">${esc(p.nome)}</td>
+                  <td class="p-3 font-mono">${p.estoque}</td>
+                  <td class="p-3 font-mono text-gray-400">${p.min_estoque}</td>
+                  <td class="p-3">${statusEstoque(p, ['Esgotado', 'Crítico', 'OK'])}</td>
+                </tr>
+              `).join('') || `<tr><td colspan="4" class="p-4 text-center text-gray-400">Nenhum item com estoque crítico no momento!</td></tr>`}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   `;
 
-  // Renderiza o gráfico Chart.js no canvas criado
-  setTimeout(() => renderizarGrafico(pecas), 50);
+  // Vincula o botão do relatório
+  const btnImp = document.getElementById('btn-imprimir-geral');
+  if (btnImp) btnImp.onclick = () => gerarRelatorio('tudo');
+
+  // Renderiza o gráfico circular
+  setTimeout(() => renderizarGrafico(totalPecas, totalGuepar, totalManutencoes, fornecedores.length), 50);
 }
 
-function renderizarGrafico(pecas) {
-  const canvas = document.getElementById('graficoEstoque');
+function renderizarGrafico(pecas, guepar, manutencoes, fornecedores) {
+  const canvas = document.getElementById('graficoDashboard');
   if (!canvas || typeof Chart === 'undefined') return;
 
-  if (chartInstancia) {
-    chartInstancia.destroy();
-  }
-
-  const rotulos = pecas.map(p => p.nome);
-  const estoques = pecas.map(p => p.estoque);
-  const minimos = pecas.map(p => p.min_estoque);
+  if (chartInstancia) chartInstancia.destroy();
 
   chartInstancia = new Chart(canvas, {
-    type: 'bar',
+    type: 'doughnut',
     data: {
-      labels: rotulos,
-      datasets: [
-        {
-          label: 'Estoque Atual',
-          data: estoques,
-          backgroundColor: 'rgba(6, 182, 212, 0.7)',
-          borderColor: 'rgb(6, 182, 212)',
-          borderWidth: 1,
-          borderRadius: 6
-        },
-        {
-          label: 'Estoque Mínimo',
-          data: minimos,
-          backgroundColor: 'rgba(239, 68, 68, 0.4)',
-          borderColor: 'rgb(239, 68, 68)',
-          borderWidth: 1,
-          borderRadius: 6
-        }
-      ]
+      labels: ['Peças do Robô', 'Guepar Uso', 'Manutenções', 'Fornecedores'],
+      datasets: [{
+        data: [pecas, guepar, manutencoes, fornecedores],
+        backgroundColor: ['#06b6d4', '#3b82f6', '#f59e0b', '#10b981'],
+        borderWidth: 2,
+        borderColor: '#0f172a'
+      }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
         legend: {
-          labels: { color: '#94a3b8' }
-        }
-      },
-      scales: {
-        x: {
-          ticks: { color: '#94a3b8' },
-          grid: { color: 'rgba(51, 65, 85, 0.3)' }
-        },
-        y: {
-          ticks: { color: '#94a3b8' },
-          grid: { color: 'rgba(51, 65, 85, 0.3)' },
-          beginAtZero: true
+          position: 'bottom',
+          labels: { color: '#94a3b8', font: { size: 12 } }
         }
       }
     }
