@@ -1,6 +1,8 @@
 import { state } from './state.js';
 import { esc, statusEstoque } from './utils.js';
 
+let chartInstancia = null;
+
 export function renderDashboard() {
   const container = document.getElementById('aba-dashboard');
   if (!container) return;
@@ -71,6 +73,17 @@ export function renderDashboard() {
       </div>
     </div>
 
+    <!-- SEÇÃO DO GRÁFICO DE ESTOQUE -->
+    <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 backdrop-blur-md">
+      <h2 class="text-lg font-bold text-white mb-4 flex items-center space-x-2">
+        <i class="ph ph-chart-bar text-cyan-400 text-xl"></i>
+        <span>Níveis de Estoque x Mínimo Exigido</span>
+      </h2>
+      <div class="w-full h-72">
+        <canvas id="graficoEstoque"></canvas>
+      </div>
+    </div>
+
     <!-- TABELA RESUMO DE PEÇAS CRÍTICAS -->
     <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 backdrop-blur-md">
       <h2 class="text-lg font-bold text-white mb-4 flex items-center space-x-2">
@@ -101,4 +114,65 @@ export function renderDashboard() {
       </div>
     </div>
   `;
+
+  // Renderiza o gráfico Chart.js no canvas criado
+  setTimeout(() => renderizarGrafico(pecas), 50);
+}
+
+function renderizarGrafico(pecas) {
+  const canvas = document.getElementById('graficoEstoque');
+  if (!canvas || typeof Chart === 'undefined') return;
+
+  if (chartInstancia) {
+    chartInstancia.destroy();
+  }
+
+  const rotulos = pecas.map(p => p.nome);
+  const estoques = pecas.map(p => p.estoque);
+  const minimos = pecas.map(p => p.min_estoque);
+
+  chartInstancia = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: rotulos,
+      datasets: [
+        {
+          label: 'Estoque Atual',
+          data: estoques,
+          backgroundColor: 'rgba(6, 182, 212, 0.7)',
+          borderColor: 'rgb(6, 182, 212)',
+          borderWidth: 1,
+          borderRadius: 6
+        },
+        {
+          label: 'Estoque Mínimo',
+          data: minimos,
+          backgroundColor: 'rgba(239, 68, 68, 0.4)',
+          borderColor: 'rgb(239, 68, 68)',
+          borderWidth: 1,
+          borderRadius: 6
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          labels: { color: '#94a3b8' }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: '#94a3b8' },
+          grid: { color: 'rgba(51, 65, 85, 0.3)' }
+        },
+        y: {
+          ticks: { color: '#94a3b8' },
+          grid: { color: 'rgba(51, 65, 85, 0.3)' },
+          beginAtZero: true
+        }
+      }
+    }
+  });
 }
