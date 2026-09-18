@@ -16,12 +16,7 @@
       theme: {
         extend: {
           colors: {
-            brand: {
-              50: '#ecfeff',
-              500: '#06b6d4',
-              600: '#0891b2',
-              700: '#0e7490',
-            }
+            brand: { 50: '#ecfeff', 500: '#06b6d4', 600: '#0891b2', 700: '#0e7490' }
           }
         }
       }
@@ -30,10 +25,15 @@
 </head>
 <body class="h-full text-slate-100 bg-slate-950 font-sans antialiased selection:bg-cyan-500 selection:text-white">
 
+  <!-- TOAST -->
+  <div id="toast" class="fixed bottom-5 right-5 z-50 hidden bg-slate-800 text-white px-5 py-3 rounded-xl border border-cyan-500/30 shadow-2xl flex items-center space-x-2 backdrop-blur-md">
+    <i class="ph ph-info text-cyan-400 text-lg"></i>
+    <span id="toast-msg" class="text-sm font-semibold"></span>
+  </div>
+
   <!-- TELA DE LOGIN -->
   <div id="tela-login" class="min-h-screen flex items-center justify-center p-4 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-black">
     <div class="w-full max-w-md bg-slate-900/90 border border-slate-800 p-8 rounded-3xl backdrop-blur-xl shadow-2xl space-y-6">
-      
       <div class="text-center space-y-2">
         <div class="inline-flex items-center justify-center p-3 bg-cyan-500/10 rounded-2xl border border-cyan-500/20 mb-2">
           <i class="ph ph-robot text-4xl text-cyan-400"></i>
@@ -53,22 +53,18 @@
           <input type="password" id="login-senha" value="123456" class="w-full bg-slate-800/80 border border-slate-700/80 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-500 text-sm">
         </div>
 
-        <button type="button" onclick="entrarSemFalha()" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3.5 rounded-xl transition shadow-lg shadow-cyan-950/50 flex items-center justify-center space-x-2 text-sm cursor-pointer">
+        <button type="button" onclick="entrarSistema()" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3.5 rounded-xl transition shadow-lg shadow-cyan-950/50 flex items-center justify-center space-x-2 text-sm cursor-pointer">
           <span>Entrar no Sistema</span>
           <i class="ph ph-arrow-right text-lg"></i>
         </button>
       </div>
-
     </div>
   </div>
 
-  <!-- APLICAÇÃO PRINCIPAL -->
+  <!-- TELA PRINCIPAL DO SISTEMA -->
   <div id="tela-app" class="hidden min-h-screen flex flex-col md:flex-row bg-slate-950">
-    
-    <!-- BARRA LATERAL -->
     <aside class="w-full md:w-64 bg-slate-900/80 border-r border-slate-800/80 p-5 flex flex-col justify-between shrink-0 backdrop-blur-md">
       <div class="space-y-6">
-        
         <div class="flex items-center space-x-3 px-2">
           <div class="p-2 bg-cyan-500/10 text-cyan-400 rounded-xl border border-cyan-500/20">
             <i class="ph ph-robot text-2xl"></i>
@@ -79,47 +75,37 @@
           </div>
         </div>
 
-        <!-- MENU DE NAVEGAÇÃO -->
         <nav class="space-y-1">
-          <button onclick="mudarAba('dashboard')" class="w-full nav-item flex items-center space-x-3 px-4 py-3 rounded-xl font-bold text-sm transition text-cyan-400 bg-cyan-500/10 border border-cyan-500/20" id="nav-dashboard">
+          <button onclick="trocarAba('dashboard')" class="w-full nav-item flex items-center space-x-3 px-4 py-3 rounded-xl font-bold text-sm transition text-cyan-400 bg-cyan-500/10 border border-cyan-500/20" id="nav-dashboard">
             <i class="ph ph-squares-four text-lg"></i>
             <span>Dashboard</span>
           </button>
-
-          <button onclick="mudarAba('manutencoes')" class="w-full nav-item flex items-center space-x-3 px-4 py-3 rounded-xl font-semibold text-sm transition text-gray-400 hover:text-white hover:bg-slate-800/50" id="nav-manutencoes">
+          <button onclick="trocarAba('manutencoes')" class="w-full nav-item flex items-center space-x-3 px-4 py-3 rounded-xl font-semibold text-sm transition text-gray-400 hover:text-white hover:bg-slate-800/50" id="nav-manutencoes">
             <i class="ph ph-wrench text-lg"></i>
             <span>Manutenções</span>
           </button>
-
-          <button onclick="mudarAba('guepar')" class="w-full nav-item flex items-center space-x-3 px-4 py-3 rounded-xl font-semibold text-sm transition text-gray-400 hover:text-white hover:bg-slate-800/50" id="nav-guepar">
+          <button onclick="trocarAba('guepar')" class="w-full nav-item flex items-center space-x-3 px-4 py-3 rounded-xl font-semibold text-sm transition text-gray-400 hover:text-white hover:bg-slate-800/50" id="nav-guepar">
             <i class="ph ph-package text-lg"></i>
             <span>Guepar Uso</span>
           </button>
-
-          <button onclick="mudarAba('pecas')" class="w-full nav-item flex items-center space-x-3 px-4 py-3 rounded-xl font-semibold text-sm transition text-gray-400 hover:text-white hover:bg-slate-800/50" id="nav-pecas">
+          <button onclick="trocarAba('pecas')" class="w-full nav-item flex items-center space-x-3 px-4 py-3 rounded-xl font-semibold text-sm transition text-gray-400 hover:text-white hover:bg-slate-800/50" id="nav-pecas">
             <i class="ph ph-cpu text-lg"></i>
             <span>Peças do Robô</span>
           </button>
-
-          <button onclick="mudarAba('fornecedores')" class="w-full nav-item flex items-center space-x-3 px-4 py-3 rounded-xl font-semibold text-sm transition text-gray-400 hover:text-white hover:bg-slate-800/50" id="nav-fornecedores">
+          <button onclick="trocarAba('fornecedores')" class="w-full nav-item flex items-center space-x-3 px-4 py-3 rounded-xl font-semibold text-sm transition text-gray-400 hover:text-white hover:bg-slate-800/50" id="nav-fornecedores">
             <i class="ph ph-users-three text-lg"></i>
             <span>Fornecedores</span>
           </button>
         </nav>
-
       </div>
 
-      <!-- RODAPÉ -->
       <div class="pt-6 border-t border-slate-800/80 space-y-4">
         <div class="flex items-center space-x-2 px-2">
           <div class="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
           <span class="text-xs text-gray-400 font-medium">Sincronizado</span>
         </div>
-
         <div class="bg-slate-800/40 p-3 rounded-xl border border-slate-800 flex items-center justify-between">
-          <div class="truncate mr-2">
-            <p class="text-xs font-bold text-white truncate">fellipe.f@grupodime.com.br</p>
-          </div>
+          <p class="text-xs font-bold text-white truncate">fellipe.f@grupodime.com.br</p>
           <button onclick="window.location.reload()" class="text-gray-400 hover:text-red-400 p-1.5 transition rounded-lg hover:bg-slate-800 cursor-pointer">
             <i class="ph ph-sign-out text-lg"></i>
           </button>
@@ -127,12 +113,11 @@
       </div>
     </aside>
 
-    <!-- CONTEÚDO PRINCIPAL -->
     <main class="flex-1 p-6 md:p-10 overflow-y-auto space-y-6">
       <div id="aba-dashboard" class="aba-conteudo space-y-6">
         <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl">
-          <h1 class="text-2xl font-black text-white">Dashboard Guepar vs RobÔ</h1>
-          <p class="text-sm text-gray-400 mt-1">Painel operacional pronto e conectado.</p>
+          <h1 class="text-2xl font-black text-white">Dashboard Operacional</h1>
+          <p class="text-sm text-gray-400 mt-1">Visão geral do sistema e estoque.</p>
         </div>
       </div>
       <div id="aba-manutencoes" class="aba-conteudo hidden space-y-6"></div>
@@ -140,28 +125,26 @@
       <div id="aba-pecas" class="aba-conteudo hidden space-y-6"></div>
       <div id="aba-fornecedores" class="aba-conteudo hidden space-y-6"></div>
     </main>
-
   </div>
 
   <script>
-    function entrarSemFalha() {
+    function entrarSistema() {
       document.getElementById('tela-login').classList.add('hidden');
       document.getElementById('tela-app').classList.remove('hidden');
     }
 
-    function mudarAba(nomeAba) {
+    function trocarAba(aba) {
       document.querySelectorAll('.aba-conteudo').forEach(el => el.classList.add('hidden'));
       document.querySelectorAll('.nav-item').forEach(el => {
         el.className = "w-full nav-item flex items-center space-x-3 px-4 py-3 rounded-xl font-semibold text-sm transition text-gray-400 hover:text-white hover:bg-slate-800/50";
       });
 
-      const abaTarget = document.getElementById(`aba-${nomeAba}`);
-      const navTarget = document.getElementById(`nav-${nomeAba}`);
+      const abaTarget = document.getElementById(`aba-${aba}`);
+      const navTarget = document.getElementById(`nav-${aba}`);
 
       if (abaTarget) abaTarget.classList.remove('hidden');
       if (navTarget) navTarget.className = "w-full nav-item flex items-center space-x-3 px-4 py-3 rounded-xl font-bold text-sm transition text-cyan-400 bg-cyan-500/10 border border-cyan-500/20";
     }
   </script>
-
 </body>
 </html>
