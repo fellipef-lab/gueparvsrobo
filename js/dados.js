@@ -6,6 +6,8 @@ import { renderGuepar } from './guepar.js';
 import { renderFornecedores } from './fornecedores.js';
 import { renderManutencoes } from './manutencoes.js';
 
+let canalRealtime = null;
+
 export async function carregarTudo() {
   if (!state.sb) return;
   
@@ -26,7 +28,6 @@ export async function carregarTudo() {
 
     conexao('ok', 'Sincronizado');
 
-    // Renderiza todas as abas sem travar
     renderDashboard();
     if (typeof renderPecas === 'function') renderPecas();
     if (typeof renderGuepar === 'function') renderGuepar();
@@ -40,16 +41,16 @@ export async function carregarTudo() {
 }
 
 export function ouvirMudancas() {
-  if (!state.sb) return;
+  if (!state.sb || canalRealtime) return;
 
   try {
-    const canal = state.sb.channel('mudancas-schema');
-    canal
+    canalRealtime = state.sb.channel('mudancas-schema');
+    canalRealtime
       .on('postgres_changes', { event: '*', schema: 'public' }, () => {
         carregarTudo();
       })
       .subscribe();
   } catch (e) {
-    console.warn('Realtime indisponível ou já ativo:', e);
+    console.warn('Realtime ignorado para evitar travamento:', e);
   }
 }
