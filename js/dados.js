@@ -6,8 +6,6 @@ import { renderGuepar } from './guepar.js';
 import { renderFornecedores } from './fornecedores.js';
 import { renderManutencoes } from './manutencoes.js';
 
-let canalRealtime = null;
-
 export async function carregarTudo() {
   if (!state.sb) return;
   
@@ -41,16 +39,6 @@ export async function carregarTudo() {
 }
 
 export function ouvirMudancas() {
-  if (!state.sb || canalRealtime) return;
-
-  try {
-    canalRealtime = state.sb.channel('mudancas-schema');
-    canalRealtime
-      .on('postgres_changes', { event: '*', schema: 'public' }, () => {
-        carregarTudo();
-      })
-      .subscribe();
-  } catch (e) {
-    console.warn('Realtime ignorado para evitar travamento:', e);
-  }
+  // Desativado temporariamente para impedir qualquer exceção do Supabase Realtime de bloquear a UI
+  return;
 }
