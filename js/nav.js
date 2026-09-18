@@ -8,13 +8,13 @@ export function ativarAba(nomeAba) {
   // Esconde todas as abas
   document.querySelectorAll('.conteudo-aba').forEach(el => el.classList.add('hidden'));
 
-  // Desativa destaque dos botões
+  // Remove destaque de todos os botões do menu
   document.querySelectorAll('.btn-aba').forEach(btn => {
     btn.classList.remove('bg-cyan-600/20', 'text-cyan-400', 'border-r-4', 'border-cyan-400');
     btn.classList.add('text-gray-400');
   });
 
-  // Mostra a aba selecionada
+  // Exibe a aba pretendida
   const abaAlvo = document.getElementById(`aba-${nomeAba}`);
   if (abaAlvo) {
     abaAlvo.classList.remove('hidden');
@@ -27,7 +27,7 @@ export function ativarAba(nomeAba) {
     btnAtivo.classList.add('bg-cyan-600/20', 'text-cyan-400', 'border-r-4', 'border-cyan-400');
   }
 
-  // Renderiza os dados correspondentes
+  // Executa o renderizador da aba clicada
   if (nomeAba === 'dashboard') renderDashboard();
   if (nomeAba === 'pecas') renderPecas();
   if (nomeAba === 'guepar') renderGuepar();
@@ -37,7 +37,8 @@ export function ativarAba(nomeAba) {
 
 export function iniciarNav() {
   document.querySelectorAll('.btn-aba').forEach(btn => {
-    btn.onclick = () => {
+    btn.onclick = (e) => {
+      e.preventDefault();
       const aba = btn.getAttribute('data-aba');
       if (aba) ativarAba(aba);
     };
