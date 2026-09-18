@@ -1,351 +1,154 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Painel - Guepar vs RobÔ</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://unpkg.com/@phosphor-icons/web"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-tailwind.config = { theme: { extend: { colors: { tech: { 900:'#0b1120', 800:'#151e2e', 700:'#1e293b', 600:'#334155', accent:'#00e5ff' } } } } }
-</script>
-<style>
-  .glow-dot { box-shadow: 0 0 8px #00e5ff, 0 0 12px #00e5ff; }
-  ::-webkit-scrollbar { width: 10px; }
-  ::-webkit-scrollbar-track { background: #0b1120; }
-  ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 6px; }
-  @media print {
-    body * { visibility: hidden; }
-    #area-impressao, #area-impressao * { visibility: visible; }
-    #area-impressao { position: absolute; left: 0; top: 0; width: 100%; color: black !important; }
-  }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Guepar vs RobÔ — Painel de Estoque e Manutenção</title>
+  
+  <!-- Ícone da Aba do Navegador -->
+  <link rel="icon" type="image/jpeg" href="guepar.jpeg">
+
+  <!-- Tailwind CSS & Phosphor Icons -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  
+  <!-- Supabase & Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    /* Estilo para impressão do relatório */
+    @media print {
+      body * { visibility: hidden; }
+      #area-impressao, #area-impressao * { visibility: visible; }
+      #area-impressao { position: absolute; left: 0; top: 0; width: 100%; }
+    }
+  </style>
 </head>
-<body class="bg-tech-900 text-white min-h-screen">
+<body class="bg-no-repeat bg-cover bg-center bg-fixed min-h-screen text-gray-100 relative" style="background-image: url('azuk.jpg');">
 
-<div id="tela-config" class="hidden fixed inset-0 z-[70] flex items-center justify-center bg-tech-900 p-4">
-  <div class="bg-tech-800 p-8 rounded-xl border border-yellow-500/50 max-w-[520px] shadow-2xl">
-    <h2 class="text-xl font-bold mb-3 flex items-center gap-2"><i class="ph ph-plugs text-yellow-400 text-2xl"></i> Falta conectar o Supabase</h2>
-    <p class="text-gray-300 text-sm leading-relaxed mb-4">Preencha SUPABASE_URL e SUPABASE_ANON_KEY no topo do script.</p>
-  </div>
-</div>
+  <!-- Camada escura para garantir leitura dos cards sobre o fundo -->
+  <div class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm -z-10"></div>
 
-<div id="tela-login" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-tech-900 p-4">
-  <div class="bg-tech-800 p-6 sm:p-10 rounded-xl border border-tech-accent/60 shadow-2xl w-full max-w-[360px] text-center">
-    <h2 class="text-2xl font-bold text-tech-accent mb-1">Guepar <span class="text-sm text-gray-400 font-normal">vs</span> RobÔ</h2>
-    <p class="text-gray-400 text-sm mb-6">Acesso restrito</p>
-    <div class="space-y-3 text-left">
-      <input id="login-email" type="email" placeholder="E-mail" class="w-full bg-tech-900 p-3 rounded-lg border border-tech-600 focus:border-tech-accent outline-none text-white">
-      <input id="login-senha" type="password" placeholder="Senha" class="w-full bg-tech-900 p-3 rounded-lg border border-tech-600 focus:border-tech-accent outline-none text-white">
-      <button id="btn-entrar" class="w-full bg-tech-accent hover:bg-cyan-300 text-tech-900 font-bold p-3 rounded-lg transition-colors">Entrar</button>
-    </div>
-    <p id="login-erro" class="text-red-400 text-sm mt-3 min-h-[20px]"></p>
-  </div>
-</div>
-
-<div id="app" class="hidden min-h-screen md:flex">
-  <aside id="sidebar" class="hidden md:flex fixed md:static inset-y-0 left-0 z-50 w-64 bg-tech-800 border-r border-tech-700 flex-col shrink-0">
-    <div class="p-6 border-b border-tech-700 flex items-center justify-between">
-      <div class="flex items-center">
-        <img src="guepar.jpeg" alt="" onerror="this.src='guepar1.png'" class="h-10 w-10 object-contain bg-white rounded-full mr-3">
-        <h1 class="text-xl font-bold text-tech-accent">Guepar <span class="text-sm text-gray-400 font-normal">vs</span> RobÔ</h1>
+  <!-- TELA DE LOGIN -->
+  <div id="tela-login" class="min-h-screen flex items-center justify-center p-4">
+    <div class="bg-slate-900/90 border border-slate-800 p-8 rounded-2xl w-full max-w-md shadow-2xl backdrop-blur-md">
+      <div class="flex items-center justify-center mb-6">
+        <img src="guepar.jpeg" alt="Guepar Logo" class="h-12 w-12 rounded-full mr-3 border-2 border-cyan-500 object-cover" onerror="this.remove()">
+        <h1 class="text-2xl font-black tracking-tight text-white">Guepar <span class="text-cyan-400 font-normal">vs</span> RobÔ</h1>
+      </div>
+      <p class="text-gray-400 text-sm text-center mb-6">Acesse sua conta para gerenciar estoque e manutenções</p>
+      
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">E-mail</label>
+          <input type="email" id="login-email" class="w-full bg-slate-800/80 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyan-500 transition" placeholder="seu@email.com">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Senha</label>
+          <input type="password" id="login-senha" class="w-full bg-slate-800/80 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyan-500 transition" placeholder="••••••••">
+        </div>
+        
+        <p id="login-erro" class="text-red-400 text-xs font-semibold text-center min-h-[1rem]"></p>
+        
+        <button id="btn-entrar" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3 rounded-lg shadow-lg shadow-cyan-900/40 transition active:scale-[0.98]">
+          Entrar no Sistema
+        </button>
       </div>
     </div>
-    <nav class="flex-1 p-3 space-y-1 mt-4 text-[15px] font-medium pr-4 overflow-y-auto">
-      <button data-tab="dashboard" class="menu-btn w-full flex items-center gap-3 p-3 rounded-r-lg text-gray-400 hover:text-white hover:bg-tech-700/50 transition-all"><i class="ph ph-squares-four text-xl"></i> Dashboard</button>
-      <button data-tab="manutencoes" class="menu-btn w-full flex items-center gap-3 p-3 rounded-r-lg text-gray-400 hover:text-white hover:bg-tech-700/50 transition-all"><i class="ph ph-calendar text-xl"></i> Manutenções</button>
-      <button data-tab="guepar" class="menu-btn w-full flex items-center gap-3 p-3 rounded-r-lg text-gray-400 hover:text-white hover:bg-tech-700/50 transition-all"><i class="ph ph-wrench text-xl"></i> Guepar Uso</button>
-      <button data-tab="pecas" class="menu-btn w-full flex items-center gap-3 p-3 rounded-r-lg text-gray-400 hover:text-white hover:bg-tech-700/50 transition-all"><i class="ph ph-cpu text-xl"></i> Peças do Robô</button>
-      <button data-tab="fornecedores" class="menu-btn w-full flex items-center gap-3 p-3 rounded-r-lg text-gray-400 hover:text-white hover:bg-tech-700/50 transition-all"><i class="ph ph-users text-xl"></i> Fornecedores</button>
-      <button data-tab="ia" class="menu-btn w-full flex items-center gap-3 p-3 rounded-r-lg text-gray-400 hover:text-white hover:bg-tech-700/50 transition-all"><i class="ph ph-sparkle text-xl"></i> Assistente</button>
-    </nav>
-    <div class="p-4 border-t border-tech-700">
-      <p id="usuario-atual" class="text-sm text-gray-400 truncate mb-2"></p>
-      <button id="btn-sair" class="w-full flex items-center gap-2 text-gray-400 hover:text-red-400 p-2 rounded transition-all text-sm"><i class="ph ph-sign-out text-lg"></i> Sair do sistema</button>
-    </div>
-  </aside>
+  </div>
 
-  <main class="flex-1 p-4 md:p-8 overflow-y-auto md:h-screen">
+  <!-- APLICAÇÃO PRINCIPAL -->
+  <div id="app" class="hidden flex min-h-screen">
     
-    <!-- DASHBOARD INTEGRAL -->
-    <section id="tab-dashboard" class="tab-content hidden">
-      <div class="flex flex-wrap gap-4 justify-between items-center mb-6">
-        <div>
-          <h2 class="text-2xl md:text-3xl font-bold">Dashboard Geral</h2>
-          <p class="text-tech-accent text-sm font-semibold">Destaque Operacional: Manutenções e Guepar Uso</p>
+    <!-- BARRA LATERAL / NAVEGAÇÃO -->
+    <aside class="w-64 bg-slate-900/90 border-r border-slate-800/80 flex flex-col justify-between shrink-0 backdrop-blur-md">
+      <div>
+        <!-- LOGO HEADER -->
+        <div class="p-6 flex items-center border-b border-slate-800/80">
+          <img src="guepar.jpeg" alt="Logo" class="h-10 w-10 rounded-full mr-3 border border-cyan-500/50 object-cover" onerror="this.remove()">
+          <span class="text-lg font-black tracking-tight text-white">Guepar <span class="text-cyan-400 font-normal">vs</span> RobÔ</span>
         </div>
-        <div class="flex gap-2">
-          <button onclick="gerarRelatorio('tudo')" class="bg-tech-accent text-tech-900 px-4 py-2 rounded-lg font-bold hover:bg-cyan-300 transition-colors flex items-center gap-2">
-            <i class="ph ph-printer"></i> Relatório Geral
+
+        <!-- MENU DE NAVEGAÇÃO -->
+        <nav class="p-4 space-y-1">
+          <button data-aba="dashboard" class="btn-aba w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-semibold transition text-gray-400 hover:text-white hover:bg-slate-800/50">
+            <i class="ph ph-squares-four text-lg"></i>
+            <span>Dashboard</span>
           </button>
+          <button data-aba="manutencoes" class="btn-aba w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-semibold transition text-gray-400 hover:text-white hover:bg-slate-800/50">
+            <i class="ph ph-calendar-check text-lg"></i>
+            <span>Manutenções</span>
+          </button>
+          <button data-aba="guepar" class="btn-aba w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-semibold transition text-gray-400 hover:text-white hover:bg-slate-800/50">
+            <i class="ph ph-wrench text-lg"></i>
+            <span>Guepar Uso</span>
+          </button>
+          <button data-aba="pecas" class="btn-aba w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-semibold transition text-gray-400 hover:text-white hover:bg-slate-800/50">
+            <i class="ph ph-cpu text-lg"></i>
+            <span>Peças do Robô</span>
+          </button>
+          <button data-aba="fornecedores" class="btn-aba w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-semibold transition text-gray-400 hover:text-white hover:bg-slate-800/50">
+            <i class="ph ph-users-three text-lg"></i>
+            <span>Fornecedores</span>
+          </button>
+          <button data-aba="assistente" class="btn-aba w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-semibold transition text-gray-400 hover:text-white hover:bg-slate-800/50">
+            <i class="ph ph-sparkle text-lg"></i>
+            <span>Assistente</span>
+          </button>
+        </nav>
+      </div>
+
+      <!-- FOOTER DA BARRA LATERAL -->
+      <div class="p-4 border-t border-slate-800/80 space-y-3">
+        <div class="flex items-center space-x-2 px-2 text-xs text-gray-400">
+          <div id="ponto-conexao" class="w-2 h-2 rounded-full bg-gray-500 shrink-0"></div>
+          <span id="texto-conexao" class="truncate">Iniciando...</span>
         </div>
+        <div id="usuario-atual" class="px-2 text-xs font-mono text-cyan-400/80 truncate"></div>
+        <button id="btn-sair" class="w-full flex items-center space-x-2 px-4 py-2 text-xs font-semibold text-red-400 hover:bg-red-500/10 rounded-lg transition">
+          <i class="ph ph-sign-out text-sm"></i>
+          <span>Sair do sistema</span>
+        </button>
       </div>
+    </aside>
 
-      <div id="cards-destaque-main" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6"></div>
-      <div id="cards-secundarios-main" class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8"></div>
+    <!-- ÁREA DE CONTEÚDO PRINCIPAL -->
+    <main class="flex-1 overflow-y-auto p-8">
+      
+      <!-- ABAS DINÂMICAS -->
+      <div id="aba-dashboard" class="conteudo-aba space-y-6"></div>
+      <div id="aba-manutencoes" class="conteudo-aba hidden space-y-6"></div>
+      <div id="aba-guepar" class="conteudo-aba hidden space-y-6"></div>
+      <div id="aba-pecas" class="conteudo-aba hidden space-y-6"></div>
+      <div id="aba-fornecedores" class="conteudo-aba hidden space-y-6"></div>
+      <div id="aba-assistente" class="conteudo-aba hidden space-y-6"></div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <div class="bg-tech-800 p-6 rounded-xl border border-tech-700 shadow-lg flex flex-col items-center">
-            <h3 class="text-lg font-bold text-tech-accent mb-4 w-full text-left flex items-center gap-2">
-                <i class="ph ph-chart-pie-slice text-xl"></i> Status de Validade de Manutenções
-            </h3>
-            <div class="relative w-full max-w-[260px] aspect-square">
-                <canvas id="grafico-manutencoes"></canvas>
-            </div>
-        </div>
+    </main>
+  </div>
 
-        <div class="bg-tech-800 p-6 rounded-xl border border-tech-700 shadow-lg">
-            <h3 class="text-lg font-bold text-tech-accent mb-4 flex items-center gap-2">
-                <i class="ph ph-warning-circle text-xl"></i> Alertas e Ações Prioritárias
-            </h3>
-            <div id="alertas-dashboard" class="space-y-3"></div>
-        </div>
-      </div>
-    </section>
+  <!-- CONTAINER DE REPOSITÓRIO DE IMPRESSÃO (RELATÓRIOS) -->
+  <div id="area-impressao" class="hidden"></div>
 
-    <!-- TABELA: MANUTENÇÕES -->
-    <section id="tab-manutencoes" class="tab-content hidden">
-      <div class="flex flex-wrap gap-3 justify-between items-center mb-6">
-        <div>
-          <h2 class="text-xl md:text-2xl font-bold">Manutenções</h2>
-          <p class="text-gray-400 text-sm">Controle de preventivas, baterias e revisões</p>
-        </div>
-        <div class="flex gap-2">
-          <button onclick="gerarRelatorio('manutencoes')" class="bg-tech-700 hover:bg-tech-600 px-3 py-2 rounded font-bold text-sm transition-colors flex items-center gap-1"><i class="ph ph-file-pdf"></i> Relatório</button>
-          <button onclick="abrirModalManutencao()" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded font-bold transition-colors">+ Nova Manutenção</button>
-        </div>
-      </div>
-      <div class="bg-tech-800 rounded-xl border border-tech-700 shadow-lg overflow-x-auto">
-        <table class="w-full min-w-[640px] text-left">
-          <thead class="bg-tech-700/50">
-            <tr>
-              <th class="p-4 text-gray-400 text-sm font-semibold">Equipamento/Nome</th>
-              <th class="p-4 text-gray-400 text-sm font-semibold">Tipo</th>
-              <th class="p-4 text-gray-400 text-sm font-semibold">Última Troca</th>
-              <th class="p-4 text-gray-400 text-sm font-semibold">Validade</th>
-              <th class="p-4 text-gray-400 text-sm font-semibold text-center">Ações</th>
-            </tr>
-          </thead>
-          <tbody id="tabela-manutencoes" class="divide-y divide-gray-800"></tbody>
-        </table>
-      </div>
-    </section>
+  <!-- NOTIFICAÇÕES TOAST -->
+  <div id="toast" class="hidden fixed bottom-5 right-5 bg-cyan-600 text-white font-bold px-5 py-3 rounded-xl shadow-2xl transition-all z-50 border border-cyan-400/30"></div>
 
-    <!-- TABELA: GUEPAR USO -->
-    <section id="tab-guepar" class="tab-content hidden">
-      <div class="flex flex-wrap gap-3 justify-between items-center mb-6">
-        <div>
-          <h2 class="text-xl md:text-2xl font-bold">Guepar Uso (Materiais)</h2>
-          <p class="text-gray-400 text-sm">Consumíveis e materiais de suporte</p>
-        </div>
-        <div class="flex gap-2">
-          <button onclick="gerarRelatorio('guepar')" class="bg-tech-700 hover:bg-tech-600 px-3 py-2 rounded font-bold text-sm transition-colors flex items-center gap-1"><i class="ph ph-file-pdf"></i> Relatório</button>
-          <button onclick="abrirFormGuepar()" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded font-bold transition-colors">+ Novo Item</button>
-        </div>
+  <!-- MODAL DE CONFIRMAÇÃO -->
+  <div id="modalConfirma" class="hidden fixed inset-0 bg-slate-950/80 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+    <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl max-w-sm w-full space-y-4 shadow-2xl">
+      <h3 class="text-lg font-bold text-white">Confirmar Ação</h3>
+      <p id="confirma-texto" class="text-sm text-gray-300"></p>
+      <div class="flex justify-end space-x-3 pt-2">
+        <button onclick="fecharModal('modalConfirma')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-gray-300 rounded-lg text-sm font-semibold transition">Cancelar</button>
+        <button id="confirma-ok" class="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg text-sm font-semibold transition">Confirmar</button>
       </div>
-      <div class="bg-tech-800 rounded-lg border border-tech-700 shadow-lg overflow-x-auto">
-        <table class="w-full min-w-[640px] text-left">
-          <thead class="bg-tech-700/50"><tr>
-            <th class="p-4 text-gray-400 text-sm font-semibold">Cód.</th>
-            <th class="p-4 text-gray-400 text-sm font-semibold">Item</th>
-            <th class="p-4 text-gray-400 text-sm font-semibold">Marca</th>
-            <th class="p-4 text-gray-400 text-sm font-semibold">Qtd. Estoque</th>
-            <th class="p-4 text-gray-400 text-sm font-semibold text-center">Ações</th>
-          </tr></thead>
-          <tbody id="tbody-guepar"></tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- TABELA: PEÇAS DO ROBÔ -->
-    <section id="tab-pecas" class="tab-content hidden">
-      <div class="flex flex-wrap gap-3 justify-between items-center mb-6">
-        <h2 class="text-xl md:text-2xl font-bold">Peças do Robô</h2>
-        <div class="flex gap-2">
-          <button onclick="gerarRelatorio('pecas')" class="bg-tech-700 hover:bg-tech-600 px-3 py-2 rounded font-bold text-sm transition-colors flex items-center gap-1"><i class="ph ph-file-pdf"></i> Relatório</button>
-          <button onclick="abrirFormPeca()" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded font-bold transition-colors">+ Nova Peça</button>
-        </div>
-      </div>
-      <div class="bg-tech-800 rounded-lg border border-tech-700 shadow-lg overflow-x-auto">
-        <table class="w-full min-w-[640px] text-left">
-          <thead class="bg-tech-700/50"><tr>
-            <th class="p-4 text-gray-400 text-sm font-semibold">Cód.</th>
-            <th class="p-4 text-gray-400 text-sm font-semibold">Nome da peça</th>
-            <th class="p-4 text-gray-400 text-sm font-semibold">Estoque / Mínimo</th>
-            <th class="p-4 text-gray-400 text-sm font-semibold text-center">Ações</th>
-          </tr></thead>
-          <tbody id="tbody-pecas"></tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- TABELA: FORNECEDORES -->
-    <section id="tab-fornecedores" class="tab-content hidden">
-      <div class="flex flex-wrap gap-3 justify-between items-center mb-6">
-        <h2 class="text-xl md:text-2xl font-bold">Fornecedores</h2>
-        <div class="flex gap-2">
-          <button onclick="gerarRelatorio('fornecedores')" class="bg-tech-700 hover:bg-tech-600 px-3 py-2 rounded font-bold text-sm transition-colors flex items-center gap-1"><i class="ph ph-file-pdf"></i> Relatório</button>
-          <button onclick="abrirFormForn()" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded font-bold transition-colors">+ Novo Fornecedor</button>
-        </div>
-      </div>
-      <div class="bg-tech-800 rounded-lg border border-tech-700 shadow-lg overflow-x-auto">
-        <table class="w-full min-w-[720px] text-left">
-          <thead class="bg-tech-700/50"><tr>
-            <th class="p-4 text-gray-400 text-sm font-semibold">Cód.</th>
-            <th class="p-4 text-gray-400 text-sm font-semibold">Empresa</th>
-            <th class="p-4 text-gray-400 text-sm font-semibold">CNPJ</th>
-            <th class="p-4 text-gray-400 text-sm font-semibold">Contato</th>
-            <th class="p-4 text-gray-400 text-sm font-semibold">Telefone</th>
-            <th class="p-4 text-gray-400 text-sm font-semibold text-center">Ações</th>
-          </tr></thead>
-          <tbody id="tbody-fornecedores"></tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- TABELA: ASSISTENTE IA -->
-    <section id="tab-ia" class="tab-content hidden flex-col h-[calc(100vh-100px)]">
-      <h2 class="text-2xl font-bold text-tech-accent mb-4"><i class="ph ph-sparkle"></i> Assistente de Estoque</h2>
-      <div class="bg-tech-800 flex-1 rounded-xl border border-tech-700 shadow-2xl flex flex-col overflow-hidden">
-        <div id="chat-box" class="flex-1 p-6 overflow-y-auto"></div>
-        <div class="p-4 bg-tech-900 border-t border-tech-700 flex gap-3">
-          <input id="chat-input" type="text" placeholder="Pergunte sobre o estoque..." class="flex-1 bg-tech-800 p-3 rounded-xl border border-tech-600 outline-none text-white">
-          <button id="btn-enviar" class="bg-tech-accent text-tech-900 px-6 py-3 rounded-xl font-bold">Enviar</button>
-        </div>
-      </div>
-    </section>
-
-  </main>
-</div>
-
-<!-- ================= MODAIS DE CADASTRO E EDIÇÃO ================= -->
-
-<!-- MODAL: GUEPAR USO -->
-<div id="modalGuepar" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm p-4">
-  <div class="bg-tech-800 p-6 rounded-xl border border-tech-700 w-full max-w-[450px] shadow-2xl">
-    <h3 id="modalGuepar-titulo" class="text-2xl font-bold mb-6">Item Guepar Uso</h3>
-    <div class="space-y-4">
-      <div>
-        <label class="block text-sm font-semibold text-gray-300 mb-1">Nome do Item</label>
-        <input id="guepar-nome" type="text" class="w-full bg-tech-900 p-3 rounded border border-tech-600 text-white outline-none">
-      </div>
-      <div>
-        <label class="block text-sm font-semibold text-gray-300 mb-1">Marca</label>
-        <input id="guepar-marca" type="text" class="w-full bg-tech-900 p-3 rounded border border-tech-600 text-white outline-none">
-      </div>
-      <div>
-        <label class="block text-sm font-semibold text-gray-300 mb-1">Quantidade em Estoque</label>
-        <input id="guepar-estoque" type="number" min="0" class="w-full bg-tech-900 p-3 rounded border border-tech-600 text-white outline-none">
-      </div>
-    </div>
-    <p id="guepar-erro" class="text-red-400 text-sm mt-3 min-h-[20px]"></p>
-    <div class="flex justify-end gap-3 mt-6">
-      <button onclick="fecharModal('modalGuepar')" class="px-5 py-2.5 rounded bg-tech-700 font-bold">Cancelar</button>
-      <button id="guepar-salvar" onclick="salvarGuepar()" class="px-5 py-2.5 rounded bg-blue-600 hover:bg-blue-500 font-bold">Salvar</button>
     </div>
   </div>
-</div>
 
-<!-- MODAL: MANUTENÇÃO -->
-<div id="modal-manutencao" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm p-4">
-  <div class="bg-tech-800 p-6 rounded-xl border border-tech-700 w-full max-w-[450px] shadow-2xl">
-    <h3 id="modal-manutencao-titulo" class="text-2xl font-bold mb-6 text-tech-accent">Agendar Manutenção</h3>
-    <div class="space-y-4">
-      <div>
-        <label class="block text-sm text-gray-300 mb-1">Nome / Identificação do Equipamento</label>
-        <input id="manu-nome" type="text" placeholder="Ex: Robô Solda 01" class="w-full bg-tech-900 p-3 rounded border border-tech-600 text-white outline-none">
-      </div>
-      <div>
-        <label class="block text-sm text-gray-300 mb-1">Tipo de Manutenção</label>
-        <select id="manu-tipo" class="w-full bg-tech-900 p-3 rounded border border-tech-600 text-white outline-none">
-          <option value="bateria">Bateria</option>
-          <option value="rodinha">Rodinha</option>
-          <option value="graxa">Graxa</option>
-          <option value="geral">Revisão Geral</option>
-        </select>
-      </div>
-      <div>
-        <label class="block text-sm text-gray-300 mb-1">Data da Última Troca / Revisão</label>
-        <input id="manu-ultima-troca" type="date" class="w-full bg-tech-900 p-3 rounded border border-tech-600 text-white outline-none">
-      </div>
-      <div>
-        <label class="block text-sm text-gray-300 mb-1">Data de Validade / Próxima Revisão</label>
-        <input id="manu-validade" type="date" class="w-full bg-tech-900 p-3 rounded border border-tech-600 text-white outline-none">
-      </div>
-    </div>
-    <p id="manu-erro" class="text-red-400 text-sm mt-3 min-h-[20px]"></p>
-    <div class="flex justify-end gap-3 mt-6">
-      <button onclick="fecharModalManutencao()" class="px-5 py-2.5 rounded bg-tech-700 font-bold">Cancelar</button>
-      <button onclick="salvarManutencao()" class="px-5 py-2.5 rounded bg-blue-600 hover:bg-blue-500 font-bold">Salvar</button>
-    </div>
-  </div>
-</div>
+  <!-- MODAIS CRUD (DINÂMICOS/REUTILIZÁVEIS) -->
+  <div id="container-modais"></div>
 
-<!-- MODAL: PEÇAS DO ROBÔ -->
-<div id="modalItem" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm p-4">
-  <div class="bg-tech-800 p-6 rounded-xl border border-tech-700 w-full max-w-[450px] shadow-2xl">
-    <h3 id="modalItem-titulo" class="text-2xl font-bold mb-6">Peça do Robô</h3>
-    <div class="space-y-4">
-      <div>
-        <label class="block text-sm text-gray-300 mb-1">Nome</label>
-        <input id="item-nome" type="text" class="w-full bg-tech-900 p-3 rounded border border-tech-600 text-white outline-none">
-      </div>
-      <div class="flex gap-4">
-        <div class="flex-1">
-          <label class="block text-sm text-gray-300 mb-1">Qtd. Atual</label>
-          <input id="item-estoque" type="number" min="0" class="w-full bg-tech-900 p-3 rounded border border-tech-600 text-white outline-none">
-        </div>
-        <div class="flex-1">
-          <label class="block text-sm text-gray-300 mb-1">Qtd. Mínima</label>
-          <input id="item-min" type="number" min="0" class="w-full bg-tech-900 p-3 rounded border border-tech-600 text-white outline-none">
-        </div>
-      </div>
-    </div>
-    <p id="item-erro" class="text-red-400 text-sm mt-3 min-h-[20px]"></p>
-    <div class="flex justify-end gap-3 mt-6">
-      <button onclick="fecharModal('modalItem')" class="px-5 py-2.5 rounded bg-tech-700 font-bold">Cancelar</button>
-      <button id="item-salvar" onclick="salvarPeca()" class="px-5 py-2.5 rounded bg-blue-600 hover:bg-blue-500 font-bold">Salvar</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL: FORNECEDORES -->
-<div id="modalForn" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm p-4">
-  <div class="bg-tech-800 p-6 rounded-xl border border-tech-700 w-full max-w-[450px] shadow-2xl">
-    <h3 id="modalForn-titulo" class="text-2xl font-bold mb-6">Fornecedor</h3>
-    <div class="space-y-3">
-      <input id="forn-nome" type="text" placeholder="Empresa" class="w-full bg-tech-900 p-3 rounded border border-tech-600 text-white outline-none">
-      <input id="forn-cnpj" type="text" placeholder="CNPJ" class="w-full bg-tech-900 p-3 rounded border border-tech-600 text-white outline-none">
-      <input id="forn-contato" type="text" placeholder="Nome do Contato" class="w-full bg-tech-900 p-3 rounded border border-tech-600 text-white outline-none">
-      <input id="forn-telefone" type="text" placeholder="Telefone" class="w-full bg-tech-900 p-3 rounded border border-tech-600 text-white outline-none">
-    </div>
-    <p id="forn-erro" class="text-red-400 text-sm mt-3 min-h-[20px]"></p>
-    <div class="flex justify-end gap-3 mt-6">
-      <button onclick="fecharModal('modalForn')" class="px-5 py-2.5 rounded bg-tech-700 font-bold">Cancelar</button>
-      <button id="forn-salvar" onclick="salvarForn()" class="px-5 py-2.5 rounded bg-blue-600 hover:bg-blue-500 font-bold">Salvar</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL DE CONFIRMAÇÃO PARA EXCLUSÃO -->
-<div id="modalConfirma" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm p-4">
-  <div class="bg-tech-800 p-6 rounded-xl border border-red-500/50 w-full max-w-[400px] shadow-2xl">
-    <h3 class="text-xl font-bold mb-3">Excluir registro</h3>
-    <p id="confirma-texto" class="text-gray-300 mb-6"></p>
-    <div class="flex justify-end gap-3">
-      <button onclick="fecharModal('modalConfirma')" class="px-5 py-2.5 rounded bg-tech-700 font-bold">Cancelar</button>
-      <button id="confirma-ok" class="px-5 py-2.5 rounded bg-red-600 font-bold">Excluir</button>
-    </div>
-  </div>
-</div>
-
-<div id="toast" class="hidden fixed bottom-6 right-6 z-[80] bg-tech-800 border border-tech-accent px-5 py-3 rounded-lg shadow-2xl"></div>
-
-<!-- ÁREA DE IMPRESSÃO OCULTA PARA GERAR RELATÓRIOS -->
-<div id="area-impressao" class="hidden"></div>
-
-<script type="module" src="js/main.js"></script>
+  <!-- BOOTSTRAP DA APLICAÇÃO (ES MODULES) -->
+  <script type="module" src="js/main.js"></script>
 </body>
 </html>
