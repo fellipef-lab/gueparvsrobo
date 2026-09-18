@@ -35,7 +35,7 @@ export async function iniciar() {
     };
   }
 
-  // Verifica a sessão atual
+  // Verifica se já existe sessão ativa
   const { data: { session } } = await state.sb.auth.getSession();
   if (session) {
     mostrarApp(session);
