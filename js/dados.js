@@ -1,5 +1,5 @@
 import { state } from './state.js';
-import { conexao, explicarErro } from './utils.js';
+import { conexao } from './utils.js';
 import { renderDashboard } from './dashboard.js';
 import { renderPecas } from './pecas.js';
 import { renderGuepar } from './guepar.js';
@@ -26,12 +26,12 @@ export async function carregarTudo() {
 
     conexao('ok', 'Sincronizado');
 
-    // Atualiza a aba visível no momento
+    // Renderiza o dashboard e todas as telas
     renderDashboard();
-    renderPecas();
-    renderGuepar();
-    renderFornecedores();
-    renderManutencoes();
+    if (typeof renderPecas === 'function') renderPecas();
+    if (typeof renderGuepar === 'function') renderGuepar();
+    if (typeof renderFornecedores === 'function') renderFornecedores();
+    if (typeof renderManutencoes === 'function') renderManutencoes();
 
   } catch (err) {
     console.error('Erro ao carregar dados:', err);
@@ -42,10 +42,15 @@ export async function carregarTudo() {
 export function ouvirMudancas() {
   if (!state.sb) return;
 
+  // Encadeamento correto: primeiro o .on() e APENAS no final o .subscribe()
   state.sb
     .channel('mudancas-schema')
-    .on('postgres_changes', { event: '*', schema: 'public' }, () => {
-      carregarTudo();
-    })
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public' },
+      () => {
+        carregarTudo();
+      }
+    )
     .subscribe();
 }
