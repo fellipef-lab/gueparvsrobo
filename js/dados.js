@@ -1,44 +1,43 @@
 import { state } from './state.js';
-import { conexao } from './utils.js';
 import { renderDashboard } from './dashboard.js';
-import { renderPecas } from './pecas.js';
-import { renderGuepar } from './guepar.js';
-import { renderFornecedores } from './fornecedores.js';
 import { renderManutencoes } from './manutencoes.js';
+import { renderGuepar } from './guepar.js';
+import { renderPecas } from './pecas.js';
+import { renderFornecedores } from './fornecedores.js';
+import { conexao } from './utils.js';
 
 export async function carregarTudo() {
-  if (!state.sb) return;
-  
-  conexao('esperando', 'Buscando dados...');
+  conexao('esperando', 'A carregar dados...');
 
   try {
-    const [p, g, f, m] = await Promise.all([
-      state.sb.from('pecas').select('*').order('nome'),
-      state.sb.from('guepar_uso').select('*').order('nome'),
-      state.sb.from('fornecedores').select('*').order('nome'),
-      state.sb.from('manutencoes').select('*').order('validade')
+    if (!state.sb) {
+      conexao('erro', 'Sem conexão');
+      return;
+    }
+
+    // Busca dados em paralelo nas tabelas do Supabase
+    const [mRes, pRes, gRes, fRes] = await Promise.all([
+      state.sb.from('manutencoes').select('*').order('created_at', { ascending: false }),
+      state.sb.from('pecas').select('*').order('created_at', { ascending: false }),
+      state.sb.from('guepar_uso').select('*').order('created_at', { ascending: false }),
+      state.sb.from('fornecedores').select('*').order('created_at', { ascending: false })
     ]);
 
-    if (p.data) state.dados.pecas = p.data;
-    if (g.data) state.dados.guepar = g.data;
-    if (f.data) state.dados.fornecedores = f.data;
-    if (m.data) state.dados.manutencoes = m.data;
+    state.dados.manutencoes = mRes.data || [];
+    state.dados.pecas = pRes.data || [];
+    state.dados.guepar = gRes.data || [];
+    state.dados.fornecedores = fRes.data || [];
+
+    // Renderiza cada secção da interface
+    if (typeof renderDashboard === 'function') renderDashboard();
+    if (typeof renderManutencoes === 'function') renderManutencoes();
+    if (typeof renderGuepar === 'function') renderGuepar();
+    if (typeof renderPecas === 'function') renderPecas();
+    if (typeof renderFornecedores === 'function') renderFornecedores();
 
     conexao('ok', 'Sincronizado');
-
-    renderDashboard();
-    if (typeof renderPecas === 'function') renderPecas();
-    if (typeof renderGuepar === 'function') renderGuepar();
-    if (typeof renderFornecedores === 'function') renderFornecedores();
-    if (typeof renderManutencoes === 'function') renderManutencoes();
-
   } catch (err) {
     console.error('Erro ao carregar dados:', err);
-    conexao('erro', 'Erro de conexão');
+    conexao('erro', 'Erro ao sincronizar');
   }
-}
-
-export function ouvirMudancas() {
-  // Desativado temporariamente para impedir qualquer exceção do Supabase Realtime de bloquear a UI
-  return;
 }
