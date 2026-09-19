@@ -1,8 +1,10 @@
 // Gestor de Estado Global da Aplicação
 export const state = {
-  // Substitui os valores entre aspas pelas tuas credenciais reais do Supabase:
-  SUPABASE_URL: 'https://xxxxxxx.supabase.co', 
-  SUPABASE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',               
+  // A sua URL real extraída do seu projeto:
+  SUPABASE_URL: 'https://vmqkutpgigftsbangesu.supabase.co', 
+  
+  // A sua chave publishable/anon que acabou de copiar:
+  SUPABASE_KEY: 'sb_publishable_0tmGHhKQ00r7yTom2-0TQQ_J3tWKrMc',               
   
   sb: null,
 
