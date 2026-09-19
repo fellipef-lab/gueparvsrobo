@@ -1,5 +1,6 @@
 import { state } from './state.js';
 import { explicarErro, toast } from './utils.js';
+import { carregarTudo } from './dados.js';
 
 export async function iniciar() {
   const formLogin = document.getElementById('form-login');
@@ -17,21 +18,32 @@ export async function iniciar() {
       if (state.sb && state.sb.auth) {
         await state.sb.auth.signOut();
       }
+      localStorage.removeItem('guepar_user');
+      state.usuario = null;
       alternarTelas(false);
     };
   }
 
-  // Verifica se o Supabase está pronto antes de tentar ler a sessão
+  // Se já existir utilizador guardado em cache, entra direto
+  if (state.usuario) {
+    alternarTelas(true);
+    await carregarTudo();
+    return;
+  }
+
+  // Tenta recuperar sessão do Supabase
   if (state.sb && state.sb.auth) {
     try {
       const { data } = await state.sb.auth.getSession();
       if (data?.session) {
         state.usuario = data.session.user;
+        localStorage.setItem('guepar_user', JSON.stringify(data.session.user));
         alternarTelas(true);
+        await carregarTudo();
         return;
       }
     } catch (err) {
-      console.warn('Erro ao obter sessão:', err);
+      console.warn('Sessão não encontrada:', err);
     }
   }
 
@@ -59,23 +71,22 @@ export async function realizarLogin() {
   }
 
   try {
-    // Garante a inicialização do Supabase caso ainda não tenha sido criado
     if (!state.sb && typeof supabase !== 'undefined' && state.SUPABASE_URL && state.SUPABASE_KEY) {
       state.sb = supabase.createClient(state.SUPABASE_URL, state.SUPABASE_KEY);
     }
 
-    if (!state.sb || !state.sb.auth) {
-      // Fallback local caso o Supabase falhe ou esteja fora de rede
-      alternarTelas(true);
-      return;
+    if (state.sb && state.sb.auth) {
+      const { data, error } = await state.sb.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      state.usuario = data.user;
+    } else {
+      // Fallback local se o Supabase não responder
+      state.usuario = { email };
     }
 
-    const { data, error } = await state.sb.auth.signInWithPassword({ email, password });
-
-    if (error) throw error;
-
-    state.usuario = data.user;
+    localStorage.setItem('guepar_user', JSON.stringify(state.usuario));
     alternarTelas(true);
+    await carregarTudo();
   } catch (err) {
     toast(explicarErro(err));
   } finally {
