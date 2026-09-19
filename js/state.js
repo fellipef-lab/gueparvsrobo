@@ -1,40 +1,27 @@
-import { renderDashboard } from './dashboard.js';
-import { renderPecas } from './pecas.js';
-import { renderGuepar } from './guepar.js';
-import { renderFornecedores } from './fornecedores.js';
-import { renderManutencoes } from './manutencoes.js';
-
+// Gestor de Estado Global da Aplicação
 export const state = {
+  // Configurações da API Supabase
+  SUPABASE_URL: 'https://sua-url-do-supabase.supabase.co', // Substitua pela sua URL real do Supabase
+  SUPABASE_KEY: 'sua-chave-anon-key-aqui',               // Substitua pela sua Anon Key real do Supabase
+  
+  // Instância do cliente Supabase (criada no main.js / auth.js)
   sb: null,
-  usuario: null,
+
+  // Recupera o usuário salvo no navegador (evita pedir login a todo F5)
+  usuario: (function() {
+    try {
+      const saved = localStorage.getItem('guepar_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      return null;
+    }
+  })(),
+
+  // Armazenamento local de cache das tabelas do banco de dados
   dados: {
+    manutencoes: [],
     pecas: [],
     guepar: [],
-    fornecedores: [],
-    manutencoes: []
-  },
-  async carregarTudo() {
-    if (!this.sb) return;
-    try {
-      const [p, g, f, m] = await Promise.all([
-        this.sb.from('pecas').select('*').order('nome'),
-        this.sb.from('guepar_uso').select('*').order('nome'),
-        this.sb.from('fornecedores').select('*').order('nome'),
-        this.sb.from('manutencoes').select('*').order('validade')
-      ]);
-
-      if (p.data) this.dados.pecas = p.data;
-      if (g.data) this.dados.guepar = g.data;
-      if (f.data) this.dados.fornecedores = f.data;
-      if (m.data) this.dados.manutencoes = m.data;
-
-      if (typeof renderDashboard === 'function') renderDashboard();
-      if (typeof renderPecas === 'function') renderPecas();
-      if (typeof renderGuepar === 'function') renderGuepar();
-      if (typeof renderFornecedores === 'function') renderFornecedores();
-      if (typeof renderManutencoes === 'function') renderManutencoes();
-    } catch (err) {
-      console.error('Erro ao carregar dados do Supabase:', err);
-    }
+    fornecedores: []
   }
 };
