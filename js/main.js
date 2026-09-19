@@ -4,7 +4,6 @@ import { initNav } from './nav.js';
 import { carregarTudo } from './dados.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
-  // Inicializa a instância do Supabase
   if (typeof supabase !== 'undefined' && state.SUPABASE_URL && state.SUPABASE_KEY) {
     state.sb = supabase.createClient(state.SUPABASE_URL, state.SUPABASE_KEY);
   }
@@ -12,6 +11,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   initNav();
   await iniciarAuth();
   
-  // Força o carregamento dos dados e renderização das abas
-  await carregarTudo();
+  if (state.usuario) {
+    await carregarTudo();
+  }
 });
