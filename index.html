@@ -55,7 +55,7 @@
         <p class="text-xs text-gray-400">Acesse sua conta para gerenciar estoque e manutenções</p>
       </div>
 
-      <form id="form-login" onsubmit="event.preventDefault(); entrarDireto();" class="space-y-4">
+      <form id="form-login" class="space-y-4">
         <div>
           <label class="block text-xs uppercase font-bold text-gray-400 mb-1 tracking-wider">E-mail</label>
           <input type="email" id="login-email" value="fellipe.f@grupodime.com.br" required class="w-full bg-slate-800/80 border border-slate-700/80 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition text-sm">
@@ -95,30 +95,30 @@
 
         <!-- MENU DE NAVEGAÇÃO -->
         <nav class="space-y-1">
-          <button onclick="mudarAba('dashboard')" class="w-full text-left nav-item flex items-center space-x-3 px-4 py-3 rounded-xl font-bold text-sm transition text-cyan-400 bg-cyan-500/10 border border-cyan-500/20" id="nav-dashboard">
+          <a href="#dashboard" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-xl font-bold text-sm transition text-cyan-400 bg-cyan-500/10 border border-cyan-500/20" data-aba="dashboard">
             <i class="ph ph-squares-four text-lg"></i>
             <span>Dashboard</span>
-          </button>
+          </a>
 
-          <button onclick="mudarAba('manutencoes')" class="w-full text-left nav-item flex items-center space-x-3 px-4 py-3 rounded-xl font-semibold text-sm transition text-gray-400 hover:text-white hover:bg-slate-800/50" id="nav-manutencoes">
+          <a href="#manutencoes" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-xl font-semibold text-sm transition text-gray-400 hover:text-white hover:bg-slate-800/50" data-aba="manutencoes">
             <i class="ph ph-wrench text-lg"></i>
             <span>Manutenções</span>
-          </button>
+          </a>
 
-          <button onclick="mudarAba('guepar')" class="w-full text-left nav-item flex items-center space-x-3 px-4 py-3 rounded-xl font-semibold text-sm transition text-gray-400 hover:text-white hover:bg-slate-800/50" id="nav-guepar">
+          <a href="#guepar" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-xl font-semibold text-sm transition text-gray-400 hover:text-white hover:bg-slate-800/50" data-aba="guepar">
             <i class="ph ph-package text-lg"></i>
             <span>Guepar Uso</span>
-          </button>
+          </a>
 
-          <button onclick="mudarAba('pecas')" class="w-full text-left nav-item flex items-center space-x-3 px-4 py-3 rounded-xl font-semibold text-sm transition text-gray-400 hover:text-white hover:bg-slate-800/50" id="nav-pecas">
+          <a href="#pecas" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-xl font-semibold text-sm transition text-gray-400 hover:text-white hover:bg-slate-800/50" data-aba="pecas">
             <i class="ph ph-cpu text-lg"></i>
             <span>Peças do Robô</span>
-          </button>
+          </a>
 
-          <button onclick="mudarAba('fornecedores')" class="w-full text-left nav-item flex items-center space-x-3 px-4 py-3 rounded-xl font-semibold text-sm transition text-gray-400 hover:text-white hover:bg-slate-800/50" id="nav-fornecedores">
+          <a href="#fornecedores" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-xl font-semibold text-sm transition text-gray-400 hover:text-white hover:bg-slate-800/50" data-aba="fornecedores">
             <i class="ph ph-users-three text-lg"></i>
             <span>Fornecedores</span>
-          </button>
+          </a>
         </nav>
 
       </div>
@@ -135,9 +135,9 @@
         <!-- USUÁRIO / SAIR -->
         <div class="bg-slate-800/40 p-3 rounded-xl border border-slate-800 flex items-center justify-between">
           <div class="truncate mr-2">
-            <p id="usuario-email" class="text-xs font-bold text-white truncate">fellipe.f@grupodime.com.br</p>
+            <p id="usuario-email" class="text-xs font-bold text-white truncate"></p>
           </div>
-          <button onclick="window.location.reload()" title="Sair do sistema" class="text-gray-400 hover:text-red-400 p-1.5 transition rounded-lg hover:bg-slate-800 cursor-pointer">
+          <button id="btn-sair" title="Sair do sistema" class="text-gray-400 hover:text-red-400 p-1.5 transition rounded-lg hover:bg-slate-800 cursor-pointer">
             <i class="ph ph-sign-out text-lg"></i>
           </button>
         </div>
@@ -145,14 +145,9 @@
       </div>
     </aside>
 
-    <!-- CONTEÚDO PRINCIPAL (MUDANÇA DE ABAS) -->
+    <!-- CONTEÚDO PRINCIPAL -->
     <main class="flex-1 p-6 md:p-10 overflow-y-auto space-y-6">
-      <div id="aba-dashboard" class="aba-conteudo space-y-6">
-        <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl">
-          <h1 class="text-2xl font-black text-white">Dashboard Operacional</h1>
-          <p class="text-sm text-gray-400 mt-1">Gerenciamento de estoque e manutenções carregado com sucesso.</p>
-        </div>
-      </div>
+      <div id="aba-dashboard" class="aba-conteudo space-y-6"></div>
       <div id="aba-manutencoes" class="aba-conteudo hidden space-y-6"></div>
       <div id="aba-guepar" class="aba-conteudo hidden space-y-6"></div>
       <div id="aba-pecas" class="aba-conteudo hidden space-y-6"></div>
@@ -161,26 +156,10 @@
 
   </div>
 
-  <!-- SCRIPT DIRETO inline (SEM MODULOS JS QUE QUEBRAM CACHE) -->
-  <script>
-    function entrarDireto() {
-      document.getElementById('tela-login').classList.add('hidden');
-      document.getElementById('tela-app').classList.remove('hidden');
-    }
+  <div id="container-modais"></div>
 
-    function mudarAba(nomeAba) {
-      document.querySelectorAll('.aba-conteudo').forEach(el => el.classList.add('hidden'));
-      document.querySelectorAll('.nav-item').forEach(el => {
-        el.className = "w-full text-left nav-item flex items-center space-x-3 px-4 py-3 rounded-xl font-semibold text-sm transition text-gray-400 hover:text-white hover:bg-slate-800/50";
-      });
-
-      const abaTarget = document.getElementById(`aba-${nomeAba}`);
-      const navTarget = document.getElementById(`nav-${nomeAba}`);
-
-      if (abaTarget) abaTarget.classList.remove('hidden');
-      if (navTarget) navTarget.className = "w-full text-left nav-item flex items-center space-x-3 px-4 py-3 rounded-xl font-bold text-sm transition text-cyan-400 bg-cyan-500/10 border border-cyan-500/20";
-    }
-  </script>
+  <!-- INICIALIZA O SISTEMA COMPLETO -->
+  <script type="module" src="./js/main.js?v=2026_final"></script>
 
 </body>
 </html>
