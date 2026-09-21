@@ -113,6 +113,7 @@ export async function cadastrarNovoUsuario() {
   const emailInput = document.getElementById('novo-email');
   const senhaInput = document.getElementById('novo-senha');
   const roleSelect = document.getElementById('novo-role');
+  const btnCadastrar = document.getElementById('btn-cadastrar-usuario');
 
   if (!emailInput || !senhaInput || !roleSelect) return;
 
@@ -120,18 +121,52 @@ export async function cadastrarNovoUsuario() {
   const password = senhaInput.value.trim();
   const role = roleSelect.value;
 
+  if (!email || !password) {
+    toast('Preencha o e-mail e a senha temporária.');
+    return;
+  }
+
+  if (password.length < 6) {
+    toast('A senha deve ter pelo menos 6 caracteres.');
+    return;
+  }
+
+  if (btnCadastrar) {
+    btnCadastrar.disabled = true;
+    btnCadastrar.innerText = 'Cadastrando...';
+  }
+
   try {
-    const { data, error } = await state.sb.auth.signUp({ email, password });
+    // 1. Regista o utilizador no Supabase Auth
+    const { data, error } = await state.sb.auth.signUp({ 
+      email, 
+      password,
+      options: {
+        data: { role: role }
+      }
+    });
+
     if (error) throw error;
 
-    if (data.user) {
-      await state.sb.from('profiles').insert([{ id: data.user.id, email, role }]);
-      toast(`Usuário ${email} cadastrado com sucesso!`);
+    if (data?.user) {
+      // 2. Insere/Atualiza o perfil na tabela 'profiles'
+      const { error: profileErr } = await state.sb.from('profiles').upsert([
+        { id: data.user.id, email: email, role: role }
+      ]);
+
+      if (profileErr) console.warn('Aviso ao guardar perfil:', profileErr);
+
+      toast(`Usuário ${email} cadastrado como ${role.toUpperCase()}!`);
       emailInput.value = '';
       senhaInput.value = '';
     }
   } catch (err) {
     toast(explicarErro(err));
+  } finally {
+    if (btnCadastrar) {
+      btnCadastrar.disabled = false;
+      btnCadastrar.innerHTML = '<i class="ph ph-user-plus text-lg"></i><span>Cadastrar Usuário</span>';
+    }
   }
 }
 
