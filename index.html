@@ -3,219 +3,1211 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Guepar vs RobÔ - Painel de Controle</title>
+  <title>Guepar vs RobÔ - Smart Inventory 5.0</title>
   
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- Phosphor Icons CDN -->
-  <script src="https://unpkg.com/@phosphor-icons/web"></script>
-  
-  <!-- Chart.js CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- PWA & Mobile Meta Tags -->
+  <link rel="manifest" href="./manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#020617">
 
-  <!-- Supabase JS Client CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+
+  <style>
+    .chat-mensagem { animation: fadeIn 0.3s ease-out forwards; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .modal-overlay { animation: fadeIn 0.2s ease-out forwards; }
+    
+    .bento-card {
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+      border-radius: 1.5rem;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .bento-card:hover { transform: translateY(-2px); box-shadow: 0 10px 40px rgba(6, 182, 212, 0.05); }
+    
+    .badge-alerta {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 1.25rem; height: 1.25rem; border-radius: 9999px; font-size: 0.65rem; font-weight: bold;
+    }
+  </style>
 
   <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            brand: {
-              50: '#ecfeff',
-              500: '#06b6d4',
-              600: '#0891b2',
-              700: '#0e7490',
-            }
-          }
-        }
-      }
-    }
+    tailwind.config = { darkMode: 'class', theme: { extend: { colors: { brand: { 500: '#06b6d4' } } } } }
   </script>
 </head>
-<body class="h-full text-slate-100 bg-slate-950 font-sans antialiased selection:bg-cyan-500 selection:text-white">
+<body class="h-full text-slate-100 bg-slate-950 font-sans antialiased flex items-center justify-center bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-fixed">
 
-  <!-- NOTIFICAÇÃO TOAST -->
-  <div id="toast" class="fixed bottom-5 right-5 z-50 hidden bg-slate-800 text-white px-5 py-3 rounded-xl border border-cyan-500/30 shadow-2xl flex items-center space-x-2 backdrop-blur-md">
-    <i class="ph ph-info text-cyan-400 text-lg"></i>
-    <span id="toast-msg" class="text-sm font-semibold"></span>
-  </div>
-
-  <!-- TELA DE LOGIN -->
-  <div id="tela-login" class="min-h-screen flex items-center justify-center p-4 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-black">
-    <div class="w-full max-w-md bg-slate-900/90 border border-slate-800 p-8 rounded-3xl backdrop-blur-xl shadow-2xl space-y-6">
-      
-      <div class="text-center space-y-2">
-        <div class="inline-flex items-center justify-center p-3 bg-cyan-500/10 rounded-2xl border border-cyan-500/20 mb-2">
-          <i class="ph ph-robot text-4xl text-cyan-400"></i>
-        </div>
-        <h1 class="text-2xl font-black tracking-tight text-white">Guepar <span class="text-cyan-400">vs</span> RobÔ</h1>
-        <p class="text-xs text-gray-400">Acesse sua conta para gerenciar estoque e manutenções</p>
+  <!-- ECRÃ DE LOGIN -->
+  <div id="tela-login" class="w-full max-w-md bg-slate-900/90 backdrop-blur-xl p-8 rounded-3xl shadow-2xl space-y-6 border border-slate-800 m-4 relative z-10">
+    <div class="text-center">
+      <div class="inline-flex items-center justify-center p-4 bg-cyan-500/10 rounded-2xl border border-cyan-500/20 mb-3 relative">
+        <i class="ph ph-robot text-5xl text-cyan-400"></i>
       </div>
-
-      <form id="form-login" class="space-y-4">
-        <div>
-          <label class="block text-xs uppercase font-bold text-gray-400 mb-1 tracking-wider">E-mail</label>
-          <input type="email" id="login-email" value="fellipe.f@grupodime.com.br" required class="w-full bg-slate-800/80 border border-slate-700/80 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition text-sm">
-        </div>
-
-        <div>
-          <label class="block text-xs uppercase font-bold text-gray-400 mb-1 tracking-wider">Senha</label>
-          <input type="password" id="login-senha" value="123456" required class="w-full bg-slate-800/80 border border-slate-700/80 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition text-sm">
-        </div>
-
-        <button type="submit" id="btn-login" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3.5 rounded-xl transition shadow-lg shadow-cyan-950/50 flex items-center justify-center space-x-2 text-sm cursor-pointer">
-          <span>Entrar no Sistema</span>
-          <i class="ph ph-arrow-right text-lg"></i>
-        </button>
-      </form>
-
+      <h1 class="text-2xl font-black">Guepar <span class="text-cyan-400">vs</span> RobÔ</h1>
+      <p class="text-xs text-gray-400 mt-1">Smart Inventory 5.0</p>
     </div>
+    
+    <form id="form-login" class="space-y-4">
+      <div>
+        <label class="block text-xs uppercase font-bold text-gray-400 mb-1">Acesso (Nome ou E-mail)</label>
+        <input type="text" id="login-id" value="fellipe.f@grupodime.com.br" required class="w-full bg-slate-800/80 border border-slate-700 focus:border-cyan-500 outline-none rounded-xl px-4 py-3 text-white transition" placeholder="Digite o seu utilizador">
+      </div>
+      <div>
+        <label class="block text-xs uppercase font-bold text-gray-400 mb-1">Palavra-passe</label>
+        <input type="password" id="login-senha" value="123456" required class="w-full bg-slate-800/80 border border-slate-700 focus:border-cyan-500 outline-none rounded-xl px-4 py-3 text-white transition">
+      </div>
+      <button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-cyan-900/50 transition">
+        Aceder ao Painel <i class="ph ph-arrow-right text-xl"></i>
+      </button>
+      
+      <!-- BOTÃO DE LOGIN BIOMÉTRICO -->
+      <button type="button" onclick="loginBiometrico()" class="w-full bg-slate-800 hover:bg-slate-700 text-cyan-400 font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 cursor-pointer border border-slate-700 transition mt-2">
+        <i class="ph ph-fingerprint text-2xl"></i> Face ID / Digital
+      </button>
+    </form>
   </div>
 
-  <!-- APLICAÇÃO PRINCIPAL (SISTEMA) -->
-  <div id="tela-app" class="hidden min-h-screen flex flex-col md:flex-row bg-slate-950">
+  <!-- APLICAÇÃO PRINCIPAL -->
+  <div id="tela-app" class="hidden w-full h-full flex bg-slate-950 overflow-hidden relative">
     
-    <!-- BARRA LATERAL (SIDEBAR) -->
-    <aside class="w-full md:w-64 bg-slate-900/80 border-r border-slate-800/80 p-5 flex flex-col justify-between shrink-0 backdrop-blur-md">
-      <div class="space-y-6">
-        
-        <!-- LOGO -->
+    <!-- MENU LATERAL -->
+    <aside id="menu-lateral" class="w-64 absolute md:relative h-full bg-slate-900/95 border-r border-slate-800 p-5 flex flex-col justify-between shrink-0 z-50 backdrop-blur-md overflow-y-auto transition-transform duration-300 -translate-x-full md:translate-x-0">
+      <button onclick="toggleMenu()" class="md:hidden absolute top-4 right-4 text-gray-400 hover:text-white"><i class="ph ph-x text-2xl"></i></button>
+      
+      <div class="space-y-8 mt-6 md:mt-0">
         <div class="flex items-center space-x-3 px-2">
-          <div class="p-2 bg-cyan-500/10 text-cyan-400 rounded-xl border border-cyan-500/20">
-            <i class="ph ph-robot text-2xl"></i>
-          </div>
+          <i class="ph ph-robot text-3xl text-cyan-400"></i>
           <div>
-            <h2 class="font-black text-white text-lg leading-none">Guepar <span class="text-cyan-400">vs</span> RobÔ</h2>
-            <span class="text-[10px] text-gray-400 font-semibold tracking-wider uppercase">Painel Operacional</span>
+            <h2 class="font-black text-white text-xl leading-none">Guepar <span class="text-cyan-400">App</span></h2>
+            <span class="text-[10px] text-emerald-400 font-bold tracking-wider uppercase flex items-center gap-1 mt-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Sistema Online
+            </span>
           </div>
         </div>
 
-        <!-- MENU DE NAVEGAÇÃO -->
-        <nav class="space-y-1">
-          <a href="#dashboard" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-xl font-bold text-sm transition text-cyan-400 bg-cyan-500/10 border border-cyan-500/20" data-aba="dashboard">
-            <i class="ph ph-squares-four text-lg"></i>
-            <span>Dashboard</span>
+        <nav class="space-y-2">
+          <a href="#" data-aba="dashboard" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-xl font-bold text-sm text-cyan-400 bg-cyan-500/10 border border-cyan-500/30 transition" onclick="toggleMenu(true)">
+            <i class="ph ph-squares-four text-xl"></i><span>Command Center</span>
           </a>
-
-          <a href="#manutencoes" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-xl font-semibold text-sm transition text-gray-400 hover:text-white hover:bg-slate-800/50" data-aba="manutencoes">
-            <i class="ph ph-wrench text-lg"></i>
-            <span>Manutenções</span>
+          <a href="#" data-aba="pecas" class="nav-link flex items-center justify-between px-4 py-3 rounded-xl font-semibold text-sm text-gray-400 border border-transparent hover:text-white hover:bg-slate-800 transition" onclick="toggleMenu(true)">
+            <div class="flex items-center space-x-3"><i class="ph ph-cpu text-xl"></i><span>Peças do Robô</span></div>
+            <span id="badge-pecas" class="badge-alerta bg-red-500/20 text-red-400 border border-red-500/50 hidden">0</span>
           </a>
-
-          <a href="#guepar" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-xl font-semibold text-sm transition text-gray-400 hover:text-white hover:bg-slate-800/50" data-aba="guepar">
-            <i class="ph ph-package text-lg"></i>
-            <span>Guepar Uso</span>
+          <a href="#" data-aba="guepar" class="nav-link flex items-center justify-between px-4 py-3 rounded-xl font-semibold text-sm text-gray-400 border border-transparent hover:text-white hover:bg-slate-800 transition" onclick="toggleMenu(true)">
+            <div class="flex items-center space-x-3"><i class="ph ph-package text-xl"></i><span>Guepar Uso</span></div>
+            <span id="badge-guepar" class="badge-alerta bg-amber-500/20 text-amber-400 border border-amber-500/50 hidden">0</span>
           </a>
-
-          <a href="#pecas" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-xl font-semibold text-sm transition text-gray-400 hover:text-white hover:bg-slate-800/50" data-aba="pecas">
-            <i class="ph ph-cpu text-lg"></i>
-            <span>Peças do Robô</span>
+          <a href="#" data-aba="manutencoes" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-xl font-semibold text-sm text-gray-400 border border-transparent hover:text-white hover:bg-slate-800 transition" onclick="toggleMenu(true)">
+            <i class="ph ph-wrench text-xl"></i><span>Manutenções Pred.</span>
           </a>
-
-          <a href="#fornecedores" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-xl font-semibold text-sm transition text-gray-400 hover:text-white hover:bg-slate-800/50" data-aba="fornecedores">
-            <i class="ph ph-users-three text-lg"></i>
-            <span>Fornecedores</span>
+          <a href="#" data-aba="usuarios" class="nav-link req-admin hidden items-center space-x-3 px-4 py-3 rounded-xl font-semibold text-sm text-gray-400 border border-transparent hover:text-white hover:bg-slate-800 transition" onclick="toggleMenu(true)">
+            <i class="ph ph-users-three text-xl"></i><span>Acessos & Utilizadores</span>
           </a>
-
-          <!-- ABA DE USUÁRIOS (CONTROLE DE ACESSO) -->
-          <a href="#usuarios" id="nav-usuarios" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-xl font-semibold text-sm transition text-gray-400 hover:text-white hover:bg-slate-800/50" data-aba="usuarios">
-            <i class="ph ph-user-gear text-lg"></i>
-            <span>Usuários</span>
+          <a href="#" data-aba="auditoria" class="nav-link req-admin hidden items-center space-x-3 px-4 py-3 rounded-xl font-semibold text-sm text-amber-400 border border-transparent hover:bg-amber-500/10 transition" onclick="toggleMenu(true)">
+            <i class="ph ph-file-search text-xl"></i><span>Auditoria (Logs)</span>
+          </a>
+          <a href="#" data-aba="ia" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-xl font-semibold text-sm text-purple-400 border border-purple-500/20 hover:bg-purple-500/10 transition mt-4 relative overflow-hidden group" onclick="toggleMenu(true)">
+            <i class="ph ph-magic-wand text-xl relative z-10"></i><span class="relative z-10">Assistente IA</span>
           </a>
         </nav>
-
       </div>
-
-      <!-- RODAPÉ DA SIDEBAR -->
-      <div class="pt-6 border-t border-slate-800/80 space-y-4">
-        
-        <!-- STATUS CONEXÃO -->
-        <div class="flex items-center space-x-2 px-2">
-          <div id="ponto-conexao" class="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
-          <span id="texto-conexao" class="text-xs text-gray-400 font-medium">Sincronizado</span>
+      <div class="pt-6 border-t border-slate-800 mt-4">
+        <div class="flex flex-col gap-2 mb-4 px-2">
+          <p id="usuario-display" class="text-xs font-bold text-white truncate"></p>
+          <span id="usuario-role-display" class="text-[10px] text-cyan-400 font-bold uppercase tracking-wider bg-cyan-500/10 w-fit px-2 py-1 rounded"></span>
         </div>
-
-        <!-- USUÁRIO / SAIR -->
-        <div class="bg-slate-800/40 p-3 rounded-xl border border-slate-800 flex items-center justify-between">
-          <div class="truncate mr-2">
-            <p id="usuario-email" class="text-xs font-bold text-white truncate"></p>
-            <span id="usuario-role" class="text-[10px] text-cyan-400 font-semibold uppercase tracking-wider block"></span>
-          </div>
-          <button id="btn-sair" title="Sair do sistema" class="text-gray-400 hover:text-red-400 p-1.5 transition rounded-lg hover:bg-slate-800 cursor-pointer">
-            <i class="ph ph-sign-out text-lg"></i>
-          </button>
-        </div>
-
+        <button id="btn-sair" class="w-full bg-slate-800 hover:bg-red-500/20 text-gray-300 hover:text-red-400 py-2.5 rounded-xl text-sm font-bold transition flex justify-center items-center gap-2 cursor-pointer border border-slate-700 hover:border-red-500/30">
+          <i class="ph ph-power"></i> Encerrar Sessão
+        </button>
       </div>
     </aside>
 
-    <!-- CONTEÚDO PRINCIPAL -->
-    <main class="flex-1 p-6 md:p-10 overflow-y-auto space-y-6">
-      <div id="aba-dashboard" class="aba-conteudo space-y-6"></div>
-      <div id="aba-manutencoes" class="aba-conteudo hidden space-y-6"></div>
-      <div id="aba-guepar" class="aba-conteudo hidden space-y-6"></div>
-      <div id="aba-pecas" class="aba-conteudo hidden space-y-6"></div>
-      <div id="aba-fornecedores" class="aba-conteudo hidden space-y-6"></div>
-
-      <!-- PAINEL DE GESTÃO DE USUÁRIOS -->
-      <div id="aba-usuarios" class="aba-conteudo hidden space-y-6">
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h1 class="text-2xl font-black text-white tracking-tight">Gestão de Usuários</h1>
-            <p class="text-xs text-gray-400">Controle quem tem acesso ao sistema e suas permissões</p>
-          </div>
-          <button id="btn-abrir-modal-usuario" class="btn-novo bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2.5 rounded-xl font-bold text-sm transition flex items-center space-x-2 shadow-lg shadow-cyan-950/40 cursor-pointer w-fit">
-            <i class="ph ph-user-plus text-lg"></i>
-            <span>Novo Usuário</span>
-          </button>
+    <!-- ÁREA DE CONTEÚDO PRINCIPAL -->
+    <main class="flex-1 h-full flex flex-col bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-black relative w-full">
+      
+      <!-- BARRA SUPERIOR MOBILE & IDIOMAS -->
+      <div class="flex md:hidden justify-between items-center p-4 border-b border-slate-800 bg-slate-900/50 backdrop-blur-md z-40">
+        <button onclick="toggleMenu()" class="text-white text-2xl cursor-pointer hover:text-cyan-400 transition"><i class="ph ph-list"></i></button>
+        <div class="flex gap-2">
+          <button class="text-xs bg-slate-800 px-3 py-1.5 rounded font-bold text-gray-300 hover:bg-slate-700 transition">EN</button>
+          <button class="text-xs bg-cyan-600 px-3 py-1.5 rounded font-bold text-white shadow-lg shadow-cyan-900/50">PT</button>
         </div>
+      </div>
 
-        <!-- FORMULÁRIO DE CADASTRO DE NOVO USUÁRIO -->
-        <div class="bg-slate-900/80 border border-slate-800 p-6 rounded-2xl backdrop-blur-md max-w-xl space-y-4">
-          <h2 class="text-base font-bold text-white flex items-center space-x-2">
-            <i class="ph ph-shield-check text-cyan-400 text-xl"></i>
-            <span>Criar Nova Conta e Definir Permissão</span>
-          </h2>
-
-          <form id="form-novo-usuario" class="space-y-4">
+      <div class="flex-1 p-6 md:p-8 overflow-y-auto space-y-6">
+        
+        <!-- ABA: DASHBOARD -->
+        <section id="aba-dashboard" class="aba-conteudo space-y-6">
+          <header class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-2">
             <div>
-              <label class="block text-xs uppercase font-bold text-gray-400 mb-1 tracking-wider">E-mail do Usuário</label>
-              <input type="email" id="novo-email" placeholder="usuario@grupodime.com.br" required class="w-full bg-slate-800/80 border border-slate-700/80 rounded-xl px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition text-sm">
+              <h1 class="text-3xl font-black text-white tracking-tight">Command Center</h1>
+              <p class="text-sm text-gray-400 mt-1">Visão 360º em tempo real da Indústria 5.0</p>
+            </div>
+            <div class="flex gap-2 flex-wrap">
+              <input type="file" id="importar-backup" class="hidden" accept=".json" onchange="importarDados(event)">
+              <button onclick="document.getElementById('importar-backup').click()" class="req-admin hidden bg-amber-600/20 text-amber-400 hover:bg-amber-600 hover:text-white px-4 py-2.5 rounded-xl text-sm font-bold border border-amber-500/30 transition cursor-pointer flex items-center gap-2">
+                <i class="ph ph-upload-simple text-lg"></i> Importar Backup
+              </button>
+              <button onclick="exportarBackup()" class="req-admin hidden bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white px-4 py-2.5 rounded-xl text-sm font-bold border border-emerald-500/30 transition cursor-pointer flex items-center gap-2">
+                <i class="ph ph-download-simple text-lg"></i> Salvar Backup
+              </button>
+              <button onclick="gerarRelatorio('tudo')" class="bg-cyan-600 hover:bg-cyan-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-cyan-900/50 flex items-center gap-2 transition cursor-pointer">
+                <i class="ph ph-printer text-lg"></i> Imprimir Report
+              </button>
+            </div>
+          </header>
+          
+          <div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-12 gap-5">
+            <div class="bento-card col-span-1 md:col-span-2 lg:col-span-3 p-6 flex flex-col justify-between relative overflow-hidden">
+              <div class="absolute -right-4 -top-4 w-24 h-24 bg-emerald-500/10 rounded-full blur-xl"></div>
+              <div class="flex justify-between items-start">
+                <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Saúde Operacional</span>
+                <div class="p-2 bg-emerald-500/20 text-emerald-400 rounded-lg"><i class="ph ph-heartbeat text-xl"></i></div>
+              </div>
+              <div class="mt-4">
+                <h2 class="text-4xl font-black text-white" id="kpi-saude">100%</h2>
+                <p class="text-xs text-emerald-400 mt-1 font-semibold flex items-center gap-1" id="kpi-saude-desc"><i class="ph ph-trend-up"></i> Sistema Estável</p>
+              </div>
             </div>
 
-            <div>
-              <label class="block text-xs uppercase font-bold text-gray-400 mb-1 tracking-wider">Senha Temporária</label>
-              <input type="password" id="novo-senha" placeholder="••••••••" required class="w-full bg-slate-800/80 border border-slate-700/80 rounded-xl px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition text-sm">
+            <div class="bento-card col-span-1 md:col-span-2 lg:col-span-3 p-6 flex flex-col justify-between relative overflow-hidden">
+              <div class="absolute -right-4 -top-4 w-24 h-24 bg-amber-500/10 rounded-full blur-xl"></div>
+              <div class="flex justify-between items-start">
+                <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Ferramentas Livres</span>
+                <div class="p-2 bg-amber-500/20 text-amber-400 rounded-lg"><i class="ph ph-hand-coins text-xl"></i></div>
+              </div>
+              <div class="mt-4">
+                <h2 class="text-4xl font-black text-white" id="kpi-emprestimos">0</h2>
+                <p class="text-xs text-amber-400 mt-1 font-semibold flex items-center gap-1">Empréstimos Ativos</p>
+              </div>
             </div>
 
-            <div>
-              <label class="block text-xs uppercase font-bold text-gray-400 mb-1 tracking-wider">Nível de Permissão</label>
-              <select id="novo-role" class="w-full bg-slate-800/80 border border-slate-700/80 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500 transition text-sm">
-                <option value="operador">Operador (Pode criar e editar registros)</option>
-                <option value="visitante">Visitante (Apenas visualização / Sem ações)</option>
-                <option value="admin">Administrador (Acesso total + Gestão de contas)</option>
-              </select>
+            <div class="bento-card col-span-1 md:col-span-2 lg:col-span-3 p-6 flex flex-col justify-between relative overflow-hidden req-admin hidden">
+              <div class="absolute -right-4 -top-4 w-24 h-24 bg-purple-500/10 rounded-full blur-xl"></div>
+              <div class="flex justify-between items-start">
+                <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Capital Global (Stock)</span>
+                <div class="p-2 bg-purple-500/20 text-purple-400 rounded-lg"><i class="ph ph-currency-dollar text-xl"></i></div>
+              </div>
+              <div class="mt-4">
+                <h2 class="text-3xl font-black text-white" id="kpi-capital">R$ 0,00</h2>
+                <p class="text-[10px] text-purple-400 mt-1 font-semibold flex items-center gap-1"><i class="ph ph-coins"></i> Total Global Inventariado</p>
+              </div>
             </div>
 
-            <button type="submit" id="btn-cadastrar-usuario" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3 rounded-xl transition flex items-center justify-center space-x-2 text-sm cursor-pointer shadow-lg shadow-cyan-950/50">
-              <i class="ph ph-user-plus text-lg"></i>
-              <span>Cadastrar Usuário</span>
+            <div class="bento-card col-span-1 md:col-span-2 lg:col-span-3 p-6 flex flex-col justify-between relative overflow-hidden req-admin hidden border-emerald-500/30">
+              <div class="absolute -right-4 -top-4 w-24 h-24 bg-cyan-500/10 rounded-full blur-xl"></div>
+              <div class="flex justify-between items-start">
+                <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Ativos Robótica</span>
+                <div class="p-2 bg-cyan-500/20 text-cyan-400 rounded-lg"><i class="ph ph-cpu text-xl"></i></div>
+              </div>
+              <div class="mt-4">
+                <h2 class="text-3xl font-black text-white" id="kpi-pecas-custo">R$ 0,00</h2>
+                <p class="text-[10px] text-cyan-400 mt-1 font-semibold flex items-center gap-1"><i class="ph ph-shield-check"></i> Cobertura de Paragem</p>
+              </div>
+            </div>
+
+            <div class="bento-card col-span-1 md:col-span-4 lg:col-span-6 p-6">
+              <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2"><i class="ph ph-target text-cyan-400"></i> Alvo de Reposição Estratégica</h3>
+              <div class="relative h-48 w-full"><canvas id="chartRadar"></canvas></div>
+            </div>
+
+            <div class="bento-card col-span-1 md:col-span-4 lg:col-span-6 p-6">
+              <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2"><i class="ph ph-activity text-cyan-400"></i> Ciclo de Manutenção</h3>
+              <div class="relative h-48 w-full flex justify-center"><canvas id="chartDoughnut"></canvas></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ABA: PEÇAS DO ROBÔ -->
+        <section id="aba-pecas" class="aba-conteudo hidden space-y-6">
+          <header class="flex flex-wrap justify-between items-end gap-4">
+            <div>
+              <h1 class="text-3xl font-black text-white tracking-tight">Peças do Robô</h1>
+              <p class="text-sm text-gray-400 mt-1">Inventário e Sobressalentes</p>
+            </div>
+            <div class="flex gap-2">
+              <button onclick="exportarExcel(db.pecas, 'Pecas_Robo')" class="bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white px-4 py-2.5 rounded-xl text-sm font-bold border border-emerald-500/30 transition cursor-pointer flex items-center gap-2">
+                <i class="ph ph-file-csv text-lg"></i> CSV
+              </button>
+              <button onclick="gerarRelatorio('pecas')" class="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold border border-slate-700 flex items-center gap-2 transition cursor-pointer">
+                <i class="ph ph-printer text-lg"></i>
+              </button>
+              <!-- Acesso permitido ao Visitante 1 -->
+              <button onclick="abrirModal('modal-add-peca')" class="req-vis1 hidden bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-lg flex items-center gap-2 cursor-pointer transition">
+                <i class="ph ph-plus-circle text-lg"></i> Nova Peça
+              </button>
+            </div>
+          </header>
+          <div class="bento-card overflow-x-auto">
+            <table class="w-full text-left border-collapse min-w-[600px]">
+              <thead>
+                <tr class="bg-slate-800/30 text-xs text-gray-400 uppercase tracking-wider border-b border-slate-700/50">
+                  <th class="p-4">Nome da Peça</th><th class="p-4">Estoque Atual</th><th class="p-4">Estoque Mínimo</th><th class="p-4">Sobressalentes</th><th class="p-4 text-right req-vis1 hidden">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="tabela-pecas" class="text-sm text-white"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ABA: GUEPAR USO -->
+        <section id="aba-guepar" class="aba-conteudo hidden space-y-6">
+          <header class="flex flex-wrap justify-between items-end gap-4">
+            <div>
+              <h1 class="text-3xl font-black text-white tracking-tight">Material Guepar</h1>
+              <p class="text-sm text-gray-400 mt-1">Inventário Global</p>
+            </div>
+            <div class="flex gap-2">
+              <button onclick="exportarExcel(db.guepar, 'Inventario_Guepar')" class="bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white px-4 py-2.5 rounded-xl text-sm font-bold border border-emerald-500/30 transition cursor-pointer flex items-center gap-2">
+                <i class="ph ph-file-csv text-lg"></i> CSV
+              </button>
+              <button onclick="gerarRelatorio('guepar')" class="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold border border-slate-700 flex items-center gap-2 cursor-pointer">
+                <i class="ph ph-printer text-lg"></i>
+              </button>
+              <!-- Acesso permitido ao Visitante 1 -->
+              <button onclick="abrirModal('modal-add-guepar')" class="req-vis1 hidden bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold border border-slate-700 flex items-center gap-2 cursor-pointer">
+                <i class="ph ph-package text-lg"></i> Novo Item
+              </button>
+              <button onclick="abrirModal('modal-emprestimo')" class="req-vis1 hidden bg-cyan-600 hover:bg-cyan-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-cyan-900/50 flex items-center gap-2 cursor-pointer">
+                <i class="ph ph-hand-coins text-lg"></i> Emprestar
+              </button>
+            </div>
+          </header>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bento-card overflow-x-auto">
+              <div class="p-4 bg-slate-800/30 border-b border-slate-700/50 flex items-center gap-2"><i class="ph ph-archive-box text-cyan-400 text-lg"></i><h2 class="font-bold text-white">Estoque Disponível</h2></div>
+              <table class="w-full text-left border-collapse min-w-[400px]">
+                <thead><tr class="text-xs text-gray-400 uppercase tracking-wider border-b border-slate-700/50"><th class="p-4">Item</th><th class="p-4">Marca</th><th class="p-4">Qtd</th><th class="p-4 text-right req-vis1 hidden">Ações</th></tr></thead>
+                <tbody id="tabela-guepar" class="text-sm text-white"></tbody>
+              </table>
+            </div>
+
+            <div class="bento-card overflow-x-auto relative">
+              <div class="absolute top-0 right-0 w-1.5 h-full bg-amber-500"></div>
+              <div class="p-4 bg-slate-800/30 border-b border-slate-700/50 flex items-center gap-2"><i class="ph ph-users text-amber-400 text-lg"></i><h2 class="font-bold text-white">Empréstimos Ativos</h2></div>
+              <table class="w-full text-left border-collapse min-w-[400px]">
+                <thead><tr class="text-xs text-gray-400 uppercase tracking-wider border-b border-slate-700/50"><th class="p-4">Colaborador</th><th class="p-4">Item Retirado</th><th class="p-4 text-right req-vis1 hidden">Ação</th></tr></thead>
+                <tbody id="tabela-emprestimos" class="text-sm text-white"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ABA: MANUTENÇÕES -->
+        <section id="aba-manutencoes" class="aba-conteudo hidden space-y-6">
+          <header class="flex flex-wrap justify-between items-end gap-4">
+            <div>
+              <h1 class="text-3xl font-black text-white tracking-tight">Ordens de Manutenção</h1>
+              <p class="text-sm text-gray-400 mt-1">Monitorização de ciclo de vida</p>
+            </div>
+            <div class="flex gap-2">
+              <button onclick="exportarExcel(db.manutencoes, 'Historico_Manutencao')" class="bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white px-4 py-2.5 rounded-xl text-sm font-bold border border-emerald-500/30 transition cursor-pointer flex items-center gap-2">
+                <i class="ph ph-file-csv text-lg"></i> CSV
+              </button>
+              <button onclick="gerarRelatorio('manutencoes')" class="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold border border-slate-700 flex items-center gap-2 cursor-pointer">
+                <i class="ph ph-printer text-lg"></i>
+              </button>
+              <!-- Acesso permitido ao Visitante 1 -->
+              <button onclick="abrirModal('modal-add-manutencao')" class="req-vis1 hidden bg-cyan-600 hover:bg-cyan-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-cyan-900/50 flex items-center gap-2 cursor-pointer">
+                <i class="ph ph-wrench text-lg"></i> Agendar
+              </button>
+            </div>
+          </header>
+          <div class="bento-card overflow-x-auto">
+            <table class="w-full text-left border-collapse min-w-[600px]">
+              <thead>
+                <tr class="bg-slate-800/30 text-xs text-gray-400 uppercase tracking-wider border-b border-slate-700/50">
+                  <th class="p-4">Equipamento</th><th class="p-4">Tipo</th><th class="p-4">Última Troca</th><th class="p-4">Validade / Próxima</th><th class="p-4 text-right req-vis1 hidden">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="tabela-manutencoes" class="text-sm text-white"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ABA: USUÁRIOS (APENAS ADMIN) -->
+        <section id="aba-usuarios" class="aba-conteudo hidden space-y-6">
+          <header class="flex flex-wrap justify-between items-end gap-4">
+            <div>
+              <h1 class="text-3xl font-black text-white tracking-tight">Gestão de Utilizadores</h1>
+              <p class="text-sm text-gray-400 mt-1">Crie logins com nomes livres ou e-mails</p>
+            </div>
+            <button onclick="abrirModal('modal-add-usuario')" class="bg-purple-600 hover:bg-purple-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-purple-900/50 flex items-center gap-2 cursor-pointer">
+              <i class="ph ph-user-plus text-lg"></i> Novo Utilizador
             </button>
+          </header>
+          <div class="bento-card overflow-x-auto">
+            <table class="w-full text-left border-collapse min-w-[500px]">
+              <thead>
+                <tr class="bg-slate-800/30 text-xs text-gray-400 uppercase tracking-wider border-b border-slate-700/50">
+                  <th class="p-4">Utilizador / Login</th><th class="p-4">Permissão</th><th class="p-4 text-right">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="tabela-usuarios" class="text-sm text-white"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ABA: AUDITORIA / LOGS (APENAS ADMIN) -->
+        <section id="aba-auditoria" class="aba-conteudo hidden space-y-6">
+          <header class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-2">
+            <div>
+              <h1 class="text-3xl font-black text-amber-400 tracking-tight">Auditoria do Sistema</h1>
+              <p class="text-sm text-gray-400 mt-1">Trilha inalterável de ações críticas e edições detalhadas</p>
+            </div>
+            <div class="flex gap-2 w-full md:w-auto">
+              <select id="filtro-auditoria" onchange="renderizarTabelas()" class="bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-amber-500 shadow-lg">
+                <option value="TODAS">Todas as Ações</option>
+                <option value="CRIACAO">Criações</option>
+                <option value="EDICAO">Edições</option>
+                <option value="EXCLUSAO">Exclusões</option>
+                <option value="EMPRESTIMO">Empréstimos</option>
+                <option value="DEVOLUCAO">Devoluções</option>
+              </select>
+              <button onclick="exportarExcel(db.logs, 'Auditoria_Seguranca')" class="bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white px-4 py-2.5 rounded-xl text-sm font-bold border border-emerald-500/30 transition cursor-pointer flex items-center gap-2">
+                <i class="ph ph-file-csv text-lg"></i> CSV
+              </button>
+              <button onclick="gerarRelatorio('auditoria')" class="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold border border-slate-700 flex items-center gap-2 cursor-pointer transition">
+                <i class="ph ph-printer text-lg"></i>
+              </button>
+            </div>
+          </header>
+          
+          <div class="bento-card overflow-hidden">
+            <div class="max-h-[600px] overflow-y-auto overflow-x-auto">
+              <table class="w-full text-left border-collapse min-w-[700px]">
+                <thead>
+                  <tr class="bg-slate-800/30 text-xs text-gray-400 uppercase tracking-wider border-b border-slate-700/50 sticky top-0 backdrop-blur-md z-10">
+                    <th class="p-4">Data/Hora</th><th class="p-4">Utilizador</th><th class="p-4">Ação</th><th class="p-4 w-1/2">Detalhes</th>
+                  </tr>
+                </thead>
+                <tbody id="tabela-auditoria" class="text-sm text-white"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ABA: IA -->
+        <section id="aba-ia" class="aba-conteudo hidden h-[80vh] flex-col">
+          <header class="mb-4"><h1 class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400 tracking-tight flex items-center gap-2">Guepar Copilot IA</h1></header>
+          <div class="flex-1 bento-card flex flex-col overflow-hidden">
+            <div id="chat-mensagens" class="flex-1 p-4 md:p-6 overflow-y-auto space-y-6">
+              <div class="flex gap-4 chat-mensagem">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center shrink-0"><i class="ph ph-robot text-white text-xl"></i></div>
+                <div class="bg-slate-800/80 border border-slate-700 p-4 rounded-2xl rounded-tl-none text-sm text-gray-200">
+                  A sua Gestão Inteligente 5.0 está ativa. Pergunte-me sobre <b>stock crítico</b>, <b>alertas de atraso</b>, ou <b>resumo financeiro de peças</b>.
+                </div>
+              </div>
+            </div>
+            <form onsubmit="adicionarMensagemIA(document.getElementById('chat-input').value); return false;" class="p-4 bg-slate-900/80 border-t border-slate-700/50 flex gap-2">
+              <input type="text" id="chat-input" placeholder="Escreva a sua pergunta..." autocomplete="off" class="flex-1 bg-slate-950 border border-slate-800 focus:border-purple-500 rounded-xl px-4 text-white outline-none">
+              <button type="submit" class="px-6 rounded-xl bg-gradient-to-r from-cyan-600 to-purple-600 text-white font-bold cursor-pointer hover:shadow-lg hover:shadow-purple-500/30 transition"><i class="ph ph-paper-plane-right text-xl"></i></button>
+            </form>
+          </div>
+        </section>
+
+      </div> <!-- FIM DA ÁREA ROLÁVEL -->
+
+      <!-- ================= MODAIS ================= -->
+      
+      <div id="modal-add-peca" class="fixed inset-0 bg-black/60 backdrop-blur-md z-50 hidden flex items-center justify-center modal-overlay">
+        <div class="bento-card p-8 w-full max-w-md mx-4 relative max-h-[90vh] overflow-y-auto">
+          <button onclick="fecharModal('modal-add-peca')" class="absolute top-4 right-4 text-gray-400 hover:text-white cursor-pointer"><i class="ph ph-x text-xl"></i></button>
+          <h2 class="text-xl font-bold text-white mb-6 flex items-center gap-2"><i class="ph ph-cpu text-emerald-400"></i> <span id="titulo-modal-peca">Registar Peça</span></h2>
+          <form id="form-peca" class="space-y-4">
+            <input type="hidden" id="peca-edit-id" value="">
+            <div><label class="block text-xs font-bold text-gray-400 mb-1">Nome da Peça</label><input type="text" id="peca-nome" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-emerald-500"></div>
+            <div class="grid grid-cols-2 gap-3">
+              <div><label class="block text-xs font-bold text-gray-400 mb-1">Atual</label><input type="number" id="peca-atual" min="0" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none"></div>
+              <div><label class="block text-xs font-bold text-gray-400 mb-1">Mínimo</label><input type="number" id="peca-min" min="0" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none"></div>
+              <div><label class="block text-xs font-bold text-emerald-400 mb-1">Reserva (Kits)</label><input type="number" id="peca-sobre" min="0" value="0" class="w-full bg-slate-950 border border-emerald-700/50 rounded-xl px-3 py-2 text-white outline-none"></div>
+              <div><label class="block text-xs font-bold text-cyan-400 mb-1">Custo Unit. (R$)</label><input type="number" id="peca-custo" min="0" step="0.01" value="0" class="w-full bg-slate-950 border border-cyan-700/50 rounded-xl px-3 py-2 text-white outline-none"></div>
+            </div>
+            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl mt-4 cursor-pointer">Salvar Registo</button>
           </form>
         </div>
       </div>
 
-    </main>
+      <div id="modal-add-guepar" class="fixed inset-0 bg-black/60 backdrop-blur-md z-50 hidden flex items-center justify-center modal-overlay">
+        <div class="bento-card p-8 w-full max-w-md mx-4 relative max-h-[90vh] overflow-y-auto">
+          <button onclick="fecharModal('modal-add-guepar')" class="absolute top-4 right-4 text-gray-400 hover:text-white cursor-pointer"><i class="ph ph-x text-xl"></i></button>
+          <h2 class="text-xl font-bold text-white mb-6 flex items-center gap-2"><i class="ph ph-package text-cyan-400"></i> <span id="titulo-modal-guepar">Item Guepar</span></h2>
+          <form id="form-guepar" class="space-y-4">
+            <input type="hidden" id="guepar-edit-id" value="">
+            <div><label class="block text-xs font-bold text-gray-400 mb-1">Nome do Item</label><input type="text" id="guepar-nome" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-cyan-500"></div>
+            <div><label class="block text-xs font-bold text-gray-400 mb-1">Marca</label><input type="text" id="guepar-marca" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none"></div>
+            <div class="grid grid-cols-2 gap-4">
+              <div><label class="block text-xs font-bold text-gray-400 mb-1">Quantidade</label><input type="number" id="guepar-qtd" min="0" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none"></div>
+              <div><label class="block text-xs font-bold text-purple-400 mb-1">Custo Unit. (R$)</label><input type="number" id="guepar-custo" min="0" step="0.01" value="0" required class="w-full bg-slate-950 border border-purple-700/50 rounded-xl px-3 py-2 text-white outline-none"></div>
+            </div>
+            <button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3 rounded-xl mt-4 cursor-pointer">Salvar Registo</button>
+          </form>
+        </div>
+      </div>
 
+      <div id="modal-add-manutencao" class="fixed inset-0 bg-black/60 backdrop-blur-md z-50 hidden flex items-center justify-center modal-overlay">
+        <div class="bento-card p-8 w-full max-w-md mx-4 relative max-h-[90vh] overflow-y-auto">
+          <button onclick="fecharModal('modal-add-manutencao')" class="absolute top-4 right-4 text-gray-400 hover:text-white cursor-pointer"><i class="ph ph-x text-xl"></i></button>
+          <h2 class="text-xl font-bold text-white mb-6 flex items-center gap-2"><i class="ph ph-wrench text-cyan-400"></i> <span id="titulo-modal-manu">Ordem de Manutenção</span></h2>
+          <form id="form-manutencao" class="space-y-4">
+            <input type="hidden" id="manu-edit-id" value="">
+            <div><label class="block text-xs font-bold text-gray-400 mb-1">Equipamento</label><input type="text" id="manu-equip" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-cyan-500"></div>
+            <div>
+              <label class="block text-xs font-bold text-gray-400 mb-1">Tipo de Manutenção</label>
+              <select id="manu-tipo" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-cyan-500" onchange="document.getElementById('manu-tipo-outro').classList.toggle('hidden', this.value !== 'Outro')">
+                <option value="">Selecione o tipo...</option>
+                <option value="Troca de Bateria">Troca de Bateria</option>
+                <option value="Lubrificação (Graxa)">Lubrificação (Graxa)</option>
+                <option value="Substituição de Rodinha">Substituição de Rodinha</option>
+                <option value="Revisão Geral">Revisão Geral</option>
+                <option value="Outro">Outro (Especificar...)</option>
+              </select>
+              <input type="text" id="manu-tipo-outro" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-cyan-500 mt-2 hidden" placeholder="Especificar...">
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div><label class="block text-xs font-bold text-gray-400 mb-1">Última Troca</label><input type="date" id="manu-ultima" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none"></div>
+              <div><label class="block text-xs font-bold text-gray-400 mb-1">Validade Prevista</label><input type="date" id="manu-validade" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none"></div>
+            </div>
+            <button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3 rounded-xl mt-4 cursor-pointer">Salvar Ordem</button>
+          </form>
+        </div>
+      </div>
+
+      <div id="modal-add-usuario" class="fixed inset-0 bg-black/60 backdrop-blur-md z-50 hidden flex items-center justify-center modal-overlay">
+        <div class="bento-card p-8 w-full max-w-md mx-4 relative max-h-[90vh] overflow-y-auto">
+          <button onclick="fecharModal('modal-add-usuario')" class="absolute top-4 right-4 text-gray-400 hover:text-white cursor-pointer"><i class="ph ph-x text-xl"></i></button>
+          <h2 class="text-xl font-bold text-white mb-6 flex items-center gap-2"><i class="ph ph-user-plus text-purple-400"></i> Conta de Acesso</h2>
+          <form id="form-usuario" class="space-y-4">
+            <input type="hidden" id="user-edit-id" value="">
+            <div><label class="block text-xs font-bold text-gray-400 mb-1">Utilizador / E-mail</label><input type="text" id="user-login" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-purple-500" placeholder="Ex: Operador Carlos"></div>
+            <div><label class="block text-xs font-bold text-gray-400 mb-1">Senha</label><input type="password" id="user-senha" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-purple-500"></div>
+            <div>
+              <label class="block text-xs font-bold text-gray-400 mb-1">Permissão</label>
+              <select id="user-role" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-purple-500">
+                <option value="admin">Administrador (Total)</option>
+                <option value="visitante1">Visitante 1 (Pode Emprestar Ferramentas)</option>
+                <option value="visitante">Visitante (Apenas Leitura)</option>
+              </select>
+            </div>
+            
+            <button type="button" onclick="registarBiometria()" class="w-full bg-slate-800 hover:bg-slate-700 text-purple-400 font-bold py-3 rounded-xl border border-slate-700 mt-2 flex justify-center items-center gap-2 transition cursor-pointer">
+              <i class="ph ph-fingerprint text-xl"></i> Registar Face ID / Digital
+            </button>
+
+            <button type="submit" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 rounded-xl mt-4 cursor-pointer">Salvar Utilizador</button>
+          </form>
+        </div>
+      </div>
+
+      <div id="modal-emprestimo" class="fixed inset-0 bg-black/60 backdrop-blur-md z-50 hidden flex items-center justify-center modal-overlay">
+        <div class="bento-card border-amber-500/30 p-8 w-full max-w-md mx-4 relative max-h-[90vh] overflow-y-auto">
+          <button onclick="fecharModal('modal-emprestimo')" class="absolute top-4 right-4 text-gray-400 hover:text-white cursor-pointer"><i class="ph ph-x text-xl"></i></button>
+          <h2 class="text-xl font-bold text-white mb-6 flex items-center gap-2"><i class="ph ph-hand-coins text-amber-400"></i> Check-out Ferramenta</h2>
+          <form id="form-emprestimo" class="space-y-4">
+            <div><label class="block text-xs font-bold text-gray-400 mb-1">Colaborador</label><input type="text" id="emp-nome" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-amber-500"></div>
+            <div>
+              <label class="block text-xs font-bold text-gray-400 mb-1">Selecionar Ferramenta</label>
+              <select id="emp-item-select" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-amber-500" onchange="document.getElementById('emp-item-outro').classList.toggle('hidden', this.value !== 'Outro')"></select>
+              <input type="text" id="emp-item-outro" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none mt-2 hidden" placeholder="Especificar...">
+            </div>
+            <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-3 rounded-xl mt-4 cursor-pointer">Registar Retirada</button>
+          </form>
+        </div>
+      </div>
+
+      <div id="modal-diff" class="fixed inset-0 bg-black/60 backdrop-blur-md z-50 hidden flex items-center justify-center modal-overlay">
+        <div class="bento-card p-8 w-full max-w-xl mx-4 relative max-h-[90vh] overflow-y-auto">
+          <button onclick="fecharModal('modal-diff')" class="absolute top-4 right-4 text-gray-400 hover:text-white cursor-pointer"><i class="ph ph-x text-xl"></i></button>
+          <h2 class="text-xl font-bold text-white mb-6 flex items-center gap-2"><i class="ph ph-magnifying-glass text-cyan-400"></i> Detalhes da Alteração</h2>
+          <div class="overflow-hidden rounded-xl border border-slate-700 bg-slate-900/50">
+            <table class="w-full text-left border-collapse text-sm">
+              <thead>
+                <tr class="bg-slate-800/80 text-xs text-gray-400 uppercase tracking-wider border-b border-slate-700">
+                  <th class="p-3 w-1/3">Campo Modificado</th><th class="p-3 w-1/3">Valor Antigo</th><th class="p-3 w-1/3">Valor Novo</th>
+                </tr>
+              </thead>
+              <tbody id="tabela-diff" class="text-gray-300"></tbody>
+            </table>
+          </div>
+          <button onclick="fecharModal('modal-diff')" class="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white font-bold py-3 rounded-xl mt-6 cursor-pointer transition">Fechar Janela</button>
+        </div>
+      </div>
+
+    </main>
   </div>
 
-  <div id="container-modais"></div>
+  <!-- JAVASCRIPT COMPLETO E INTACTO COM SEGURANÇA REFORÇADA -->
+  <script>
+    const defaultDB = {
+      usuarios: [
+        { login: 'fellipe.f@grupodime.com.br', senha: '123456', role: 'admin' },
+        { login: 'Operador', senha: '123', role: 'visitante1' },
+        { login: 'Leitura', senha: '123', role: 'visitante' }
+      ],
+      pecas: [
+        { nome: 'Bateria de Lítio', estoque: 1, min: 2, sobressalentes: 1, custo: 1250.00 },
+        { nome: 'Sensores Ultrassónicos', estoque: 12, min: 4, sobressalentes: 2, custo: 450.00 }
+      ],
+      guepar: [
+        { nome: 'Parafusadeira Industrial', marca: 'Bosch', estoque: 3, custo: 890.00 },
+        { nome: 'Graxa Branca', marca: 'Guepar', estoque: 12, custo: 45.00 }
+      ],
+      emprestimos: [],
+      manutencoes: [
+        { equip: 'Robô Alpha - Motor', tipo: 'Lubrificação (Graxa)', ultima: '2026-09-10', validade: '2026-12-10' }
+      ],
+      logs: []
+    };
 
-  <!-- INICIALIZA O SISTEMA COMPLETO -->
-  <script type="module" src="./js/main.js?v=2026_final"></script>
+    let db = JSON.parse(localStorage.getItem('gueparDB')) ? JSON.parse(localStorage.getItem('gueparDB')) : defaultDB;
+    
+    if (!db.usuarios) db.usuarios = defaultDB.usuarios;
+    if (!db.logs) db.logs = [];
 
+    function toggleMenu(autoClose = false) {
+      if(window.innerWidth >= 768) return; 
+      const menu = document.getElementById('menu-lateral');
+      if (autoClose) { menu.classList.add('-translate-x-full'); } 
+      else { menu.classList.toggle('-translate-x-full'); }
+    }
+
+    function calcularDiff(antigo, novo, dicionario) {
+      let diff = [];
+      for (let key in novo) {
+        let valAntigo = antigo[key] === undefined ? '' : (antigo[key] === null ? '' : String(antigo[key]));
+        let valNovo = novo[key] === undefined ? '' : (novo[key] === null ? '' : String(novo[key]));
+        if (valAntigo !== valNovo) {
+          diff.push({ 
+            campo: dicionario[key] ? dicionario[key] : key, 
+            de: valAntigo === '' ? '(Vazio)' : valAntigo, 
+            para: valNovo === '' ? '(Vazio)' : valNovo 
+          });
+        }
+      }
+      return diff;
+    }
+
+    function auditarAcao(acao, detalhes, alteracoes = null) {
+      const utilizador = localStorage.getItem('guepar_email') ? localStorage.getItem('guepar_email') : 'Sistema';
+      db.logs.unshift({ data: new Date().toISOString(), utilizador: utilizador, acao: acao, detalhes: detalhes, alteracoes: alteracoes });
+      if(db.logs.length > 500) db.logs.pop();
+    }
+
+    async function salvarDB() {
+      localStorage.setItem('gueparDB', JSON.stringify(db));
+      renderizarTabelas();
+      atualizarListaEmprestimo();
+      iniciarGraficos();
+      verificarNotificacoesPush();
+    }
+
+    // SEGURANÇA: Apenas ADMIN pode apagar LOGS
+    function apagarLog(index) {
+      const role = localStorage.getItem('guepar_role');
+      if (role !== 'admin') {
+        alert('Acesso negado: Apenas o Administrador pode excluir o histórico de auditoria.');
+        return;
+      }
+      if (confirm('Tem a certeza que deseja apagar este registo do histórico? Esta ação não pode ser desfeita.')) {
+        db.logs.splice(index, 1);
+        salvarDB();
+      }
+    }
+
+    function exportarExcel(dadosArray, nomeFicheiro) {
+      if (!dadosArray || dadosArray.length === 0) { alert('Não há dados para exportar.'); return; }
+      let csv = '';
+      const camposFiltrados = Object.keys(dadosArray[0]).filter(k => k !== 'senha' && k !== 'indOriginal' && k !== 'alteracoes');
+      csv += camposFiltrados.map(c => `"${c.toUpperCase()}"`).join(';') + '\n';
+      
+      dadosArray.forEach(obj => {
+        csv += camposFiltrados.map(campo => {
+          let valor = obj[campo];
+          if (valor === null || valor === undefined) valor = '';
+          return `"${String(valor).replace(/"/g, '""')}"`;
+        }).join(';') + '\n';
+      });
+
+      const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `${nomeFicheiro}_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      auditarAcao('EXPORTACAO', `Exportou CSV: ${nomeFicheiro}`);
+      salvarDB();
+    }
+
+    function exportarBackup() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(db));
+      const link = document.createElement("a");
+      link.setAttribute("href", dataStr);
+      link.setAttribute("download", "Guepar_Backup_" + new Date().toISOString().split('T')[0] + ".json");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      auditarAcao('EXPORTACAO', 'Backup completo baixado.');
+      salvarDB();
+    }
+
+    function importarDados(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      if (!confirm('Atenção: Importar backup irá substituir TODOS os dados atuais. Prosseguir?')) { event.target.value = ''; return; }
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const importedDB = JSON.parse(e.target.result);
+          if (importedDB && importedDB.pecas && importedDB.guepar && importedDB.usuarios) {
+            db = importedDB;
+            auditarAcao('IMPORTACAO', 'Base de dados restaurada via backup.');
+            localStorage.setItem('gueparDB', JSON.stringify(db));
+            alert('Dados importados com sucesso! O sistema será recarregado.');
+            location.reload();
+          } else { alert('Ficheiro de backup inválido.'); }
+        } catch (err) { alert('Erro ao ler o ficheiro.'); }
+      };
+      reader.readAsText(file);
+    }
+
+    function pedirPermissaoNotificacao() {
+      if (!("Notification" in window)) return;
+      if (Notification.permission !== "granted" && Notification.permission !== "denied") {
+        Notification.requestPermission();
+      }
+    }
+
+    function dispararPush(titulo, corpo) {
+      if (Notification.permission === "granted") {
+        new Notification(titulo, { body: corpo, icon: "https://www.transparenttextures.com/patterns/cubes.png" });
+      }
+    }
+
+    function verificarNotificacoesPush() {
+      let pecasEmFalta = db.pecas.filter(p => p.estoque < p.min).length;
+      let emprestimosAtrasados = db.emprestimos.filter(e => ((new Date().getTime() - (e.dataHora ? e.dataHora : 0)) / 3600000) > 48).length;
+      
+      if (pecasEmFalta > 0 && localStorage.getItem('noti_pecas') !== new Date().toDateString()) {
+        dispararPush("Aviso Inventário", `${pecasEmFalta} peça(s) no limite mínimo!`);
+        localStorage.setItem('noti_pecas', new Date().toDateString());
+      }
+      if (emprestimosAtrasados > 0 && localStorage.getItem('noti_emp') !== new Date().toDateString()) {
+        dispararPush("Alerta Ferramentas", `${emprestimosAtrasados} empréstimo(s) atrasados (>48h).`);
+        localStorage.setItem('noti_emp', new Date().toDateString());
+      }
+    }
+
+    function aplicarPermissoes() {
+      const role = localStorage.getItem('guepar_role') ? localStorage.getItem('guepar_role') : 'visitante';
+      const isAdm = role === 'admin';
+      const isVis1 = role === 'admin' ? true : (role === 'visitante1' ? true : false);
+      
+      document.querySelectorAll('.req-admin').forEach(el => {
+        if(isAdm) el.classList.remove('hidden'); else el.classList.add('hidden');
+      });
+      document.querySelectorAll('.req-vis1').forEach(el => {
+        if(isVis1) el.classList.remove('hidden'); else el.classList.add('hidden');
+      });
+      
+      const lbl = { admin: 'Administrador (Total)', visitante1: 'Visitante Nível 1', visitante: 'Leitura Apenas' };
+      document.getElementById('usuario-role-display').textContent = lbl[role] ? lbl[role] : 'Desconhecido';
+    }
+
+    const fmtMoeda = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+    function formatarDataBR(d) { if(!d) return '-'; const [a,m,dia] = d.split('-'); return `${dia}/${m}/${a}`; }
+
+    function gerarRelatorio(tipo) {
+      const titulos = { pecas: 'Relatório de Peças do Robô', guepar: 'Relatório Guepar Uso', manutencoes: 'Relatório de Manutenções', auditoria: 'Relatório de Logs', tudo: 'Relatório Geral' };
+      const win = window.open('', '_blank');
+      if (!win) { alert('Permita pop-ups no navegador.'); return; }
+      
+      let html = `<html><head><title>${titulos[tipo]}</title><style>body { font-family: sans-serif; padding: 20px; } table { width: 100%; border-collapse: collapse; margin-top: 15px; } th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }</style></head><body><h1>${titulos[tipo]}</h1>`;
+      
+      if (tipo === 'pecas' || tipo === 'tudo') {
+        html += `<h2>Peças</h2><table><tr><th>Peça</th><th>Estoque</th><th>Mínimo</th></tr>` + db.pecas.map(p => `<tr><td>${p.nome}</td><td>${p.estoque}</td><td>${p.min}</td></tr>`).join('') + `</table>`;
+      }
+      if (tipo === 'guepar' || tipo === 'tudo') {
+        html += `<h2>Guepar</h2><table><tr><th>Item</th><th>Qtd</th></tr>` + db.guepar.map(g => `<tr><td>${g.nome}</td><td>${g.estoque}</td></tr>`).join('') + `</table>`;
+      }
+      html += `<script>window.print();<\/script></body></html>`;
+      win.document.write(html); win.document.close();
+    }
+
+    // SEGURANÇA: Apenas ADMIN pode apagar QUALQUER registo (Botão do Lixo)
+    function apagarRegistro(tipo, index) {
+      const role = localStorage.getItem('guepar_role');
+      if (role !== 'admin') {
+        alert('Acesso negado: Apenas o Administrador pode excluir registos do sistema.');
+        return;
+      }
+      if (confirm('Tem a certeza que deseja apagar este registo? Esta ação não pode ser desfeita.')) {
+        let nomeRegisto = "";
+        if (tipo === 'peca') { nomeRegisto = db.pecas[index].nome; db.pecas.splice(index, 1); }
+        if (tipo === 'guepar') { nomeRegisto = db.guepar[index].nome; db.guepar.splice(index, 1); }
+        if (tipo === 'manutencao') { nomeRegisto = db.manutencoes[index].equip; db.manutencoes.splice(index, 1); }
+        if (tipo === 'usuario') { nomeRegisto = db.usuarios[index].login; db.usuarios.splice(index, 1); }
+        auditarAcao('EXCLUSAO', `Apagou o registo [${tipo}]: ${nomeRegisto}`);
+        salvarDB();
+      }
+    }
+
+    function renderizarTabelas() {
+      const role = localStorage.getItem('guepar_role') ? localStorage.getItem('guepar_role') : 'visitante';
+      const isAdm = role === 'admin';
+      const isVis1 = role === 'admin' ? true : (role === 'visitante1' ? true : false);
+
+      let totalCapitalGlobal = 0, totalAtivosRobo = 0, pecasCriticas = 0, empAtrasados = 0;
+
+      db.pecas.forEach(p => {
+        const valorPeca = (p.estoque + (p.sobressalentes ? p.sobressalentes : 0)) * (p.custo ? p.custo : 0);
+        totalAtivosRobo += valorPeca; totalCapitalGlobal += valorPeca;
+        if(p.estoque < p.min) pecasCriticas++;
+      });
+      db.guepar.forEach(g => { totalCapitalGlobal += (g.estoque * (g.custo ? g.custo : 0)); });
+
+      const elCapital = document.getElementById('kpi-capital');
+      const elPecasCusto = document.getElementById('kpi-pecas-custo');
+      if(elCapital) elCapital.textContent = fmtMoeda.format(totalCapitalGlobal);
+      if(elPecasCusto) elPecasCusto.textContent = fmtMoeda.format(totalAtivosRobo);
+
+      const bdgPecas = document.getElementById('badge-pecas');
+      if(pecasCriticas > 0) { bdgPecas.textContent = pecasCriticas; bdgPecas.classList.remove('hidden'); } else { bdgPecas.classList.add('hidden'); }
+
+      let saude = 100; if (pecasCriticas > 0) saude -= (pecasCriticas * 5);
+      const hSaude = document.getElementById('kpi-saude');
+      const hDesc = document.getElementById('kpi-saude-desc');
+      if (hSaude) hSaude.textContent = Math.max(0, saude) + '%';
+      if (hDesc) {
+        if(saude < 80) { hDesc.innerHTML = `<i class="ph ph-warning"></i> Risco de Paragem`; hDesc.className = "text-xs text-red-400 mt-1 font-semibold flex items-center gap-1"; }
+        else { hDesc.innerHTML = `<i class="ph ph-trend-up"></i> Sistema Estável`; hDesc.className = "text-xs text-emerald-400 mt-1 font-semibold flex items-center gap-1"; }
+      }
+
+      document.getElementById('tabela-pecas').innerHTML = db.pecas.map((p, i) => {
+        const critico = p.estoque < p.min;
+        return `
+          <tr class="border-b border-slate-800/30 hover:bg-slate-800/50">
+            <td class="p-4">${p.nome}</td>
+            <td class="p-4 ${critico ? 'text-red-400 font-bold' : 'text-white'}">${p.estoque}</td>
+            <td class="p-4 text-gray-400">${p.min}</td>
+            <td class="p-4"><span class="bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded text-xs border border-emerald-500/20">${p.sobressalentes} Kits</span></td>
+            <td class="p-4 text-right req-vis1 ${isVis1 ? '' : 'hidden'}">
+              <div class="flex justify-end gap-3">
+                <button onclick="prepararEdicao('peca', ${i})" class="text-cyan-400 hover:text-white transition" title="Editar"><i class="ph ph-pencil-simple text-lg"></i></button>
+                <!-- Botão de Apagar (Lixo) SÓ aparece para Admin -->
+                <button onclick="apagarRegistro('peca', ${i})" class="text-red-500 hover:text-white transition ${isAdm ? '' : 'hidden'}" title="Apagar"><i class="ph ph-trash text-lg"></i></button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      document.getElementById('tabela-guepar').innerHTML = db.guepar.map((g, i) => `
+        <tr class="border-b border-slate-800/30 hover:bg-slate-800/50">
+          <td class="p-4 font-medium">${g.nome}</td>
+          <td class="p-4 text-gray-400">${g.marca}</td>
+          <td class="p-4 text-cyan-400 font-bold">${g.estoque}</td>
+          <td class="p-4 text-right req-vis1 ${isVis1 ? '' : 'hidden'}">
+            <div class="flex justify-end gap-3">
+              <button onclick="prepararEdicao('guepar', ${i})" class="text-cyan-400 hover:text-white transition" title="Editar"><i class="ph ph-pencil-simple text-lg"></i></button>
+              <!-- Botão de Apagar SÓ aparece para Admin -->
+              <button onclick="apagarRegistro('guepar', ${i})" class="text-red-500 hover:text-white transition ${isAdm ? '' : 'hidden'}" title="Apagar"><i class="ph ph-trash text-lg"></i></button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+
+      document.getElementById('tabela-emprestimos').innerHTML = db.emprestimos.map((e, i) => {
+        const horasPassadas = (new Date().getTime() - (e.dataHora ? e.dataHora : new Date().getTime())) / 3600000;
+        let corLinha = 'text-white'; let alerta = '';
+        if (horasPassadas > 48) { corLinha = 'text-red-400 font-bold'; alerta = '<i class="ph ph-warning-circle ml-1" title="Atraso"></i>'; empAtrasados++; }
+        else if (horasPassadas > 24) { corLinha = 'text-amber-400 font-bold'; alerta = '<i class="ph ph-clock ml-1" title="Atenção"></i>'; }
+        return `
+          <tr class="border-b border-slate-800/30 hover:bg-slate-800/50">
+            <td class="p-4 font-bold ${corLinha} flex items-center"><i class="ph ph-user mr-2 text-amber-500"></i> ${e.pessoa} ${alerta}</td>
+            <td class="p-4 text-gray-300">${e.item}</td>
+            <td class="p-4 text-right req-vis1 ${isVis1 ? '' : 'hidden'}">
+              <!-- Devolução permitida ao Visitante 1 -->
+              <button onclick="devolverEmprestimo(${i})" class="text-xs bg-slate-800 px-3 py-1 rounded text-white border border-slate-700 cursor-pointer hover:bg-slate-700 transition">Devolver</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      const bdgGuepar = document.getElementById('badge-guepar');
+      if(empAtrasados > 0) { bdgGuepar.textContent = empAtrasados; bdgGuepar.classList.remove('hidden'); } else { bdgGuepar.classList.add('hidden'); }
+      document.getElementById('kpi-emprestimos').textContent = db.emprestimos.length;
+
+      document.getElementById('tabela-manutencoes').innerHTML = db.manutencoes.map((m, i) => `
+        <tr class="border-b border-slate-800/30 hover:bg-slate-800/50">
+          <td class="p-4 font-medium text-white">${m.equip}</td>
+          <td class="p-4"><span class="bg-slate-800 px-2 py-1 border border-slate-700 text-cyan-300 text-xs rounded">${m.tipo}</span></td>
+          <td class="p-4 text-gray-400">${formatarDataBR(m.ultima)}</td>
+          <td class="p-4 text-gray-300">${formatarDataBR(m.validade)}</td>
+          <td class="p-4 text-right req-vis1 ${isVis1 ? '' : 'hidden'}">
+            <div class="flex justify-end gap-3">
+              <button onclick="prepararEdicao('manutencao', ${i})" class="text-cyan-400 hover:text-white transition" title="Editar"><i class="ph ph-pencil-simple text-lg"></i></button>
+              <!-- Botão de Apagar SÓ aparece para Admin -->
+              <button onclick="apagarRegistro('manutencao', ${i})" class="text-red-500 hover:text-white transition ${isAdm ? '' : 'hidden'}" title="Apagar"><i class="ph ph-trash text-lg"></i></button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+        
+      document.getElementById('tabela-usuarios').innerHTML = db.usuarios.map((u, i) => `
+        <tr class="border-b border-slate-800/30 hover:bg-slate-800/50">
+          <td class="p-4 font-medium text-white">${u.login}</td>
+          <td class="p-4 text-purple-400 uppercase text-xs font-bold">${u.role}</td>
+          <td class="p-4 text-right flex justify-end gap-3">
+            <button onclick="prepararEdicao('usuario', ${i})" class="text-cyan-400 hover:text-white transition" title="Editar"><i class="ph ph-pencil-simple text-lg"></i></button>
+            <button onclick="apagarRegistro('usuario', ${i})" class="text-red-500 hover:text-white transition" title="Apagar"><i class="ph ph-trash text-lg"></i></button>
+          </td>
+        </tr>
+      `).join('');
+
+      if(isAdm) {
+        const filtroEl = document.getElementById('filtro-auditoria');
+        const filtro = filtroEl ? filtroEl.value : 'TODAS';
+        let logsParaMostrar = db.logs.map((log, index) => ({ ...log, indOriginal: index }));
+        if (filtro !== 'TODAS') { logsParaMostrar = logsParaMostrar.filter(l => l.acao === filtro); }
+
+        document.getElementById('tabela-auditoria').innerHTML = logsParaMostrar.map(l => {
+          const d = new Date(l.data);
+          let corAcao = 'text-cyan-400';
+          if(l.acao === 'EXCLUSAO') corAcao = 'text-red-400';
+          if(l.acao === 'EMPRESTIMO') corAcao = 'text-amber-400';
+          if(l.acao === 'DEVOLUCAO') corAcao = 'text-emerald-400';
+
+          let btnDetalhes = l.acao === 'EDICAO' && l.alteracoes && l.alteracoes.length > 0 ? `<button onclick="abrirModalDiff(${l.indOriginal})" class="ml-4 shrink-0 bg-slate-800/80 hover:bg-cyan-600 text-cyan-400 hover:text-white px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-wider transition border border-slate-700 hover:border-cyan-500">Ver Detalhes</button>` : '';
+          
+          // O Lixo da auditoria [como mostra na sua foto] fica SÓ disponível no painel de Admin
+          let btnLixeira = `<button onclick="apagarLog(${l.indOriginal})" class="ml-2 shrink-0 text-red-500 hover:text-white bg-slate-800 hover:bg-red-600 p-1.5 rounded transition border border-slate-700 hover:border-red-500"><i class="ph ph-trash text-lg"></i></button>`;
+
+          return `
+            <tr class="border-b border-slate-800/30 hover:bg-slate-800/50">
+              <td class="p-4 text-gray-400 text-xs">${d.toLocaleDateString('pt-BR')} ${d.toLocaleTimeString('pt-BR')}</td>
+              <td class="p-4 font-medium">${l.utilizador}</td>
+              <td class="p-4 font-bold ${corAcao} text-xs">${l.acao}</td>
+              <td class="p-4 text-gray-300 text-sm flex items-center justify-between">
+                <span class="truncate">${l.detalhes}</span>
+                <div class="flex items-center">${btnDetalhes}${btnLixeira}</div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+    }
+
+    function atualizarListaEmprestimo() {
+      const s = document.getElementById('emp-item-select');
+      s.innerHTML = `<option value="">Selecionar...</option>` + db.guepar.map(g => `<option value="${g.nome}">${g.nome} (${g.estoque})</option>`).join('') + `<option value="Outro">Outro...</option>`;
+    }
+
+    function abrirModalDiff(index) {
+      const log = db.logs[index]; const tab = document.getElementById('tabela-diff');
+      if (!log || !log.alteracoes) return;
+      tab.innerHTML = log.alteracoes.map(alt => `
+        <tr class="border-b border-slate-800/50 hover:bg-slate-800/80 transition">
+          <td class="p-3 font-bold text-white">${alt.campo}</td>
+          <td class="p-3 text-red-400 line-through decoration-red-900/50">${alt.de}</td>
+          <td class="p-3 text-emerald-400 font-bold">${alt.para}</td>
+        </tr>
+      `).join('');
+      abrirModal('modal-diff');
+    }
+
+    function prepararEdicao(tipo, index) {
+      if(tipo === 'peca') {
+        const i = db.pecas[index]; document.getElementById('peca-edit-id').value = index; document.getElementById('peca-nome').value = i.nome; document.getElementById('peca-atual').value = i.estoque; document.getElementById('peca-min').value = i.min; document.getElementById('peca-sobre').value = i.sobressalentes; document.getElementById('peca-custo').value = i.custo ? i.custo : 0; document.getElementById('titulo-modal-peca').textContent = "Editar Peça"; abrirModal('modal-add-peca');
+      }
+      if(tipo === 'guepar') {
+        const i = db.guepar[index]; document.getElementById('guepar-edit-id').value = index; document.getElementById('guepar-nome').value = i.nome; document.getElementById('guepar-marca').value = i.marca; document.getElementById('guepar-qtd').value = i.estoque; document.getElementById('guepar-custo').value = i.custo ? i.custo : 0; document.getElementById('titulo-modal-guepar').textContent = "Editar Item Guepar"; abrirModal('modal-add-guepar');
+      }
+      if(tipo === 'manutencao') {
+        const i = db.manutencoes[index]; document.getElementById('manu-edit-id').value = index; document.getElementById('manu-equip').value = i.equip;
+        const select = document.getElementById('manu-tipo');
+        if(Array.from(select.options).some(o => o.value === i.tipo)) { select.value = i.tipo; document.getElementById('manu-tipo-outro').classList.add('hidden'); } else { select.value = 'Outro'; document.getElementById('manu-tipo-outro').classList.remove('hidden'); document.getElementById('manu-tipo-outro').value = i.tipo; }
+        document.getElementById('manu-ultima').value = i.ultima; document.getElementById('manu-validade').value = i.validade; document.getElementById('titulo-modal-manu').textContent = "Editar Manutenção"; abrirModal('modal-add-manutencao');
+      }
+      if(tipo === 'usuario') {
+        const i = db.usuarios[index]; document.getElementById('user-edit-id').value = index; document.getElementById('user-login').value = i.login; document.getElementById('user-senha').value = i.senha; document.getElementById('user-role').value = i.role; abrirModal('modal-add-usuario');
+      }
+    }
+
+    function abrirModal(id) { document.getElementById(id).classList.remove('hidden'); }
+    function fecharModal(id) { 
+      document.getElementById(id).classList.add('hidden'); const form = document.querySelector(`#${id} form`);
+      if(form) { form.reset(); const hidden = form.querySelector('input[type="hidden"]'); if(hidden) hidden.value = ''; }
+      if(id === 'modal-add-peca') document.getElementById('titulo-modal-peca').textContent = "Registar Peça";
+      if(id === 'modal-add-guepar') document.getElementById('titulo-modal-guepar').textContent = "Item Guepar";
+      if(id === 'modal-add-manutencao') document.getElementById('titulo-modal-manu').textContent = "Ordem de Manutenção";
+    }
+
+    document.getElementById('form-peca').addEventListener('submit', (e) => {
+      e.preventDefault(); const id = document.getElementById('peca-edit-id').value;
+      const data = { nome: document.getElementById('peca-nome').value, estoque: parseInt(document.getElementById('peca-atual').value), min: parseInt(document.getElementById('peca-min').value), sobressalentes: parseInt(document.getElementById('peca-sobre').value) || 0, custo: parseFloat(document.getElementById('peca-custo').value) || 0 };
+      if(id === "") { db.pecas.push(data); auditarAcao('CRIACAO', `Criou peça: ${data.nome}`); } else { const dict = { nome: 'Nome', estoque: 'Estoque Atual', min: 'Stock Mínimo', sobressalentes: 'Reserva', custo: 'Custo (R$)' }; const diff = calcularDiff(db.pecas[id], data, dict); db.pecas[id] = data; auditarAcao('EDICAO', `Editou peça: ${data.nome}`, diff); }
+      salvarDB(); fecharModal('modal-add-peca');
+    });
+
+    document.getElementById('form-guepar').addEventListener('submit', (e) => {
+      e.preventDefault(); const id = document.getElementById('guepar-edit-id').value;
+      const data = { nome: document.getElementById('guepar-nome').value, marca: document.getElementById('guepar-marca').value, estoque: parseInt(document.getElementById('guepar-qtd').value), custo: parseFloat(document.getElementById('guepar-custo').value) || 0 };
+      if(id === "") { db.guepar.push(data); auditarAcao('CRIACAO', `Criou item: ${data.nome}`); } else { const dict = { nome: 'Item', marca: 'Marca', estoque: 'Quantidade', custo: 'Custo (R$)' }; const diff = calcularDiff(db.guepar[id], data, dict); db.guepar[id] = data; auditarAcao('EDICAO', `Editou item: ${data.nome}`, diff); }
+      salvarDB(); fecharModal('modal-add-guepar');
+    });
+
+    document.getElementById('form-manutencao').addEventListener('submit', (e) => {
+      e.preventDefault(); const id = document.getElementById('manu-edit-id').value;
+      let tipo = document.getElementById('manu-tipo').value; if (tipo === 'Outro') tipo = document.getElementById('manu-tipo-outro').value;
+      const data = { equip: document.getElementById('manu-equip').value, tipo: tipo, ultima: document.getElementById('manu-ultima').value, validade: document.getElementById('manu-validade').value };
+      if(id === "") { db.manutencoes.push(data); auditarAcao('CRIACAO', `Agendou manutenção: ${data.equip}`); } else { const dict = { equip: 'Equipamento', tipo: 'Tipo de Serviço', ultima: 'Data Última Troca', validade: 'Vencimento Previsto' }; const diff = calcularDiff(db.manutencoes[id], data, dict); db.manutencoes[id] = data; auditarAcao('EDICAO', `Editou manutenção: ${data.equip}`, diff); }
+      salvarDB(); fecharModal('modal-add-manutencao');
+    });
+
+    // SEGURANÇA: Apenas ADMIN pode criar ou alterar Contas
+    document.getElementById('form-usuario').addEventListener('submit', (e) => {
+      e.preventDefault(); 
+      const role = localStorage.getItem('guepar_role');
+      if (role !== 'admin') {
+        alert('Acesso negado: Apenas o Administrador pode criar ou editar contas de acesso.');
+        return;
+      }
+      
+      const id = document.getElementById('user-edit-id').value;
+      const data = { login: document.getElementById('user-login').value, senha: document.getElementById('user-senha').value, role: document.getElementById('user-role').value };
+      if(id === "") { db.usuarios.push(data); auditarAcao('CRIACAO', `Criou utilizador: ${data.login}`); } else { const dict = { login: 'Login de Acesso', senha: 'Palavra-passe', role: 'Nível de Permissão' }; const diff = calcularDiff(db.usuarios[id], data, dict); db.usuarios[id] = data; auditarAcao('EDICAO', `Editou utilizador: ${data.login}`, diff); }
+      salvarDB(); fecharModal('modal-add-usuario');
+    });
+
+    document.getElementById('form-emprestimo').addEventListener('submit', (e) => {
+      e.preventDefault(); const selectValor = document.getElementById('emp-item-select').value;
+      let item = selectValor === 'Outro' ? document.getElementById('emp-item-outro').value : selectValor;
+      const nomePessoa = document.getElementById('emp-nome').value;
+      const index = db.guepar.findIndex(g => g.nome === item);
+      if (index !== -1 && db.guepar[index].estoque > 0) db.guepar[index].estoque -= 1;
+      db.emprestimos.push({ pessoa: nomePessoa, item: item, dataHora: new Date().getTime() });
+      auditarAcao('EMPRESTIMO', `Check-out de ${item} para ${nomePessoa}`);
+      salvarDB(); fecharModal('modal-emprestimo');
+    });
+
+    function devolverEmprestimo(index) {
+      const itemDevolvido = db.emprestimos[index].item; const pessoa = db.emprestimos[index].pessoa;
+      const idx = db.guepar.findIndex(g => g.nome === itemDevolvido);
+      if (idx !== -1) db.guepar[idx].estoque += 1;
+      db.emprestimos.splice(index, 1); auditarAcao('DEVOLUCAO', `Check-in de ${itemDevolvido} devolvido por ${pessoa}`);
+      salvarDB();
+    }
+
+    // --- GRÁFICOS DINÂMICOS ---
+    Chart.defaults.color = '#94a3b8';
+    function iniciarGraficos() {
+      if (typeof Chart === 'undefined') return;
+      const rCtx = document.getElementById('chartRadar'); const dCtx = document.getElementById('chartDoughnut');
+      if(!rCtx || !dCtx) return;
+      if(window.g1) window.g1.destroy(); if(window.g3) window.g3.destroy();
+
+      window.g1 = new Chart(rCtx.getContext('2d'), {
+        type: 'radar',
+        data: { labels: db.pecas.map(p=>p.nome), datasets: [
+          { label: 'Estoque', data: db.pecas.map(p=>p.estoque), borderColor: '#06b6d4', backgroundColor: 'rgba(6, 182, 212, 0.2)' },
+          { label: 'Mín', data: db.pecas.map(p=>p.min), borderColor: '#ef4444', borderDash: [5,5], backgroundColor: 'transparent' }
+        ]}, options: { maintainAspectRatio: false }
+      });
+
+      let [emDia, atencao, vencida] = [0,0,0]; const h = new Date();
+      db.manutencoes.forEach(m => { const d = (new Date(m.validade) - h) / 86400000; if(d < 0) vencida++; else if(d <= 15) atencao++; else emDia++; });
+      if(emDia===0&&atencao===0&&vencida===0) emDia=1;
+      window.g3 = new Chart(dCtx.getContext('2d'), {
+        type: 'doughnut', data: { labels: ['OK', 'Aviso', 'Atraso'], datasets: [{ data: [emDia, atencao, vencida], backgroundColor: ['#10b981', '#f59e0b', '#ef4444'], borderWidth: 0 }] },
+        options: { maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'bottom' } } }
+      });
+    }
+
+    const linksMenu = document.querySelectorAll('.nav-link');
+    const abasConteudo = document.querySelectorAll('.aba-conteudo');
+    linksMenu.forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault(); const alvo = link.getAttribute('data-aba'); 
+        abasConteudo.forEach(aba => aba.classList.add('hidden'));
+        linksMenu.forEach(l => {
+          if(!l.getAttribute('data-aba').includes('ia') && !l.getAttribute('data-aba').includes('auditoria')) { l.classList.remove('text-cyan-400', 'bg-cyan-500/10', 'border-cyan-500/30'); l.classList.add('text-gray-400', 'border-transparent'); } 
+          else if (l.getAttribute('data-aba').includes('auditoria')) { l.classList.remove('bg-amber-500/10'); }
+        });
+        if (alvo !== 'ia' && alvo !== 'auditoria') { link.classList.add('text-cyan-400', 'bg-cyan-500/10', 'border-cyan-500/30'); link.classList.remove('text-gray-400', 'border-transparent'); } 
+        else if (alvo === 'auditoria') { link.classList.add('bg-amber-500/10'); }
+        document.getElementById('aba-' + alvo).classList.remove('hidden');
+        if(alvo === 'ia') document.getElementById('aba-' + alvo).classList.add('flex');
+        if(alvo === 'dashboard') iniciarGraficos();
+      });
+    });
+
+    function arrancarSistema(login_id, role) {
+      document.body.classList.remove('items-center', 'justify-center');
+      document.getElementById('tela-login').style.display = 'none';
+      document.getElementById('tela-app').classList.remove('hidden');
+      document.getElementById('usuario-display').textContent = login_id;
+      
+      aplicarPermissoes(); renderizarTabelas(); atualizarListaEmprestimo();
+      pedirPermissaoNotificacao(); setTimeout(iniciarGraficos, 100); 
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      if (localStorage.getItem('guepar_logado') === 'true') { arrancarSistema(localStorage.getItem('guepar_email'), localStorage.getItem('guepar_role')); }
+    });
+
+    document.getElementById('form-login').addEventListener('submit', (e) => {
+      e.preventDefault(); const loginID = document.getElementById('login-id').value; const senha = document.getElementById('login-senha').value;
+      const user = db.usuarios.find(u => u.login.toLowerCase() === loginID.toLowerCase() && u.senha === senha);
+      if(user) { localStorage.setItem('guepar_logado', 'true'); localStorage.setItem('guepar_email', user.login); localStorage.setItem('guepar_role', user.role); arrancarSistema(user.login, user.role); } 
+      else { alert('Credenciais inválidas!'); }
+    });
+
+    document.getElementById('btn-sair').addEventListener('click', () => {
+      localStorage.removeItem('guepar_logado'); localStorage.removeItem('guepar_email'); localStorage.removeItem('guepar_role'); location.reload();
+    });
+
+    // --- LOGIN BIOMÉTRICO ---
+    async function loginBiometrico() {
+      try {
+        if (!window.PublicKeyCredential) {
+          alert("O seu dispositivo ou navegador não suporta autenticação biométrica.");
+          return;
+        }
+
+        const publicKeyCredentialRequestOptions = {
+          challenge: new Uint8Array(32), 
+          rpId: window.location.hostname,
+          userVerification: "required",
+          timeout: 60000
+        };
+
+        const assertion = await navigator.credentials.get({
+          publicKey: publicKeyCredentialRequestOptions
+        });
+
+        if (assertion) {
+          const emailSalvo = localStorage.getItem('guepar_email') || db.usuarios[0].login;
+          const user = db.usuarios.find(u => u.login === emailSalvo) || db.usuarios[0];
+          
+          localStorage.setItem('guepar_logado', 'true'); 
+          localStorage.setItem('guepar_email', user.login); 
+          localStorage.setItem('guepar_role', user.role); 
+          
+          arrancarSistema(user.login, user.role);
+        }
+      } catch (error) {
+        console.error("Erro na biometria:", error);
+        alert("Autenticação biométrica cancelada. É necessário um ambiente seguro (HTTPS / Localhost).");
+      }
+    }
+
+    // --- REGISTO BIOMÉTRICO (Só o admin na aba de usuários) ---
+    async function registarBiometria() {
+      const nomeUser = document.getElementById('user-login').value;
+      
+      if (!nomeUser) {
+        alert("Por favor, preencha o campo 'Utilizador / E-mail' antes de registar a biometria.");
+        return;
+      }
+
+      if (!window.PublicKeyCredential) {
+        alert("O seu dispositivo ou navegador não suporta registo biométrico.");
+        return;
+      }
+
+      try {
+        const userId = new Uint8Array(16);
+        crypto.getRandomValues(userId); 
+
+        const publicKeyCredentialCreationOptions = {
+          challenge: new Uint8Array(32),
+          rp: { name: "Guepar Smart Inventory", id: window.location.hostname },
+          user: { id: userId, name: nomeUser, displayName: nomeUser },
+          pubKeyCredParams: [{ alg: -7, type: "public-key" }],
+          authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required" },
+          timeout: 60000,
+          attestation: "none"
+        };
+
+        const credential = await navigator.credentials.create({
+          publicKey: publicKeyCredentialCreationOptions
+        });
+
+        if (credential) {
+          alert(`Biometria registada com sucesso para: ${nomeUser}!`);
+        }
+      } catch (error) {
+        console.error("Erro ao registar biometria:", error);
+        alert("Registo cancelado. A biometria só funciona em ambiente seguro (HTTPS ou usando a extensão Live Server).");
+      }
+    }
+
+    // --- IA COM SUPORTE PARA NUVEM ---
+    async function adicionarMensagemIA(t) {
+      if(!t || t.trim() === '') return;
+      const chatMsgs = document.getElementById('chat-mensagens'); 
+      document.getElementById('chat-input').value = '';
+      
+      chatMsgs.innerHTML += `
+        <div class="flex gap-4 chat-mensagem flex-row-reverse mb-4">
+          <div class="w-10 h-10 rounded-xl bg-slate-700 flex items-center justify-center border border-slate-600 shrink-0"><i class="ph ph-user text-white"></i></div>
+          <div class="bg-cyan-600 text-white p-4 rounded-2xl rounded-tr-none text-sm">${t}</div>
+        </div>
+      `;
+      chatMsgs.scrollTop = chatMsgs.scrollHeight;
+
+      const loadingId = 'loading-' + Date.now();
+      chatMsgs.innerHTML += `<div id="${loadingId}" class="text-cyan-400 text-xs mt-2 italic flex items-center gap-2"><i class="ph ph-spinner animate-spin text-lg"></i> Processando IA na nuvem...</div>`;
+      chatMsgs.scrollTop = chatMsgs.scrollHeight;
+
+      try {
+        await new Promise(r => setTimeout(r, 1000)); 
+        
+        let respostaReal = "Desculpe, não compreendi. Tente perguntar sobre <b>stock crítico</b>, <b>alertas de atraso</b>, ou <b>resumo financeiro de peças</b>.";
+        const query = t.toLowerCase();
+
+        if (query.includes('stock') || query.includes('falt') || query.includes('crítico')) {
+          const criticos = db.pecas.filter(p => p.estoque < p.min);
+          respostaReal = criticos.length > 0 ? `Atenção! Encontrei peças em estado crítico:<br><br>` + criticos.map(p => `• <b>${p.nome}</b>: Só temos ${p.estoque} (Mínimo: ${p.min})`).join('<br>') : "O seu stock de peças está saudável.";
+        } else if (query.includes('alerta') || query.includes('atraso') || query.includes('empréstimo') || query.includes('ferramenta')) {
+          const atrasados = db.emprestimos.filter(e => ((new Date().getTime() - (e.dataHora ? e.dataHora : 0)) / 3600000) > 24);
+          respostaReal = atrasados.length > 0 ? `Temos ferramentas em falta há mais de 24h:<br><br>` + atrasados.map(e => `• <b>${e.pessoa}</b> está com: ${e.item}`).join('<br>') : "Todos os empréstimos estão dentro do prazo previsto.";
+        } else if (query.includes('resumo') || query.includes('capital') || query.includes('dinheiro') || query.includes('custo') || query.includes('robô')) {
+          let totalPecas = 0; db.pecas.forEach(p => totalPecas += ((p.estoque + (p.sobressalentes ? p.sobressalentes : 0)) * (p.custo ? p.custo : 0)));
+          respostaReal = `O valor total em <b>Ativos de Robótica (Spare Parts)</b> imobilizados é de <b>${fmtMoeda.format(totalPecas)}</b>.`;
+        }
+
+        document.getElementById(loadingId).remove();
+        chatMsgs.innerHTML += `
+          <div class="flex gap-4 chat-mensagem mb-4">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center shrink-0"><i class="ph ph-robot text-white text-xl"></i></div>
+            <div class="bg-slate-800/80 border border-slate-700 p-4 rounded-2xl rounded-tl-none text-sm text-gray-200 leading-relaxed">${respostaReal}</div>
+          </div>
+        `;
+        chatMsgs.scrollTop = chatMsgs.scrollHeight;
+      } catch(e) {
+        document.getElementById(loadingId).remove();
+        chatMsgs.innerHTML += `<div class="text-red-400 text-xs mb-4">Erro de conexão com a IA.</div>`;
+      }
+    }
+
+    // --- REGISTO DO PWA ---
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => console.log('PWA Service Worker Ativado!', reg.scope))
+          .catch(err => console.error('Erro no Service Worker PWA', err));
+      });
+    }
+  </script>
 </body>
 </html>
