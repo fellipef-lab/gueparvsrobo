@@ -139,7 +139,7 @@
           <button id="btn-lang-pt" onclick="mudarIdioma('pt')" class="text-xs bg-cyan-600 px-3 py-1.5 rounded font-bold text-white shadow-lg shadow-cyan-900/50 cursor-pointer transition">PT</button>
         </div>
       </div>
-      <!-- IDIOMAS DESKTOP (Invisível no mobile) -->
+      <!-- IDIOMAS DESKTOP -->
       <div class="hidden md:flex justify-end p-4 pb-0 z-40">
          <div class="flex gap-2">
           <button id="btn-lang-en-desk" onclick="mudarIdioma('en')" class="text-xs bg-slate-800 px-3 py-1.5 rounded font-bold text-gray-300 hover:bg-slate-700 transition cursor-pointer">EN</button>
@@ -599,13 +599,11 @@
 
     // --- IDIOMAS ---
     function mudarIdioma(lang) {
-      // Muda estilo dos botões mobile e desktop
       document.querySelectorAll('#btn-lang-en, #btn-lang-pt, #btn-lang-en-desk, #btn-lang-pt-desk').forEach(btn => {
         btn.className = "text-xs px-3 py-1.5 rounded font-bold transition cursor-pointer " + 
           (btn.textContent.trim().toLowerCase() === lang ? "bg-cyan-600 text-white shadow-lg shadow-cyan-900/50" : "bg-slate-800 text-gray-300 hover:bg-slate-700");
       });
 
-      // Substitui os textos baseados nos atributos data-pt e data-en
       document.querySelectorAll('.text-translate').forEach(el => {
         if(lang === 'en' && el.getAttribute('data-en')) {
           el.innerHTML = el.getAttribute('data-en');
@@ -661,7 +659,6 @@
       }
     }
 
-    // SEGURANÇA: Apenas ADMIN pode apagar LOGS
     function apagarLog(index) {
       const role = localStorage.getItem('guepar_role');
       if (role !== 'admin') {
@@ -786,7 +783,7 @@
       let html = `<html><head><title>${titulos[tipo]}</title><style>body { font-family: sans-serif; padding: 20px; } table { width: 100%; border-collapse: collapse; margin-top: 15px; } th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }</style></head><body><h1>${titulos[tipo]}</h1>`;
       
       if (tipo === 'pecas' || tipo === 'tudo') {
-        html += `<h2>Peças</h2><table><tr><th>Peça</th><th>Estoque</th><th>Mínimo</th></tr>` + db.pecas.map(p => `<tr><td>${p.nome}</td><td>${p.estoque}</td><td>${p.min}</td></tr>`).join('') + `</table>`;
+        html += `2>Peças</h2><table><tr><th>Peça</th><th>Estoque</th><th>Mínimo</th></tr>` + db.pecas.map(p => `<tr><td>${p.nome}</td><td>${p.estoque}</td><td>${p.min}</td></tr>`).join('') + `</table>`;
       }
       if (tipo === 'guepar' || tipo === 'tudo') {
         html += `<h2>Guepar</h2><table><tr><th>Item</th><th>Qtd</th></tr>` + db.guepar.map(g => `<tr><td>${g.nome}</td><td>${g.estoque}</td></tr>`).join('') + `</table>`;
@@ -795,7 +792,6 @@
       win.document.write(html); win.document.close();
     }
 
-    // SEGURANÇA: Apenas ADMIN pode apagar QUALQUER registo
     function apagarRegistro(tipo, index) {
       const role = localStorage.getItem('guepar_role');
       if (role !== 'admin') {
@@ -1021,7 +1017,6 @@
       salvarDB(); fecharModal('modal-add-manutencao');
     });
 
-    // SEGURANÇA: Apenas ADMIN pode criar ou alterar Contas
     document.getElementById('form-usuario').addEventListener('submit', (e) => {
       e.preventDefault(); 
       const role = localStorage.getItem('guepar_role');
@@ -1107,7 +1102,6 @@
       aplicarPermissoes(); renderizarTabelas(); atualizarListaEmprestimo();
       pedirPermissaoNotificacao(); setTimeout(iniciarGraficos, 100); 
 
-      // Aplica tradução se já estava selecionada antes
       const savedLang = localStorage.getItem('guepar_lang');
       if(savedLang === 'en') setTimeout(() => mudarIdioma('en'), 300);
     }
@@ -1127,7 +1121,7 @@
       localStorage.removeItem('guepar_logado'); localStorage.removeItem('guepar_email'); localStorage.removeItem('guepar_role'); location.reload();
     });
 
-    // --- LOGIN BIOMÉTRICO (CORRIGIDO PARA WEBAUTHN) ---
+    // --- LOGIN BIOMÉTRICO ---
     async function loginBiometrico() {
       try {
         if (!window.PublicKeyCredential) {
@@ -1161,11 +1155,11 @@
         }
       } catch (error) {
         console.error("Erro na biometria:", error);
-        alert("Autenticação biométrica cancelada. É necessário um ambiente seguro (HTTPS / Localhost).");
+        alert("Autenticação biométrica cancelada. Certifique-se de que registou uma Chave de Acesso anteriormente.");
       }
     }
 
-    // --- REGISTO BIOMÉTRICO (CORRIGIDO PARA FORÇAR FACE ID / DIGITAL) ---
+    // --- REGISTO BIOMÉTRICO (GRAVAÇÃO FORÇADA DE CHAVE RESIDENTE) ---
     async function registarBiometria() {
       const nomeUser = document.getElementById('user-login').value;
       
@@ -1192,8 +1186,9 @@
           user: { id: userId, name: nomeUser, displayName: nomeUser },
           pubKeyCredParams: [ { alg: -7, type: "public-key" }, { alg: -257, type: "public-key" } ],
           authenticatorSelection: { 
-            authenticatorAttachment: "platform", // Força leitor nativo
-            requireResidentKey: false,
+            authenticatorAttachment: "platform",
+            requireResidentKey: true, // FORÇA O TELEMÓVEL A GUARDAR A CHAVE
+            residentKey: "required",  // FORÇA O TELEMÓVEL A GUARDAR A CHAVE
             userVerification: "required"
           },
           timeout: 60000,
@@ -1205,11 +1200,11 @@
         });
 
         if (credential) {
-          alert(`Biometria gravada com sucesso no seu dispositivo para: ${nomeUser}!`);
+          alert(`Chave de acesso guardada com sucesso no seu dispositivo para: ${nomeUser}!`);
         }
       } catch (error) {
         console.error("Erro ao registar biometria:", error);
-        alert("Registo cancelado ou falhou. Certifique-se de que não fechou a janela do Face ID/Digital.");
+        alert("Registo cancelado. Lembre-se de aceitar guardar a chave de acesso quando a janela do telemóvel abrir.");
       }
     }
 
