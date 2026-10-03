@@ -14,7 +14,6 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://unpkg.com/html5-qrcode"></script>
 
   <style>
     .chat-mensagem { animation: fadeIn 0.3s ease-out forwards; }
@@ -66,9 +65,9 @@
         <span class="text-translate" data-pt="Aceder ao Painel" data-en="Login to Dashboard">Aceder ao Painel</span> <i class="ph ph-arrow-right text-xl"></i>
       </button>
       
-      <!-- BOTÃO DE LOGIN BIOMÉTRICO -->
-      <button type="button" onclick="loginBiometrico()" class="w-full bg-slate-800 hover:bg-slate-700 text-cyan-400 font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 cursor-pointer border border-slate-700 transition mt-2">
-        <i class="ph ph-fingerprint text-2xl"></i> Face ID / Digital
+      <!-- BOTÃO DE LOGIN RÁPIDO POR PIN -->
+      <button type="button" onclick="loginPIN()" class="w-full bg-slate-800 hover:bg-slate-700 text-cyan-400 font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 cursor-pointer border border-slate-700 transition mt-2">
+        <i class="ph ph-keypad text-2xl"></i> Login Rápido por PIN (4 Dígitos)
       </button>
     </form>
   </div>
@@ -139,7 +138,6 @@
           <button id="btn-lang-pt" onclick="mudarIdioma('pt')" class="text-xs bg-cyan-600 px-3 py-1.5 rounded font-bold text-white shadow-lg shadow-cyan-900/50 cursor-pointer transition">PT</button>
         </div>
       </div>
-      <!-- IDIOMAS DESKTOP -->
       <div class="hidden md:flex justify-end p-4 pb-0 z-40">
          <div class="flex gap-2">
           <button id="btn-lang-en-desk" onclick="mudarIdioma('en')" class="text-xs bg-slate-800 px-3 py-1.5 rounded font-bold text-gray-300 hover:bg-slate-700 transition cursor-pointer">EN</button>
@@ -367,6 +365,7 @@
               <thead>
                 <tr class="bg-slate-800/30 text-xs text-gray-400 uppercase tracking-wider border-b border-slate-700/50">
                   <th class="p-4 text-translate" data-pt="Utilizador / Login" data-en="User / Login">Utilizador / Login</th>
+                  <th class="p-4 text-translate" data-pt="PIN" data-en="PIN">PIN Rápido</th>
                   <th class="p-4 text-translate" data-pt="Permissão" data-en="Role">Permissão</th>
                   <th class="p-4 text-right text-translate" data-pt="Ações" data-en="Actions">Ações</th>
                 </tr>
@@ -437,10 +436,9 @@
           </div>
         </section>
 
-      </div> <!-- FIM DA ÁREA ROLÁVEL -->
+      </div>
 
-      <!-- ================= MODAIS ================= -->
-      
+      <!-- MODAIS -->
       <div id="modal-add-peca" class="fixed inset-0 bg-black/60 backdrop-blur-md z-50 hidden flex items-center justify-center modal-overlay">
         <div class="bento-card p-8 w-full max-w-md mx-4 relative max-h-[90vh] overflow-y-auto">
           <button onclick="fecharModal('modal-add-peca')" class="absolute top-4 right-4 text-gray-400 hover:text-white cursor-pointer"><i class="ph ph-x text-xl"></i></button>
@@ -511,7 +509,8 @@
           <form id="form-usuario" class="space-y-4">
             <input type="hidden" id="user-edit-id" value="">
             <div><label class="block text-xs font-bold text-gray-400 mb-1 text-translate" data-pt="Utilizador / E-mail" data-en="User / Email">Utilizador / E-mail</label><input type="text" id="user-login" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-purple-500" placeholder="Ex: Operador Carlos"></div>
-            <div><label class="block text-xs font-bold text-gray-400 mb-1 text-translate" data-pt="Senha" data-en="Password">Senha</label><input type="password" id="user-senha" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-purple-500"></div>
+            <div><label class="block text-xs font-bold text-gray-400 mb-1 text-translate" data-pt="Senha Principal" data-en="Password">Senha Principal</label><input type="password" id="user-senha" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-purple-500"></div>
+            <div><label class="block text-xs font-bold text-cyan-400 mb-1 text-translate" data-pt="PIN Rápido (4 Dígitos)" data-en="Quick PIN (4 Digits)">PIN Rápido (4 Dígitos)</label><input type="text" id="user-pin" maxlength="4" pattern="\d{4}" class="w-full bg-slate-950 border border-cyan-800/80 rounded-xl px-3 py-2 text-cyan-300 font-mono tracking-widest outline-none focus:border-cyan-400" placeholder="Ex: 1234"></div>
             <div>
               <label class="block text-xs font-bold text-gray-400 mb-1 text-translate" data-pt="Permissão" data-en="Role">Permissão</label>
               <select id="user-role" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-purple-500">
@@ -521,10 +520,6 @@
               </select>
             </div>
             
-            <button type="button" onclick="registarBiometria()" class="w-full bg-slate-800 hover:bg-slate-700 text-purple-400 font-bold py-3 rounded-xl border border-slate-700 mt-2 flex justify-center items-center gap-2 transition cursor-pointer">
-              <i class="ph ph-fingerprint text-xl"></i> <span class="text-translate" data-pt="Registar Face ID / Digital" data-en="Register Face ID / Print">Registar Face ID / Digital</span>
-            </button>
-
             <button type="submit" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 rounded-xl mt-4 cursor-pointer text-translate" data-pt="Salvar Utilizador" data-en="Save User">Salvar Utilizador</button>
           </form>
         </div>
@@ -569,13 +564,13 @@
     </main>
   </div>
 
-  <!-- JAVASCRIPT COMPLETO E INTACTO -->
+  <!-- JAVASCRIPT LOGIC -->
   <script>
     const defaultDB = {
       usuarios: [
-        { login: 'fellipe.f@grupodime.com.br', senha: '123456', role: 'admin' },
-        { login: 'Operador', senha: '123', role: 'visitante1' },
-        { login: 'Leitura', senha: '123', role: 'visitante' }
+        { login: 'fellipe.f@grupodime.com.br', senha: '123456', pin: '1234', role: 'admin' },
+        { login: 'Operador', senha: '123', pin: '0000', role: 'visitante1' },
+        { login: 'Leitura', senha: '123', pin: '1111', role: 'visitante' }
       ],
       pecas: [
         { nome: 'Bateria de Lítio', estoque: 1, min: 2, sobressalentes: 1, custo: 1250.00 },
@@ -597,7 +592,6 @@
     if (!db.usuarios) db.usuarios = defaultDB.usuarios;
     if (!db.logs) db.logs = [];
 
-    // --- IDIOMAS ---
     function mudarIdioma(lang) {
       document.querySelectorAll('#btn-lang-en, #btn-lang-pt, #btn-lang-en-desk, #btn-lang-pt-desk').forEach(btn => {
         btn.className = "text-xs px-3 py-1.5 rounded font-bold transition cursor-pointer " + 
@@ -615,7 +609,6 @@
       localStorage.setItem('guepar_lang', lang);
     }
 
-    // --- MENU MOBILE ---
     function toggleMenu(autoClose = false) {
       if(window.innerWidth >= 768) return; 
       const menu = document.getElementById('menu-lateral');
@@ -651,12 +644,6 @@
       atualizarListaEmprestimo();
       iniciarGraficos();
       verificarNotificacoesPush();
-      
-      try {
-        // Exemplo Nuvem: await fetch('https://SUA-API.com/sync', { method: 'POST', body: JSON.stringify(db) });
-      } catch (err) {
-        console.warn("Offline.");
-      }
     }
 
     function apagarLog(index) {
@@ -910,6 +897,7 @@
       document.getElementById('tabela-usuarios').innerHTML = db.usuarios.map((u, i) => `
         <tr class="border-b border-slate-800/30 hover:bg-slate-800/50">
           <td class="p-4 font-medium text-white">${u.login}</td>
+          <td class="p-4 font-mono text-cyan-400 font-bold">${u.pin || '---'}</td>
           <td class="p-4 text-purple-400 uppercase text-xs font-bold">${u.role}</td>
           <td class="p-4 text-right flex justify-end gap-3">
             <button onclick="prepararEdicao('usuario', ${i})" class="text-cyan-400 hover:text-white transition" title="Editar"><i class="ph ph-pencil-simple text-lg"></i></button>
@@ -982,7 +970,7 @@
         document.getElementById('manu-ultima').value = i.ultima; document.getElementById('manu-validade').value = i.validade; document.getElementById('titulo-modal-manu').textContent = "Editar Manutenção"; abrirModal('modal-add-manutencao');
       }
       if(tipo === 'usuario') {
-        const i = db.usuarios[index]; document.getElementById('user-edit-id').value = index; document.getElementById('user-login').value = i.login; document.getElementById('user-senha').value = i.senha; document.getElementById('user-role').value = i.role; abrirModal('modal-add-usuario');
+        const i = db.usuarios[index]; document.getElementById('user-edit-id').value = index; document.getElementById('user-login').value = i.login; document.getElementById('user-senha').value = i.senha; document.getElementById('user-pin').value = i.pin || ''; document.getElementById('user-role').value = i.role; abrirModal('modal-add-usuario');
       }
     }
 
@@ -1017,7 +1005,6 @@
       salvarDB(); fecharModal('modal-add-manutencao');
     });
 
-    // SEGURANÇA: Apenas ADMIN pode criar ou alterar Contas
     document.getElementById('form-usuario').addEventListener('submit', (e) => {
       e.preventDefault(); 
       const role = localStorage.getItem('guepar_role');
@@ -1027,8 +1014,14 @@
       }
       
       const id = document.getElementById('user-edit-id').value;
-      const data = { login: document.getElementById('user-login').value, senha: document.getElementById('user-senha').value, role: document.getElementById('user-role').value };
-      if(id === "") { db.usuarios.push(data); auditarAcao('CRIACAO', `Criou utilizador: ${data.login}`); } else { const dict = { login: 'Login de Acesso', senha: 'Palavra-passe', role: 'Nível de Permissão' }; const diff = calcularDiff(db.usuarios[id], data, dict); db.usuarios[id] = data; auditarAcao('EDICAO', `Editou utilizador: ${data.login}`, diff); }
+      const data = { 
+        login: document.getElementById('user-login').value, 
+        senha: document.getElementById('user-senha').value, 
+        pin: document.getElementById('user-pin').value || '1234',
+        role: document.getElementById('user-role').value 
+      };
+
+      if(id === "") { db.usuarios.push(data); auditarAcao('CRIACAO', `Criou utilizador: ${data.login}`); } else { const dict = { login: 'Login de Acesso', senha: 'Palavra-passe', pin: 'PIN Rápido', role: 'Nível de Permissão' }; const diff = calcularDiff(db.usuarios[id], data, dict); db.usuarios[id] = data; auditarAcao('EDICAO', `Editou utilizador: ${data.login}`, diff); }
       salvarDB(); fecharModal('modal-add-usuario');
     });
 
@@ -1051,7 +1044,6 @@
       salvarDB();
     }
 
-    // --- GRÁFICOS DINÂMICOS ---
     Chart.defaults.color = '#94a3b8';
     function iniciarGraficos() {
       if (typeof Chart === 'undefined') return;
@@ -1122,93 +1114,19 @@
       localStorage.removeItem('guepar_logado'); localStorage.removeItem('guepar_email'); localStorage.removeItem('guepar_role'); location.reload();
     });
 
-    // --- LOGIN BIOMÉTRICO (FLEXÍVEL E UNIVERSAL) ---
-    async function loginBiometrico() {
-      try {
-        if (!window.PublicKeyCredential) {
-          alert("O seu dispositivo ou navegador não suporta autenticação biométrica (WebAuthn).");
-          return;
-        }
+    // --- NOVA LÓGICA: LOGIN RÁPIDO POR PIN (4 DÍGITOS) ---
+    function loginPIN() {
+      const pinInserido = prompt("Introduza o seu PIN de 4 dígitos:");
+      if (!pinInserido) return;
 
-        const challenge = new Uint8Array(32);
-        crypto.getRandomValues(challenge);
-
-        const publicKeyCredentialRequestOptions = {
-          challenge: challenge,
-          userVerification: "preferred",
-          timeout: 60000
-        };
-
-        const assertion = await navigator.credentials.get({
-          publicKey: publicKeyCredentialRequestOptions
-        });
-
-        if (assertion) {
-          const emailSalvo = localStorage.getItem('guepar_email') || db.usuarios[0].login;
-          const user = db.usuarios.find(u => u.login === emailSalvo) || db.usuarios[0];
-          
-          localStorage.setItem('guepar_logado', 'true'); 
-          localStorage.setItem('guepar_email', user.login); 
-          localStorage.setItem('guepar_role', user.role); 
-          
-          arrancarSistema(user.login, user.role);
-        }
-      } catch (error) {
-        console.error("Erro na biometria:", error);
-        alert("Autenticação cancelada ou nenhuma chave foi encontrada neste dispositivo.");
-      }
-    }
-
-    // --- REGISTO BIOMÉTRICO (COMPATÍVEL COM ANDROID / IOS / WINDOWS) ---
-    async function registarBiometria() {
-      const nomeUser = document.getElementById('user-login').value;
-      
-      if (!nomeUser) {
-        alert("Por favor, preencha o campo 'Utilizador / E-mail' antes de registar a biometria.");
-        return;
-      }
-
-      if (!window.PublicKeyCredential) {
-        alert("O seu navegador não suporta WebAuthn (Biometria). Use Chrome ou Safari atualizados.");
-        return;
-      }
-
-      try {
-        const userId = new Uint8Array(16);
-        crypto.getRandomValues(userId); 
-        
-        const challenge = new Uint8Array(32);
-        crypto.getRandomValues(challenge);
-
-        const publicKeyCredentialCreationOptions = {
-          challenge: challenge,
-          rp: { name: "Guepar App" },
-          user: { 
-            id: userId, 
-            name: nomeUser, 
-            displayName: nomeUser 
-          },
-          pubKeyCredParams: [
-            { alg: -7, type: "public-key" },
-            { alg: -257, type: "public-key" }
-          ],
-          authenticatorSelection: { 
-            userVerification: "preferred"
-          },
-          timeout: 60000,
-          attestation: "none"
-        };
-
-        const credential = await navigator.credentials.create({
-          publicKey: publicKeyCredentialCreationOptions
-        });
-
-        if (credential) {
-          alert(`Chave de acesso criada e guardada com sucesso no telemóvel para: ${nomeUser}!`);
-        }
-      } catch (error) {
-        console.error("Erro ao registar biometria:", error);
-        alert("Não foi possível concluir o registo. Verifique se o seu telemóvel tem um bloqueio de ecrã (PIN, Impressão Digital ou Rosto) ativo.");
+      const user = db.usuarios.find(u => u.pin === pinInserido.trim());
+      if (user) {
+        localStorage.setItem('guepar_logado', 'true'); 
+        localStorage.setItem('guepar_email', user.login); 
+        localStorage.setItem('guepar_role', user.role); 
+        arrancarSistema(user.login, user.role);
+      } else {
+        alert("PIN incorreto ou não registado.");
       }
     }
 
