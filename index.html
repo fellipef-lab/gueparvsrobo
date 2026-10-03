@@ -783,7 +783,7 @@
       let html = `<html><head><title>${titulos[tipo]}</title><style>body { font-family: sans-serif; padding: 20px; } table { width: 100%; border-collapse: collapse; margin-top: 15px; } th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }</style></head><body><h1>${titulos[tipo]}</h1>`;
       
       if (tipo === 'pecas' || tipo === 'tudo') {
-        html += `2>Peças</h2><table><tr><th>Peça</th><th>Estoque</th><th>Mínimo</th></tr>` + db.pecas.map(p => `<tr><td>${p.nome}</td><td>${p.estoque}</td><td>${p.min}</td></tr>`).join('') + `</table>`;
+        html += `<h2>Peças</h2><table><tr><th>Peça</th><th>Estoque</th><th>Mínimo</th></tr>` + db.pecas.map(p => `<tr><td>${p.nome}</td><td>${p.estoque}</td><td>${p.min}</td></tr>`).join('') + `</table>`;
       }
       if (tipo === 'guepar' || tipo === 'tudo') {
         html += `<h2>Guepar</h2><table><tr><th>Item</th><th>Qtd</th></tr>` + db.guepar.map(g => `<tr><td>${g.nome}</td><td>${g.estoque}</td></tr>`).join('') + `</table>`;
@@ -1017,6 +1017,7 @@
       salvarDB(); fecharModal('modal-add-manutencao');
     });
 
+    // SEGURANÇA: Apenas ADMIN pode criar ou alterar Contas
     document.getElementById('form-usuario').addEventListener('submit', (e) => {
       e.preventDefault(); 
       const role = localStorage.getItem('guepar_role');
@@ -1121,7 +1122,7 @@
       localStorage.removeItem('guepar_logado'); localStorage.removeItem('guepar_email'); localStorage.removeItem('guepar_role'); location.reload();
     });
 
-    // --- LOGIN BIOMÉTRICO ---
+    // --- LOGIN BIOMÉTRICO (FLEXÍVEL E UNIVERSAL) ---
     async function loginBiometrico() {
       try {
         if (!window.PublicKeyCredential) {
@@ -1134,8 +1135,7 @@
 
         const publicKeyCredentialRequestOptions = {
           challenge: challenge,
-          rpId: window.location.hostname,
-          userVerification: "required",
+          userVerification: "preferred",
           timeout: 60000
         };
 
@@ -1155,11 +1155,11 @@
         }
       } catch (error) {
         console.error("Erro na biometria:", error);
-        alert("Autenticação biométrica cancelada. Certifique-se de que registou uma Chave de Acesso anteriormente.");
+        alert("Autenticação cancelada ou nenhuma chave foi encontrada neste dispositivo.");
       }
     }
 
-    // --- REGISTO BIOMÉTRICO (GRAVAÇÃO FORÇADA DE CHAVE RESIDENTE) ---
+    // --- REGISTO BIOMÉTRICO (COMPATÍVEL COM ANDROID / IOS / WINDOWS) ---
     async function registarBiometria() {
       const nomeUser = document.getElementById('user-login').value;
       
@@ -1182,14 +1182,18 @@
 
         const publicKeyCredentialCreationOptions = {
           challenge: challenge,
-          rp: { name: "Guepar App", id: window.location.hostname },
-          user: { id: userId, name: nomeUser, displayName: nomeUser },
-          pubKeyCredParams: [ { alg: -7, type: "public-key" }, { alg: -257, type: "public-key" } ],
+          rp: { name: "Guepar App" },
+          user: { 
+            id: userId, 
+            name: nomeUser, 
+            displayName: nomeUser 
+          },
+          pubKeyCredParams: [
+            { alg: -7, type: "public-key" },
+            { alg: -257, type: "public-key" }
+          ],
           authenticatorSelection: { 
-            authenticatorAttachment: "platform",
-            requireResidentKey: true, // FORÇA O TELEMÓVEL A GUARDAR A CHAVE
-            residentKey: "required",  // FORÇA O TELEMÓVEL A GUARDAR A CHAVE
-            userVerification: "required"
+            userVerification: "preferred"
           },
           timeout: 60000,
           attestation: "none"
@@ -1200,11 +1204,11 @@
         });
 
         if (credential) {
-          alert(`Chave de acesso guardada com sucesso no seu dispositivo para: ${nomeUser}!`);
+          alert(`Chave de acesso criada e guardada com sucesso no telemóvel para: ${nomeUser}!`);
         }
       } catch (error) {
         console.error("Erro ao registar biometria:", error);
-        alert("Registo cancelado. Lembre-se de aceitar guardar a chave de acesso quando a janela do telemóvel abrir.");
+        alert("Não foi possível concluir o registo. Verifique se o seu telemóvel tem um bloqueio de ecrã (PIN, Impressão Digital ou Rosto) ativo.");
       }
     }
 
