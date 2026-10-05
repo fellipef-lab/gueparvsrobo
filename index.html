@@ -227,6 +227,30 @@
               <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2"><i class="ph ph-activity text-cyan-400"></i> <span class="text-translate" data-pt="Ciclo de Manutenção" data-en="Maintenance Cycle">Ciclo de Manutenção</span></h3>
               <div class="relative h-48 w-full flex justify-center"><canvas id="chartDoughnut"></canvas></div>
             </div>
+          <div class="bento-card col-span-1 md:col-span-4 lg:col-span-7 p-6">
+              <h3 class="text-sm font-bold text-white mb-1 flex items-center gap-2"><i class="ph ph-lightning text-amber-400"></i> <span class="text-translate" data-pt="Central de Ações" data-en="Action Center">Central de Ações</span></h3>
+              <p class="text-xs text-gray-500 mb-4 text-translate" data-pt="O que resolver agora, da maior para a menor urgência" data-en="What to fix now, most urgent first">O que resolver agora, da maior para a menor urgência</p>
+              <div id="ins-acoes" class="space-y-2"></div>
+            </div>
+            <div class="bento-card col-span-1 md:col-span-4 lg:col-span-5 p-6">
+              <h3 class="text-sm font-bold text-white mb-1 flex items-center gap-2"><i class="ph ph-calendar-check text-cyan-400"></i> <span class="text-translate" data-pt="Próximas Manutenções" data-en="Upcoming Maintenance">Próximas Manutenções</span></h3>
+              <p class="text-xs text-gray-500 mb-4 text-translate" data-pt="A barra mostra os dias restantes (base de 90 dias)" data-en="Bar shows days left (90-day scale)">A barra mostra os dias restantes (base de 90 dias)</p>
+              <div id="ins-manut" class="space-y-3"></div>
+            </div>
+            <div class="bento-card col-span-1 md:col-span-4 lg:col-span-6 p-6">
+              <h3 class="text-sm font-bold text-white mb-1 flex items-center gap-2"><i class="ph ph-shield-check text-emerald-400"></i> <span class="text-translate" data-pt="Cobertura das Peças" data-en="Parts Coverage">Cobertura das Peças</span></h3>
+              <p class="text-xs text-gray-500 mb-4 text-translate" data-pt="Estoque atual comparado ao mínimo (a linha marca 100%)" data-en="Current stock vs minimum (line marks 100%)">Estoque atual comparado ao mínimo (a linha marca 100%)</p>
+              <div id="ins-cobertura" class="space-y-3"></div>
+            </div>
+            <div class="bento-card col-span-1 md:col-span-4 lg:col-span-6 p-6 req-admin hidden">
+              <h3 class="text-sm font-bold text-white mb-1 flex items-center gap-2"><i class="ph ph-coins text-purple-400"></i> <span class="text-translate" data-pt="Onde Está o Dinheiro" data-en="Where the Money Is">Onde Está o Dinheiro</span></h3>
+              <p class="text-xs text-gray-500 mb-4 text-translate" data-pt="Peças com maior valor parado (estoque + sobressalentes)" data-en="Parts with most capital tied up">Peças com maior valor parado (estoque + sobressalentes)</p>
+              <div id="ins-capital" class="space-y-3"></div>
+            </div>
+            <div class="bento-card col-span-1 md:col-span-4 lg:col-span-12 p-6">
+              <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2"><i class="ph ph-clock-counter-clockwise text-cyan-400"></i> <span class="text-translate" data-pt="Atividade Recente" data-en="Recent Activity">Atividade Recente</span></h3>
+              <div id="ins-atividade" class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2"></div>
+            </div>
           </div>
         </section>
 
@@ -1167,6 +1191,35 @@
         type: 'doughnut', data: { labels: ['OK', 'Aviso', 'Atraso'], datasets: [{ data: [emDia, atencao, vencida], backgroundColor: ['#10b981', '#f59e0b', '#ef4444'], borderWidth: 0 }] },
         options: { maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'bottom' } } }
       });
+      renderizarInsights();
+    }
+    function renderizarInsights() {
+      const $ = id => document.getElementById(id); if (!$('ins-acoes')) return;
+      const hoje = new Date();
+      const esc = v => String(v == null ? '' : v).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+      const moeda = v => (typeof fmtMoeda !== 'undefined' ? fmtMoeda.format(v) : v.toFixed(2));
+      const cor = n => n >= 3 ? ['red', 'Crítico'] : n === 2 ? ['amber', 'Atenção'] : ['emerald', 'OK'];
+      const acoes = []; let crit = 0, venc = 0, avis = 0, atr = 0;
+      db.pecas.forEach(p => { if (p.estoque < p.min) { crit++; acoes.push({ n: 3, ic: 'ph-package', t: 'Repor ' + p.nome, d: 'Estoque ' + p.estoque + ' de mínimo ' + p.min + ' (faltam ' + (p.min - p.estoque) + ')' }); } });
+      const manut = db.manutencoes.map(m => ({ m, dias: Math.ceil((new Date(m.validade) - hoje) / 864e5) })).filter(x => !isNaN(x.dias)).sort((a, b) => a.dias - b.dias);
+      manut.forEach(x => {
+        if (x.dias < 0) { venc++; acoes.push({ n: 3, ic: 'ph-wrench', t: x.m.equip + ': ' + x.m.tipo, d: 'Vencida há ' + (-x.dias) + ' dia(s)' }); }
+        else if (x.dias <= 15) { avis++; acoes.push({ n: 2, ic: 'ph-wrench', t: x.m.equip + ': ' + x.m.tipo, d: 'Vence em ' + x.dias + ' dia(s)' }); }
+      });
+      db.emprestimos.forEach(e => { const h = (hoje.getTime() - (e.dataHora || 0)) / 36e5; if (h > 24) { atr++; acoes.push({ n: 2, ic: 'ph-hand-coins', t: e.item + ' com ' + e.pessoa, d: 'Fora há ' + Math.floor(h) + ' h' }); } });
+      acoes.sort((a, b) => b.n - a.n);
+      $('ins-acoes').innerHTML = acoes.length ? acoes.slice(0, 6).map(a => { const c = cor(a.n)[0]; return '<div class="flex items-center gap-3 p-3 rounded-xl bg-' + c + '-500/10 border border-' + c + '-500/20"><i class="ph ' + a.ic + ' text-xl text-' + c + '-400"></i><div class="min-w-0 flex-1"><p class="text-sm font-bold text-white truncate">' + esc(a.t) + '</p><p class="text-xs text-gray-400">' + esc(a.d) + '</p></div><span class="text-[11px] font-bold text-' + c + '-400">' + cor(a.n)[1] + '</span></div>'; }).join('') + (acoes.length > 6 ? '<p class="text-xs text-gray-500 pt-1">e mais ' + (acoes.length - 6) + ' pendência(s)</p>' : '')
+        : '<div class="p-6 text-center rounded-xl bg-emerald-500/10 border border-emerald-500/20"><i class="ph ph-check-circle text-3xl text-emerald-400"></i><p class="text-sm text-white font-bold mt-2">Tudo em dia</p><p class="text-xs text-gray-400">Nenhuma ação pendente agora.</p></div>';
+      // Saúde operacional: combina estoque, manutenção e empréstimos
+      const saude = Math.max(0, 100 - crit * 6 - venc * 10 - avis * 4 - atr * 3);
+      const hs = $('kpi-saude'), hd = $('kpi-saude-desc');
+      if (hs) hs.textContent = saude + '%';
+      if (hd) { const ok = saude >= 80; hd.className = 'text-xs mt-1 font-semibold flex items-center gap-1 ' + (ok ? 'text-emerald-400' : saude >= 50 ? 'text-amber-400' : 'text-red-400'); hd.innerHTML = '<i class="ph ' + (ok ? 'ph-trend-up' : 'ph-warning') + '"></i> ' + (ok ? 'Sistema Estável' : acoes.length + ' pendência(s) afetando a operação'); }
+      $('ins-manut').innerHTML = manut.length ? manut.slice(0, 5).map(x => { const c = x.dias < 0 ? 'red' : x.dias <= 15 ? 'amber' : 'emerald'; const w = Math.max(4, Math.min(100, x.dias / 90 * 100)); return '<div><div class="flex justify-between text-xs mb-1"><span class="text-white font-semibold truncate pr-2">' + esc(x.m.equip) + '</span><span class="text-' + c + '-400 font-bold shrink-0">' + (x.dias < 0 ? 'atrasada ' + (-x.dias) + ' d' : x.dias + ' d') + '</span></div><div class="h-2 rounded-full bg-slate-800"><div class="h-2 rounded-full bg-' + c + '-500" style="width:' + w + '%"></div></div></div>'; }).join('') : '<p class="text-sm text-gray-500">Nenhuma manutenção cadastrada.</p>';
+      $('ins-cobertura').innerHTML = db.pecas.length ? db.pecas.map(p => { const pct = p.min > 0 ? p.estoque / p.min * 100 : 100; const c = pct < 100 ? 'red' : pct < 150 ? 'amber' : 'emerald'; return '<div><div class="flex justify-between text-xs mb-1"><span class="text-white font-semibold truncate pr-2">' + esc(p.nome) + '</span><span class="text-gray-400 shrink-0">' + p.estoque + ' / ' + p.min + ' (' + Math.round(pct) + '%)</span></div><div class="relative h-2 rounded-full bg-slate-800"><div class="h-2 rounded-full bg-' + c + '-500" style="width:' + Math.min(100, pct / 2) + '%"></div><div class="absolute top-[-3px] h-[14px] w-px bg-white/60" style="left:50%"></div></div></div>'; }).join('') : '<p class="text-sm text-gray-500">Nenhuma peça cadastrada.</p>';
+      const cap = db.pecas.map(p => ({ n: p.nome, v: ((p.estoque || 0) + (p.sobressalentes || 0)) * (p.custo || 0) })).sort((a, b) => b.v - a.v).slice(0, 5), mx = cap.length ? Math.max(cap[0].v, 1) : 1;
+      if ($('ins-capital')) $('ins-capital').innerHTML = cap.length ? cap.map(x => '<div><div class="flex justify-between text-xs mb-1"><span class="text-white font-semibold truncate pr-2">' + esc(x.n) + '</span><span class="text-purple-300 font-bold shrink-0">' + moeda(x.v) + '</span></div><div class="h-2 rounded-full bg-slate-800"><div class="h-2 rounded-full bg-purple-500" style="width:' + Math.max(3, x.v / mx * 100) + '%"></div></div></div>').join('') : '<p class="text-sm text-gray-500">Nenhuma peça cadastrada.</p>';
+      $('ins-atividade').innerHTML = db.logs.length ? db.logs.slice(0, 8).map(l => '<div class="flex gap-3 text-xs py-1.5 border-b border-white/5"><span class="text-gray-500 shrink-0 w-28">' + esc(new Date(l.data).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })) + '</span><span class="text-gray-300 truncate"><b class="text-white">' + esc(l.acao) + '</b> ' + esc(l.detalhes) + ' <span class="text-gray-500">por ' + esc((l.utilizador || '').split('@')[0]) + '</span></span></div>').join('') : '<p class="text-sm text-gray-500">As ações feitas no painel aparecem aqui.</p>';
     }
 
     const linksMenu = document.querySelectorAll('.nav-link');
@@ -1185,7 +1238,8 @@
         if(alvo === 'ia') document.getElementById('aba-' + alvo).classList.add('flex');
         if(alvo === 'dashboard') iniciarGraficos();
       });
-    });
+    }
+);
 
     function arrancarSistema(login_id, role) {
       document.body.classList.remove('items-center', 'justify-center');
