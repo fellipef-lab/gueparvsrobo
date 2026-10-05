@@ -11,12 +11,9 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#020617">
 
-  <!-- Scripts e Bibliotecas Globais -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://unpkg.com/html5-qrcode"></script> <!-- QR Code -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script> <!-- Digital Twin 3D -->
 
   <style>
     .chat-mensagem { animation: fadeIn 0.3s ease-out forwards; }
@@ -90,6 +87,7 @@
             <span class="text-[10px] text-emerald-400 font-bold tracking-wider uppercase flex items-center gap-1 mt-1">
               <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> <span class="text-translate" data-pt="Sistema Online" data-en="System Online">Sistema Online</span>
             </span>
+            <span id="status-nuvem" class="block text-[10px] font-bold mt-1 text-gray-400">☁ Conectando…</span>
           </div>
         </div>
 
@@ -159,12 +157,6 @@
             </div>
             <div class="flex gap-2 flex-wrap">
               <input type="file" id="importar-backup" class="hidden" accept=".json" onchange="importarDados(event)">
-              <button onclick="enviarWhatsApp()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-emerald-900/50 flex items-center gap-2 transition cursor-pointer">
-                <i class="ph ph-whatsapp-logo text-lg"></i> Alertas WhatsApp
-              </button>
-              <button onclick="abrirModal('modal-qrcode-scanner')" class="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-purple-900/50 flex items-center gap-2 transition cursor-pointer">
-                <i class="ph ph-qr-code text-lg"></i> Ler QR Code
-              </button>
               <button onclick="document.getElementById('importar-backup').click()" class="req-admin hidden bg-amber-600/20 text-amber-400 hover:bg-amber-600 hover:text-white px-4 py-2.5 rounded-xl text-sm font-bold border border-amber-500/30 transition cursor-pointer flex items-center gap-2">
                 <i class="ph ph-upload-simple text-lg"></i> <span class="text-translate" data-pt="Importar Backup" data-en="Import Backup">Importar Backup</span>
               </button>
@@ -226,20 +218,14 @@
               </div>
             </div>
 
-            <!-- BENTO CARD: DIGITAL TWIN 3D -->
-            <div class="bento-card col-span-1 md:col-span-4 lg:col-span-6 p-6 flex flex-col justify-between">
-              <div class="flex justify-between items-center mb-2">
-                <h3 class="text-sm font-bold text-white flex items-center gap-2"><i class="ph ph-cube text-cyan-400"></i> Digital Twin 3D (Gêmeo Digital)</h3>
-                <span class="text-[10px] bg-cyan-500/20 text-cyan-300 px-2 py-0.5 rounded font-bold uppercase">Ao Vivo</span>
-              </div>
-              <div id="container-3d" class="w-full h-48 rounded-xl bg-slate-950/80 border border-slate-800 relative overflow-hidden flex items-center justify-center">
-                <div class="absolute bottom-2 left-2 text-[10px] text-gray-500 bg-slate-900/80 px-2 py-1 rounded border border-slate-800">Arraste para girar em 3D</div>
-              </div>
-            </div>
-
             <div class="bento-card col-span-1 md:col-span-4 lg:col-span-6 p-6">
               <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2"><i class="ph ph-target text-cyan-400"></i> <span class="text-translate" data-pt="Alvo de Reposição Estratégica" data-en="Strategic Restocking Target">Alvo de Reposição Estratégica</span></h3>
               <div class="relative h-48 w-full"><canvas id="chartRadar"></canvas></div>
+            </div>
+
+            <div class="bento-card col-span-1 md:col-span-4 lg:col-span-6 p-6">
+              <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2"><i class="ph ph-activity text-cyan-400"></i> <span class="text-translate" data-pt="Ciclo de Manutenção" data-en="Maintenance Cycle">Ciclo de Manutenção</span></h3>
+              <div class="relative h-48 w-full flex justify-center"><canvas id="chartDoughnut"></canvas></div>
             </div>
           </div>
         </section>
@@ -434,13 +420,7 @@
 
         <!-- ABA: IA -->
         <section id="aba-ia" class="aba-conteudo hidden h-[80vh] flex-col">
-          <header class="mb-4 flex justify-between items-center">
-            <h1 class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400 tracking-tight flex items-center gap-2 text-translate" data-pt="Guepar Copilot IA" data-en="Guepar Copilot AI">Guepar Copilot IA</h1>
-            <!-- Botão de Comando de Voz -->
-            <button onclick="ouvirComandoVoz()" class="bg-purple-600/20 text-purple-400 hover:bg-purple-600 hover:text-white px-4 py-2 rounded-xl text-xs font-bold border border-purple-500/30 flex items-center gap-2 transition cursor-pointer">
-              <i class="ph ph-microphone text-lg animate-pulse"></i> Falar Comando de Voz
-            </button>
-          </header>
+          <header class="mb-4"><h1 class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400 tracking-tight flex items-center gap-2 text-translate" data-pt="Guepar Copilot IA" data-en="Guepar Copilot AI">Guepar Copilot IA</h1></header>
           <div class="flex-1 bento-card flex flex-col overflow-hidden">
             <div id="chat-mensagens" class="flex-1 p-4 md:p-6 overflow-y-auto space-y-6">
               <div class="flex gap-4 chat-mensagem">
@@ -451,7 +431,7 @@
               </div>
             </div>
             <form onsubmit="adicionarMensagemIA(document.getElementById('chat-input').value); return false;" class="p-4 bg-slate-900/80 border-t border-slate-700/50 flex gap-2">
-              <input type="text" id="chat-input" placeholder="Escreva ou fale a sua pergunta..." autocomplete="off" class="flex-1 bg-slate-950 border border-slate-800 focus:border-purple-500 rounded-xl px-4 text-white outline-none">
+              <input type="text" id="chat-input" placeholder="Escreva a sua pergunta..." autocomplete="off" class="flex-1 bg-slate-950 border border-slate-800 focus:border-purple-500 rounded-xl px-4 text-white outline-none">
               <button type="submit" class="px-6 rounded-xl bg-gradient-to-r from-cyan-600 to-purple-600 text-white font-bold cursor-pointer hover:shadow-lg hover:shadow-purple-500/30 transition"><i class="ph ph-paper-plane-right text-xl"></i></button>
             </form>
           </div>
@@ -460,17 +440,6 @@
       </div>
 
       <!-- MODAIS -->
-      
-      <!-- MODAL: LEITOR QR CODE -->
-      <div id="modal-qrcode-scanner" class="fixed inset-0 bg-black/70 backdrop-blur-md z-50 hidden flex items-center justify-center modal-overlay">
-        <div class="bento-card p-6 w-full max-w-md mx-4 relative">
-          <button onclick="fecharModalScanner()" class="absolute top-4 right-4 text-gray-400 hover:text-white cursor-pointer"><i class="ph ph-x text-2xl"></i></button>
-          <h2 class="text-xl font-bold text-white mb-4 flex items-center gap-2"><i class="ph ph-qr-code text-cyan-400"></i> Leitor de Código de Barras/QR</h2>
-          <div id="qr-reader" class="w-full rounded-xl overflow-hidden bg-slate-950 border border-slate-800"></div>
-          <p id="qr-reader-result" class="text-xs text-center text-cyan-400 mt-3 font-semibold">Aponte a câmera para o QR Code da peça/ferramenta</p>
-        </div>
-      </div>
-
       <div id="modal-add-peca" class="fixed inset-0 bg-black/60 backdrop-blur-md z-50 hidden flex items-center justify-center modal-overlay">
         <div class="bento-card p-8 w-full max-w-md mx-4 relative max-h-[90vh] overflow-y-auto">
           <button onclick="fecharModal('modal-add-peca')" class="absolute top-4 right-4 text-gray-400 hover:text-white cursor-pointer"><i class="ph ph-x text-xl"></i></button>
@@ -624,109 +593,104 @@
     if (!db.usuarios) db.usuarios = defaultDB.usuarios;
     if (!db.logs) db.logs = [];
 
-    // --- 1. DIGITAL TWIN 3D (THREE.JS) ---
-    let scene, camera, renderer, robotMesh;
-    function iniciar3D() {
-      const container = document.getElementById('container-3d');
-      if(!container || container.children.length > 1) return;
+    /* =====================================================================
+       FIREBASE (Realtime Database) - sincroniza o db entre todos os aparelhos
+       Continua offline-first: tudo é salvo no aparelho e enviado quando há internet.
+       ===================================================================== */
+    const FIREBASE_URL = 'https://gueparvsrobo-default-rtdb.firebaseio.com';
+    const FIREBASE_CAMINHO = 'guepar';   // este painel usa /guepar
+    let nuvemPronta = false;             // login só liberado depois da 1ª sincronização
 
-      scene = new THREE.Scene();
-      camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
-      renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-      renderer.setSize(container.clientWidth, container.clientHeight);
-      container.appendChild(renderer.domElement);
+    function normDB(r) {
+      const arr = v => Array.isArray(v) ? v.filter(x => x != null) : (v && typeof v === 'object' ? Object.values(v) : []);
+      const out = Object.assign({}, r || {});
+      ['usuarios', 'pecas', 'guepar', 'emprestimos', 'manutencoes', 'logs'].forEach(k => { out[k] = arr(out[k]); });
+      if (!out.usuarios.length) out.usuarios = defaultDB.usuarios;
+      return out;
+    }
 
-      // Criar robô estilizado em 3D
-      const group = new THREE.Group();
-      
-      const bodyGeo = new THREE.BoxGeometry(1.2, 1.6, 0.8);
-      const bodyMat = new THREE.MeshPhongMaterial({ color: 0x06b6d4, wireframe: true });
-      const bodyMesh = new THREE.Mesh(bodyGeo, bodyMat);
-      group.add(bodyMesh);
+    function atualizarStatusNuvem() {
+      const e = document.getElementById('status-nuvem'); if (!e) return;
+      const m = {
+        ok:    ['☁ Sincronizado', 'text-emerald-400'],
+        envio: ['☁ Enviando…', 'text-cyan-400'],
+        erro:  ['☁ Sem conexão - salvo só neste aparelho', 'text-amber-400'],
+        local: ['☁ Só neste aparelho', 'text-gray-400']
+      }[Cloud.estado] || ['☁', 'text-gray-400'];
+      e.textContent = m[0]; e.className = 'block text-[10px] font-bold mt-1 ' + m[1];
+    }
 
-      const headGeo = new THREE.SphereGeometry(0.5, 16, 16);
-      const headMat = new THREE.MeshPhongMaterial({ color: 0xa855f7 });
-      const headMesh = new THREE.Mesh(headGeo, headMat);
-      headMesh.position.y = 1.2;
-      group.add(headMesh);
+    function aplicarRemoto(novo) {
+      if (JSON.stringify(novo) === JSON.stringify(db)) return;
+      const appAberto = !document.getElementById('tela-app').classList.contains('hidden');
+      const a = document.activeElement;
+      const ocupado = appAberto && ((a && ['INPUT', 'SELECT', 'TEXTAREA'].includes(a.tagName)) || document.querySelector('.modal-overlay:not(.hidden)'));
+      if (ocupado) { setTimeout(() => Cloud.puxar(), 3000); return; }   // não atrapalha quem está digitando
+      db = novo;
+      localStorage.setItem('gueparDB', JSON.stringify(db));
+      if (appAberto) { renderizarTabelas(); atualizarListaEmprestimo(); iniciarGraficos(); }
+    }
 
-      const light = new THREE.DirectionalLight(0xffffff, 1);
-      light.position.set(5, 5, 5).normalize();
-      scene.add(light);
-      scene.add(new THREE.AmbientLight(0x404040));
-
-      scene.add(group);
-      robotMesh = group;
-      camera.position.z = 4.5;
-
-      function animate() {
-        requestAnimationFrame(animate);
-        if(robotMesh) robotMesh.rotation.y += 0.01;
-        renderer.render(scene, camera);
+    const Cloud = {
+      url: FIREBASE_URL.replace(/\/+$/, '') + '/' + FIREBASE_CAMINHO + '.json',
+      pend: 0, estado: 'local', timer: null, es: null,
+      dirty: () => localStorage.getItem('guepar_dirty') === '1',
+      setDirty(v) { if (v) localStorage.setItem('guepar_dirty', '1'); else localStorage.removeItem('guepar_dirty'); },
+      status(e) { this.estado = e; atualizarStatusNuvem(); },
+      async ler() {
+        const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 8000);
+        try {
+          const r = await fetch(this.url, { signal: ctl.signal, cache: 'no-store' });
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          return await r.json();
+        } finally { clearTimeout(t); }
+      },
+      agendarEnvio() { this.setDirty(true); clearTimeout(this.timer); this.timer = setTimeout(() => this.empurrar(), 600); },
+      async empurrar() {
+        if (this.pend) return;
+        this.pend = 1; this.status('envio');
+        try {
+          const snap = JSON.stringify(db);
+          const r = await fetch(this.url, { method: 'PUT', body: snap });
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          if (JSON.stringify(db) === snap) this.setDirty(false); else this.agendarEnvio();  // mudou durante o envio
+          this.status('ok');
+        } catch (e) { this.status('erro'); }      // fica marcado como pendente e tenta de novo
+        finally { this.pend = 0; }
+      },
+      async puxar() {
+        if (this.pend || this.dirty()) { if (this.dirty() && !this.pend) this.empurrar(); return; }
+        try {
+          const raw = await this.ler();
+          if (this.pend || this.dirty()) return;
+          this.status('ok');
+          if (raw == null) { this.setDirty(true); await this.empurrar(); } else aplicarRemoto(normDB(raw));
+        } catch (e) { this.status('erro'); }
+      },
+      async iniciar() {
+        try {
+          const raw = await this.ler();
+          if (raw == null || this.dirty()) { this.setDirty(true); await this.empurrar(); }   // 1ª vez ou alterações feitas offline
+          else { this.status('ok'); aplicarRemoto(normDB(raw)); }
+        } catch (e) { this.status('erro'); }
+        nuvemPronta = true;
+        this.ligar();
+      },
+      ligar() {
+        try {
+          this.es = new EventSource(this.url);
+          let t = null; const ler = () => { clearTimeout(t); t = setTimeout(() => this.puxar(), 200); };
+          this.es.addEventListener('put', ler); this.es.addEventListener('patch', ler);
+          this.es.onerror = () => { if (this.estado === 'ok') this.status('erro'); };
+          this.es.onopen = () => { if (!this.dirty()) this.status('ok'); };
+        } catch (e) { }
+        setInterval(() => this.puxar(), 20000);                                   // garantia extra (e reenvia pendências)
+        window.addEventListener('online', () => this.puxar());
+        document.addEventListener('visibilitychange', () => { if (!document.hidden) this.puxar(); });
       }
-      animate();
-    }
+    };
+    window.addEventListener('DOMContentLoaded', () => { atualizarStatusNuvem(); Cloud.iniciar(); });
 
-    // --- 2. LEITOR DE QR CODE NA CÂMERA ---
-    let html5QrcodeScanner;
-    function abrirModalScanner() {
-      abrirModal('modal-qrcode-scanner');
-      html5QrcodeScanner = new Html5QrcodeScanner("qr-reader", { fps: 10, qrbox: 250 });
-      html5QrcodeScanner.render((decodedText) => {
-        document.getElementById('qr-reader-result').innerText = "Lido: " + decodedText;
-        alert("Código detectado: " + decodedText);
-        fecharModalScanner();
-      }, (error) => {});
-    }
-
-    function fecharModalScanner() {
-      if(html5QrcodeScanner) html5QrcodeScanner.clear();
-      fecharModal('modal-qrcode-scanner');
-    }
-
-    // --- 3. NOTIFICAÇÕES WHATSAPP ---
-    function enviarWhatsApp() {
-      const pecasCriticas = db.pecas.filter(p => p.estoque < p.min);
-      let mensagem = "🚨 *Relatório Guepar Smart Inventory 5.0*\n\n";
-      if(pecasCriticas.length > 0) {
-        mensagem += "*Atenção! Peças em Estoque Crítico:*\n";
-        pecasCriticas.forEach(p => mensagem += `- ${p.nome}: Qtd ${p.estoque} (Mín: ${p.min})\n`);
-      } else {
-        mensagem += "✅ *Status do Estoque:* Todos os itens estão saudáveis.\n";
-      }
-      mensagem += `\n📅 *Gerado em:* ${new Date().toLocaleDateString('pt-BR')}`;
-      
-      const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(mensagem)}`;
-      window.open(url, '_blank');
-    }
-
-    // --- 4. ASSISTENTE DE VOZ (HANDS-FREE) ---
-    function ouvirComandoVoz() {
-      if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-        alert("O seu navegador não suporta comandos de voz. Use o Google Chrome.");
-        return;
-      }
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      const recognition = new SpeechRecognition();
-      recognition.lang = 'pt-BR';
-      recognition.start();
-
-      const input = document.getElementById('chat-input');
-      input.placeholder = "A escutar a sua voz...";
-
-      recognition.onresult = function(event) {
-        const textoVoz = event.results[0][0].transcript;
-        input.value = textoVoz;
-        adicionarMensagemIA(textoVoz);
-        input.placeholder = "Escreva ou fale a sua pergunta...";
-      };
-
-      recognition.onerror = function() {
-        input.placeholder = "Escreva ou fale a sua pergunta...";
-      };
-    }
-
-    // --- IDIOMAS ---
     function mudarIdioma(lang) {
       document.querySelectorAll('#btn-lang-en, #btn-lang-pt, #btn-lang-en-desk, #btn-lang-pt-desk').forEach(btn => {
         btn.className = "text-xs px-3 py-1.5 rounded font-bold transition cursor-pointer " + 
@@ -775,6 +739,7 @@
 
     async function salvarDB() {
       localStorage.setItem('gueparDB', JSON.stringify(db));
+      Cloud.agendarEnvio();
       renderizarTabelas();
       atualizarListaEmprestimo();
       iniciarGraficos();
@@ -843,6 +808,7 @@
             db = importedDB;
             auditarAcao('IMPORTACAO', 'Base de dados restaurada via backup.');
             localStorage.setItem('gueparDB', JSON.stringify(db));
+            localStorage.setItem('guepar_dirty', '1');   // envia o backup restaurado para a nuvem
             alert('Dados importados com sucesso! O sistema será recarregado.');
             location.reload();
           } else { alert('Ficheiro de backup inválido.'); }
@@ -1217,7 +1183,7 @@
         else if (alvo === 'auditoria') { link.classList.add('bg-amber-500/10'); }
         document.getElementById('aba-' + alvo).classList.remove('hidden');
         if(alvo === 'ia') document.getElementById('aba-' + alvo).classList.add('flex');
-        if(alvo === 'dashboard') { iniciarGraficos(); setTimeout(iniciar3D, 200); }
+        if(alvo === 'dashboard') iniciarGraficos();
       });
     });
 
@@ -1228,9 +1194,7 @@
       document.getElementById('usuario-display').textContent = login_id;
       
       aplicarPermissoes(); renderizarTabelas(); atualizarListaEmprestimo();
-      pedirPermissaoNotificacao(); 
-      setTimeout(iniciarGraficos, 100); 
-      setTimeout(iniciar3D, 200);
+      pedirPermissaoNotificacao(); setTimeout(iniciarGraficos, 100); 
 
       const savedLang = localStorage.getItem('guepar_lang');
       if(savedLang === 'en') setTimeout(() => mudarIdioma('en'), 300);
@@ -1241,7 +1205,9 @@
     });
 
     document.getElementById('form-login').addEventListener('submit', (e) => {
-      e.preventDefault(); const loginID = document.getElementById('login-id').value; const senha = document.getElementById('login-senha').value;
+      e.preventDefault();
+      if (!nuvemPronta) { alert('Sincronizando com a nuvem... aguarde alguns segundos e tente de novo.'); return; }
+      const loginID = document.getElementById('login-id').value; const senha = document.getElementById('login-senha').value;
       const user = db.usuarios.find(u => u.login.toLowerCase() === loginID.toLowerCase() && u.senha === senha);
       if(user) { localStorage.setItem('guepar_logado', 'true'); localStorage.setItem('guepar_email', user.login); localStorage.setItem('guepar_role', user.role); arrancarSistema(user.login, user.role); } 
       else { alert('Credenciais inválidas!'); }
@@ -1251,7 +1217,9 @@
       localStorage.removeItem('guepar_logado'); localStorage.removeItem('guepar_email'); localStorage.removeItem('guepar_role'); location.reload();
     });
 
+    // --- NOVA LÓGICA: LOGIN RÁPIDO POR PIN (4 DÍGITOS) ---
     function loginPIN() {
+      if (!nuvemPronta) { alert('Sincronizando com a nuvem... aguarde alguns segundos e tente de novo.'); return; }
       const pinInserido = prompt("Introduza o seu PIN de 4 dígitos:");
       if (!pinInserido) return;
 
@@ -1266,6 +1234,7 @@
       }
     }
 
+    // --- IA COM SUPORTE PARA NUVEM ---
     async function adicionarMensagemIA(t) {
       if(!t || t.trim() === '') return;
       const chatMsgs = document.getElementById('chat-mensagens'); 
@@ -1314,6 +1283,7 @@
       }
     }
 
+    // --- REGISTO DO PWA ---
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js')
