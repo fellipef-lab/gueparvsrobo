@@ -52,10 +52,23 @@
       <p class="text-xs text-gray-400 mt-1">Smart Inventory 5.0</p>
     </div>
     
-    <form id="form-login" class="space-y-4">
+    <div id="login-pin" class="space-y-4">
+      <div id="pin-dots" class="flex justify-center gap-4 py-2"><span></span><span></span><span></span><span></span></div>
+      <p id="pin-msg" class="text-center text-xs h-4 text-gray-400">Digite seu PIN de 4 dígitos</p>
+      <div class="grid grid-cols-3 gap-3"><button type="button" onclick="pinTecla('1')" class="h-16 rounded-2xl bg-slate-800 hover:bg-slate-700 active:bg-cyan-600 text-2xl font-bold text-white border border-slate-700 cursor-pointer select-none touch-manipulation transition">1</button><button type="button" onclick="pinTecla('2')" class="h-16 rounded-2xl bg-slate-800 hover:bg-slate-700 active:bg-cyan-600 text-2xl font-bold text-white border border-slate-700 cursor-pointer select-none touch-manipulation transition">2</button><button type="button" onclick="pinTecla('3')" class="h-16 rounded-2xl bg-slate-800 hover:bg-slate-700 active:bg-cyan-600 text-2xl font-bold text-white border border-slate-700 cursor-pointer select-none touch-manipulation transition">3</button><button type="button" onclick="pinTecla('4')" class="h-16 rounded-2xl bg-slate-800 hover:bg-slate-700 active:bg-cyan-600 text-2xl font-bold text-white border border-slate-700 cursor-pointer select-none touch-manipulation transition">4</button><button type="button" onclick="pinTecla('5')" class="h-16 rounded-2xl bg-slate-800 hover:bg-slate-700 active:bg-cyan-600 text-2xl font-bold text-white border border-slate-700 cursor-pointer select-none touch-manipulation transition">5</button><button type="button" onclick="pinTecla('6')" class="h-16 rounded-2xl bg-slate-800 hover:bg-slate-700 active:bg-cyan-600 text-2xl font-bold text-white border border-slate-700 cursor-pointer select-none touch-manipulation transition">6</button><button type="button" onclick="pinTecla('7')" class="h-16 rounded-2xl bg-slate-800 hover:bg-slate-700 active:bg-cyan-600 text-2xl font-bold text-white border border-slate-700 cursor-pointer select-none touch-manipulation transition">7</button><button type="button" onclick="pinTecla('8')" class="h-16 rounded-2xl bg-slate-800 hover:bg-slate-700 active:bg-cyan-600 text-2xl font-bold text-white border border-slate-700 cursor-pointer select-none touch-manipulation transition">8</button><button type="button" onclick="pinTecla('9')" class="h-16 rounded-2xl bg-slate-800 hover:bg-slate-700 active:bg-cyan-600 text-2xl font-bold text-white border border-slate-700 cursor-pointer select-none touch-manipulation transition">9</button>
+        <button type="button" onclick="pinApagar(true)" class="h-16 rounded-2xl text-xs font-bold text-gray-400 hover:text-white cursor-pointer touch-manipulation">LIMPAR</button>
+        <button type="button" onclick="pinTecla('0')" class="h-16 rounded-2xl bg-slate-800 hover:bg-slate-700 active:bg-cyan-600 text-2xl font-bold text-white border border-slate-700 cursor-pointer select-none touch-manipulation transition">0</button>
+        <button type="button" onclick="pinApagar()" class="h-16 rounded-2xl text-2xl text-gray-400 hover:text-white cursor-pointer touch-manipulation"><i class="ph ph-backspace"></i></button>
+      </div>
+      <button type="button" id="btn-bio" onclick="entrarBiometria()" class="hidden w-full bg-gradient-to-r from-cyan-600 to-purple-600 text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-cyan-900/50"><i class="ph ph-scan text-2xl"></i> Entrar com Facial / Biometria</button>
+      <button type="button" onclick="trocarLogin(true)" class="w-full text-sm font-bold text-cyan-400 py-2 cursor-pointer">Entrar com e-mail e senha</button>
+      <button type="button" id="btn-instalar" onclick="instalarApp()" class="hidden w-full bg-cyan-600/20 border border-cyan-500/30 text-cyan-300 font-bold py-3 rounded-xl cursor-pointer">📲 Instalar app no celular</button>
+      <p id="dica-ios" class="hidden text-center text-[11px] text-gray-400">No iPhone: toque em <b>Compartilhar</b> e depois em <b>Adicionar à Tela de Início</b>.</p>
+    </div>
+    <form id="form-login" class="hidden space-y-4">
       <div>
         <label class="block text-xs uppercase font-bold text-gray-400 mb-1 text-translate" data-pt="Acesso (Nome ou E-mail)" data-en="Access (Name or Email)">Acesso (Nome ou E-mail)</label>
-        <input type="text" id="login-id" required autocomplete="username" class="w-full bg-slate-800/80 border border-slate-700 focus:border-cyan-500 outline-none rounded-xl px-4 py-3 text-white transition" placeholder="Digite o seu utilizador">
+        <input type="text" id="login-id" required autocomplete="username" autocapitalize="none" autocorrect="off" class="w-full bg-slate-800/80 border border-slate-700 focus:border-cyan-500 outline-none rounded-xl px-4 py-3 text-white transition" placeholder="Digite o seu utilizador">
       </div>
       <div>
         <label class="block text-xs uppercase font-bold text-gray-400 mb-1 text-translate" data-pt="Palavra-passe" data-en="Password">Palavra-passe</label>
@@ -66,9 +79,7 @@
       </button>
       
       <!-- BOTÃO DE LOGIN RÁPIDO POR PIN -->
-      <button type="button" onclick="loginPIN()" class="w-full bg-slate-800 hover:bg-slate-700 text-cyan-400 font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 cursor-pointer border border-slate-700 transition mt-2">
-        <i class="ph ph-keypad text-2xl"></i> Login Rápido por PIN (4 Dígitos)
-      </button>
+      <button type="button" onclick="trocarLogin(false)" class="w-full text-sm font-bold text-cyan-400 py-2 cursor-pointer">← Voltar ao PIN</button>
     </form>
   </div>
 
@@ -122,6 +133,7 @@
           <p id="usuario-display" class="text-xs font-bold text-white truncate"></p>
           <span id="usuario-role-display" class="text-[10px] text-cyan-400 font-bold uppercase tracking-wider bg-cyan-500/10 w-fit px-2 py-1 rounded"></span>
         </div>
+        <button id="btn-ativar-bio" onclick="ativarBiometria()" class="hidden w-full mb-2 bg-purple-600/20 hover:bg-purple-600/40 text-purple-300 py-2.5 rounded-xl text-sm font-bold transition justify-center items-center gap-2 cursor-pointer border border-purple-500/30"><i class="ph ph-scan"></i> Ativar facial neste aparelho</button>
         <button id="btn-sair" class="w-full bg-slate-800 hover:bg-red-500/20 text-gray-300 hover:text-red-400 py-2.5 rounded-xl text-sm font-bold transition flex justify-center items-center gap-2 cursor-pointer border border-slate-700 hover:border-red-500/30">
           <i class="ph ph-power"></i> <span class="text-translate" data-pt="Encerrar Sessão" data-en="Logout">Encerrar Sessão</span>
         </button>
@@ -194,38 +206,42 @@
               </div>
             </div>
 
-            <div class="bento-card col-span-1 md:col-span-2 lg:col-span-3 p-6 flex flex-col justify-between relative overflow-hidden req-admin hidden">
+            <div class="bento-card col-span-1 md:col-span-2 lg:col-span-3 p-6 flex flex-col justify-between relative overflow-hidden">
               <div class="absolute -right-4 -top-4 w-24 h-24 bg-purple-500/10 rounded-full blur-xl"></div>
               <div class="flex justify-between items-start">
-                <span class="text-xs font-bold text-gray-400 uppercase tracking-wider text-translate" data-pt="Capital Global (Stock)" data-en="Global Capital (Stock)">Capital Global (Stock)</span>
-                <div class="p-2 bg-purple-500/20 text-purple-400 rounded-lg"><i class="ph ph-currency-dollar text-xl"></i></div>
+                <span class="text-xs font-bold text-gray-400 uppercase tracking-wider text-translate" data-pt="Peças Críticas" data-en="Critical Parts">Peças Críticas</span>
+                <div class="p-2 bg-purple-500/20 text-purple-400 rounded-lg"><i class="ph ph-warning-octagon text-xl"></i></div>
               </div>
               <div class="mt-4">
-                <h2 class="text-3xl font-black text-white" id="kpi-capital">R$ 0,00</h2>
-                <p class="text-[10px] text-purple-400 mt-1 font-semibold flex items-center gap-1"><i class="ph ph-coins"></i> <span class="text-translate" data-pt="Total Global Inventariado" data-en="Total Global Inventory">Total Global Inventariado</span></p>
+                <h2 class="text-3xl font-black text-white" id="kpi-criticas">0</h2>
+                <p class="text-[10px] text-purple-400 mt-1 font-semibold flex items-center gap-1"><i class="ph ph-timer"></i> <span class="text-translate" data-pt="Abaixo do estoque mínimo" data-en="Below minimum stock">Abaixo do estoque mínimo</span></p>
               </div>
             </div>
 
-            <div class="bento-card col-span-1 md:col-span-2 lg:col-span-3 p-6 flex flex-col justify-between relative overflow-hidden req-admin hidden border-emerald-500/30">
+            <div class="bento-card col-span-1 md:col-span-2 lg:col-span-3 p-6 flex flex-col justify-between relative overflow-hidden">
               <div class="absolute -right-4 -top-4 w-24 h-24 bg-cyan-500/10 rounded-full blur-xl"></div>
               <div class="flex justify-between items-start">
-                <span class="text-xs font-bold text-gray-400 uppercase tracking-wider text-translate" data-pt="Ativos Robótica" data-en="Robotics Assets">Ativos Robótica</span>
+                <span class="text-xs font-bold text-gray-400 uppercase tracking-wider text-translate" data-pt="Manutenções em Alerta" data-en="Maintenance Alerts">Manutenções em Alerta</span>
                 <div class="p-2 bg-cyan-500/20 text-cyan-400 rounded-lg"><i class="ph ph-cpu text-xl"></i></div>
               </div>
               <div class="mt-4">
-                <h2 class="text-3xl font-black text-white" id="kpi-pecas-custo">R$ 0,00</h2>
-                <p class="text-[10px] text-cyan-400 mt-1 font-semibold flex items-center gap-1"><i class="ph ph-shield-check"></i> <span class="text-translate" data-pt="Cobertura de Paragem" data-en="Downtime Coverage">Cobertura de Paragem</span></p>
+                <h2 class="text-3xl font-black text-white" id="kpi-manu">0</h2>
+                <p class="text-[10px] text-cyan-400 mt-1 font-semibold flex items-center gap-1"><i class="ph ph-shield-check"></i> <span class="text-translate" data-pt="Vencidas ou a vencer em 15 dias" data-en="Overdue or due in 15 days">Vencidas ou a vencer em 15 dias</span></p>
               </div>
             </div>
 
             <div class="bento-card col-span-1 md:col-span-4 lg:col-span-6 p-6">
-              <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2"><i class="ph ph-target text-cyan-400"></i> <span class="text-translate" data-pt="Alvo de Reposição Estratégica" data-en="Strategic Restocking Target">Alvo de Reposição Estratégica</span></h3>
+              <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2"><i class="ph ph-target text-cyan-400"></i> <span class="text-translate" data-pt="Cobertura de Estoque (vs mínimo)" data-en="Stock Coverage (vs minimum)">Cobertura de Estoque (vs mínimo)</span></h3>
               <div class="relative h-48 w-full"><canvas id="chartRadar"></canvas></div>
             </div>
 
             <div class="bento-card col-span-1 md:col-span-4 lg:col-span-6 p-6">
               <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2"><i class="ph ph-activity text-cyan-400"></i> <span class="text-translate" data-pt="Ciclo de Manutenção" data-en="Maintenance Cycle">Ciclo de Manutenção</span></h3>
               <div class="relative h-48 w-full flex justify-center"><canvas id="chartDoughnut"></canvas></div>
+            </div>
+            <div class="bento-card col-span-1 md:col-span-4 lg:col-span-12 p-6">
+              <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2"><i class="ph ph-chart-line-up text-cyan-400"></i> <span class="text-translate" data-pt="Atividade da Operação (14 dias)" data-en="Operations Activity (14 days)">Atividade da Operação (14 dias)</span></h3>
+              <div class="relative h-48 w-full"><canvas id="chartAtividade"></canvas></div>
             </div>
           </div>
         </section>
@@ -721,6 +737,7 @@
       for (let key in novo) {
         let valAntigo = antigo[key] === undefined ? '' : (antigo[key] === null ? '' : String(antigo[key]));
         let valNovo = novo[key] === undefined ? '' : (novo[key] === null ? '' : String(novo[key]));
+        if (key === 'senha') { if (valAntigo !== valNovo) diff.push({ campo: dicionario[key] || key, de: '••••••', para: '•••••• (alterada)' }); continue; }
         if (valAntigo !== valNovo) {
           diff.push({ 
             campo: dicionario[key] ? dicionario[key] : key, 
@@ -732,6 +749,7 @@
       return diff;
     }
 
+    function snap(o, del) { return Object.keys(o || {}).filter(k => k !== 'dataHora').map(k => { const v = k === 'senha' ? '••••••' : String(o[k]); return { campo: k, de: del ? v : '(Vazio)', para: del ? '(Removido)' : v }; }); }
     function auditarAcao(acao, detalhes, alteracoes = null) {
       const utilizador = localStorage.getItem('guepar_email') ? localStorage.getItem('guepar_email') : 'Sistema';
       db.logs.unshift({ data: new Date().toISOString(), utilizador: utilizador, acao: acao, detalhes: detalhes, alteracoes: alteracoes });
@@ -851,7 +869,7 @@
       const isVis1 = role === 'admin' ? true : (role === 'visitante1' ? true : false);
       
       document.querySelectorAll('.req-admin').forEach(el => {
-        if(isAdm) el.classList.remove('hidden'); else el.classList.add('hidden');
+        if(isAdm) { el.classList.remove('hidden'); if (el.classList.contains('nav-link')) el.classList.add('flex'); } else { el.classList.add('hidden'); if (el.classList.contains('nav-link')) el.classList.remove('flex'); }
       });
       document.querySelectorAll('.req-vis1').forEach(el => {
         if(isVis1) el.classList.remove('hidden'); else el.classList.add('hidden');
@@ -889,12 +907,12 @@
         return;
       }
       if (confirm('Tem a certeza que deseja apagar este registo? Esta ação não pode ser desfeita.')) {
-        let nomeRegisto = "";
-        if (tipo === 'peca') { nomeRegisto = db.pecas[index].nome; db.pecas.splice(index, 1); }
-        if (tipo === 'guepar') { nomeRegisto = db.guepar[index].nome; db.guepar.splice(index, 1); }
-        if (tipo === 'manutencao') { nomeRegisto = db.manutencoes[index].equip; db.manutencoes.splice(index, 1); }
-        if (tipo === 'usuario') { nomeRegisto = db.usuarios[index].login; db.usuarios.splice(index, 1); }
-        auditarAcao('EXCLUSAO', `Apagou o registo [${tipo}]: ${nomeRegisto}`);
+        let nomeRegisto = "", apagado = null;
+        if (tipo === 'peca') { apagado = db.pecas[index]; nomeRegisto = db.pecas[index].nome; db.pecas.splice(index, 1); }
+        if (tipo === 'guepar') { apagado = db.guepar[index]; nomeRegisto = db.guepar[index].nome; db.guepar.splice(index, 1); }
+        if (tipo === 'manutencao') { apagado = db.manutencoes[index]; nomeRegisto = db.manutencoes[index].equip; db.manutencoes.splice(index, 1); }
+        if (tipo === 'usuario') { apagado = db.usuarios[index]; nomeRegisto = db.usuarios[index].login; db.usuarios.splice(index, 1); }
+        auditarAcao('EXCLUSAO', `Apagou o registo [${tipo}]: ${nomeRegisto}`, snap(apagado, true));
         salvarDB();
       }
     }
@@ -1022,7 +1040,7 @@
           if(l.acao === 'EMPRESTIMO') corAcao = 'text-amber-400';
           if(l.acao === 'DEVOLUCAO') corAcao = 'text-emerald-400';
 
-          let btnDetalhes = l.acao === 'EDICAO' && l.alteracoes && l.alteracoes.length > 0 ? `<button onclick="abrirModalDiff(${l.indOriginal})" class="ml-4 shrink-0 bg-slate-800/80 hover:bg-cyan-600 text-cyan-400 hover:text-white px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-wider transition border border-slate-700 hover:border-cyan-500 text-translate" data-pt="Ver Detalhes" data-en="Details">Ver Detalhes</button>` : '';
+          let btnDetalhes = l.alteracoes && Object.keys(l.alteracoes).length > 0 ? `<button onclick="abrirModalDiff('${l.data}')" class="ml-4 shrink-0 bg-slate-800/80 hover:bg-cyan-600 text-cyan-400 hover:text-white px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-wider transition border border-slate-700 hover:border-cyan-500 text-translate" data-pt="Ver Detalhes" data-en="Details">Ver Detalhes</button>` : '';
           
           let btnLixeira = `<button onclick="apagarLog(${l.indOriginal})" class="ml-2 shrink-0 text-red-500 hover:text-white bg-slate-800 hover:bg-red-600 p-1.5 rounded transition border border-slate-700 hover:border-red-500"><i class="ph ph-trash text-lg"></i></button>`;
 
@@ -1047,9 +1065,9 @@
     }
 
     function abrirModalDiff(index) {
-      const log = db.logs[index]; const tab = document.getElementById('tabela-diff');
+      const log = db.logs.find(x => x.data === index); const tab = document.getElementById('tabela-diff');
       if (!log || !log.alteracoes) return;
-      tab.innerHTML = log.alteracoes.map(alt => `
+      tab.innerHTML = (Array.isArray(log.alteracoes) ? log.alteracoes : Object.values(log.alteracoes)).map(alt => `
         <tr class="border-b border-slate-800/50 hover:bg-slate-800/80 transition">
           <td class="p-3 font-bold text-white">${esc(alt.campo)}</td>
           <td class="p-3 text-red-400 line-through decoration-red-900/50">${esc(alt.de)}</td>
@@ -1089,14 +1107,14 @@
     document.getElementById('form-peca').addEventListener('submit', (e) => {
       e.preventDefault(); const id = document.getElementById('peca-edit-id').value;
       const data = { nome: document.getElementById('peca-nome').value, estoque: parseInt(document.getElementById('peca-atual').value), min: parseInt(document.getElementById('peca-min').value), sobressalentes: parseInt(document.getElementById('peca-sobre').value) || 0, custo: parseFloat(document.getElementById('peca-custo').value) || 0 };
-      if(id === "") { db.pecas.push(data); auditarAcao('CRIACAO', `Criou peça: ${data.nome}`); } else { const dict = { nome: 'Nome', estoque: 'Estoque Atual', min: 'Stock Mínimo', sobressalentes: 'Reserva', custo: 'Custo (R$)' }; const diff = calcularDiff(db.pecas[id], data, dict); db.pecas[id] = data; auditarAcao('EDICAO', `Editou peça: ${data.nome}`, diff); }
+      if(id === "") { db.pecas.push(data); auditarAcao('CRIACAO', `Criou peça: ${data.nome}`, snap(data)); } else { const dict = { nome: 'Nome', estoque: 'Estoque Atual', min: 'Stock Mínimo', sobressalentes: 'Reserva', custo: 'Custo (R$)' }; const diff = calcularDiff(db.pecas[id], data, dict); db.pecas[id] = data; auditarAcao('EDICAO', `Editou peça: ${data.nome}`, diff); }
       salvarDB(); fecharModal('modal-add-peca');
     });
 
     document.getElementById('form-guepar').addEventListener('submit', (e) => {
       e.preventDefault(); const id = document.getElementById('guepar-edit-id').value;
       const data = { nome: document.getElementById('guepar-nome').value, marca: document.getElementById('guepar-marca').value, estoque: parseInt(document.getElementById('guepar-qtd').value), custo: parseFloat(document.getElementById('guepar-custo').value) || 0 };
-      if(id === "") { db.guepar.push(data); auditarAcao('CRIACAO', `Criou item: ${data.nome}`); } else { const dict = { nome: 'Item', marca: 'Marca', estoque: 'Quantidade', custo: 'Custo (R$)' }; const diff = calcularDiff(db.guepar[id], data, dict); db.guepar[id] = data; auditarAcao('EDICAO', `Editou item: ${data.nome}`, diff); }
+      if(id === "") { db.guepar.push(data); auditarAcao('CRIACAO', `Criou item: ${data.nome}`, snap(data)); } else { const dict = { nome: 'Item', marca: 'Marca', estoque: 'Quantidade', custo: 'Custo (R$)' }; const diff = calcularDiff(db.guepar[id], data, dict); db.guepar[id] = data; auditarAcao('EDICAO', `Editou item: ${data.nome}`, diff); }
       salvarDB(); fecharModal('modal-add-guepar');
     });
 
@@ -1104,7 +1122,7 @@
       e.preventDefault(); const id = document.getElementById('manu-edit-id').value;
       let tipo = document.getElementById('manu-tipo').value; if (tipo === 'Outro') tipo = document.getElementById('manu-tipo-outro').value;
       const data = { equip: document.getElementById('manu-equip').value, tipo: tipo, ultima: document.getElementById('manu-ultima').value, validade: document.getElementById('manu-validade').value };
-      if(id === "") { db.manutencoes.push(data); auditarAcao('CRIACAO', `Agendou manutenção: ${data.equip}`); } else { const dict = { equip: 'Equipamento', tipo: 'Tipo de Serviço', ultima: 'Data Última Troca', validade: 'Vencimento Previsto' }; const diff = calcularDiff(db.manutencoes[id], data, dict); db.manutencoes[id] = data; auditarAcao('EDICAO', `Editou manutenção: ${data.equip}`, diff); }
+      if(id === "") { db.manutencoes.push(data); auditarAcao('CRIACAO', `Agendou manutenção: ${data.equip}`, snap(data)); } else { const dict = { equip: 'Equipamento', tipo: 'Tipo de Serviço', ultima: 'Data Última Troca', validade: 'Vencimento Previsto' }; const diff = calcularDiff(db.manutencoes[id], data, dict); db.manutencoes[id] = data; auditarAcao('EDICAO', `Editou manutenção: ${data.equip}`, diff); }
       salvarDB(); fecharModal('modal-add-manutencao');
     });
 
@@ -1124,7 +1142,7 @@
         role: document.getElementById('user-role').value 
       };
 
-      if(id === "") { db.usuarios.push(data); auditarAcao('CRIACAO', `Criou utilizador: ${data.login}`); } else { const dict = { login: 'Login de Acesso', senha: 'Palavra-passe', pin: 'PIN Rápido', role: 'Nível de Permissão' }; const diff = calcularDiff(db.usuarios[id], data, dict); db.usuarios[id] = data; auditarAcao('EDICAO', `Editou utilizador: ${data.login}`, diff); }
+      if(id === "") { db.usuarios.push(data); auditarAcao('CRIACAO', `Criou utilizador: ${data.login}`, snap(data)); } else { const dict = { login: 'Login de Acesso', senha: 'Palavra-passe', pin: 'PIN Rápido', role: 'Nível de Permissão' }; const diff = calcularDiff(db.usuarios[id], data, dict); db.usuarios[id] = data; auditarAcao('EDICAO', `Editou utilizador: ${data.login}`, diff); }
       salvarDB(); fecharModal('modal-add-usuario');
     });
 
@@ -1135,7 +1153,7 @@
       const index = db.guepar.findIndex(g => g.nome === item);
       if (index !== -1 && db.guepar[index].estoque > 0) db.guepar[index].estoque -= 1;
       db.emprestimos.push({ pessoa: nomePessoa, item: item, dataHora: new Date().getTime() });
-      auditarAcao('EMPRESTIMO', `Check-out de ${item} para ${nomePessoa}`);
+      auditarAcao('EMPRESTIMO', `Check-out de ${item} para ${nomePessoa}`, [{ campo: 'Ferramenta', de: 'Disponível', para: item + ' → ' + nomePessoa }]);
       salvarDB(); fecharModal('modal-emprestimo');
     });
 
@@ -1143,32 +1161,40 @@
       const itemDevolvido = db.emprestimos[index].item; const pessoa = db.emprestimos[index].pessoa;
       const idx = db.guepar.findIndex(g => g.nome === itemDevolvido);
       if (idx !== -1) db.guepar[idx].estoque += 1;
-      db.emprestimos.splice(index, 1); auditarAcao('DEVOLUCAO', `Check-in de ${itemDevolvido} devolvido por ${pessoa}`);
+      db.emprestimos.splice(index, 1); auditarAcao('DEVOLUCAO', `Check-in de ${itemDevolvido} devolvido por ${pessoa}`, [{ campo: 'Ferramenta', de: 'Com ' + pessoa, para: 'Devolvida: ' + itemDevolvido }]);
       salvarDB();
     }
 
-    Chart.defaults.color = '#94a3b8';
+    Chart.defaults.color = '#94a3b8'; Chart.defaults.font.family = 'inherit'; Chart.defaults.borderColor = 'rgba(148,163,184,0.1)';
+    const linhaMin = { id: 'linhaMin', afterDatasetsDraw(c) { const x = c.scales.x.getPixelForValue(100), a = c.chartArea, g = c.ctx; g.save(); g.setLineDash([5, 4]); g.strokeStyle = '#f87171'; g.beginPath(); g.moveTo(x, a.top); g.lineTo(x, a.bottom); g.stroke(); g.setLineDash([]); g.fillStyle = '#f87171'; g.font = '10px sans-serif'; g.fillText('mínimo', x + 4, a.top + 10); g.restore(); } };
+    const centroRosca = { id: 'centroRosca', afterDraw(c) { const m = c.getDatasetMeta(0).data[0]; if (!m) return; const g = c.ctx; g.save(); g.textAlign = 'center'; g.fillStyle = '#fff'; g.font = 'bold 26px sans-serif'; g.fillText((window.pctManu || 0) + '%', m.x, m.y + 4); g.fillStyle = '#94a3b8'; g.font = '10px sans-serif'; g.fillText('em dia', m.x, m.y + 20); g.restore(); } };
     function iniciarGraficos() {
       if (typeof Chart === 'undefined') return;
-      const rCtx = document.getElementById('chartRadar'); const dCtx = document.getElementById('chartDoughnut');
-      if(!rCtx || !dCtx) return;
-      if(window.g1) window.g1.destroy(); if(window.g3) window.g3.destroy();
+      const c1 = document.getElementById('chartRadar'), c2 = document.getElementById('chartDoughnut'), c3 = document.getElementById('chartAtividade');
+      if (!c1 || !c2 || !c3) return;
+      ['g1', 'g3', 'g4'].forEach(k => { if (window[k]) window[k].destroy(); });
 
-      window.g1 = new Chart(rCtx.getContext('2d'), {
-        type: 'radar',
-        data: { labels: db.pecas.map(p=>p.nome), datasets: [
-          { label: 'Estoque', data: db.pecas.map(p=>p.estoque), borderColor: '#06b6d4', backgroundColor: 'rgba(6, 182, 212, 0.2)' },
-          { label: 'Mín', data: db.pecas.map(p=>p.min), borderColor: '#ef4444', borderDash: [5,5], backgroundColor: 'transparent' }
-        ]}, options: { maintainAspectRatio: false }
-      });
+      const pcs = db.pecas.map(p => ({ ...p, pct: p.min ? Math.round(p.estoque / p.min * 100) : 300 })).sort((a, b) => a.pct - b.pct);
+      c1.parentElement.style.height = Math.max(192, pcs.length * 34 + 40) + 'px';
+      window.g1 = new Chart(c1, { type: 'bar', plugins: [linhaMin],
+        data: { labels: pcs.map(p => p.nome), datasets: [{ data: pcs.map(p => Math.min(p.pct, 300)), backgroundColor: pcs.map(p => p.pct < 100 ? '#ef4444' : p.pct < 150 ? '#f59e0b' : '#10b981'), borderRadius: 8, barThickness: 14 }] },
+        options: { indexAxis: 'y', maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: i => `${pcs[i.dataIndex].estoque} em estoque · mínimo ${pcs[i.dataIndex].min} (${pcs[i.dataIndex].pct}%)` } } }, scales: { x: { min: 0, max: 300, ticks: { callback: v => v + '%' } }, y: { grid: { display: false } } } } });
 
-      let [emDia, atencao, vencida] = [0,0,0]; const h = new Date();
-      db.manutencoes.forEach(m => { const d = (new Date(m.validade) - h) / 86400000; if(d < 0) vencida++; else if(d <= 15) atencao++; else emDia++; });
-      if(emDia===0&&atencao===0&&vencida===0) emDia=1;
-      window.g3 = new Chart(dCtx.getContext('2d'), {
-        type: 'doughnut', data: { labels: ['OK', 'Aviso', 'Atraso'], datasets: [{ data: [emDia, atencao, vencida], backgroundColor: ['#10b981', '#f59e0b', '#ef4444'], borderWidth: 0 }] },
-        options: { maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'bottom' } } }
-      });
+      const hoje = new Date(); hoje.setHours(0, 0, 0, 0); let ok = 0, av = 0, ve = 0;
+      db.manutencoes.forEach(m => { const d = (new Date(m.validade + 'T00:00:00') - hoje) / 864e5; if (d < 0) ve++; else if (d <= 15) av++; else ok++; });
+      const tot = ok + av + ve; window.pctManu = tot ? Math.round(ok / tot * 100) : 100;
+      const set = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+      set('kpi-criticas', db.pecas.filter(p => p.estoque < p.min).length); set('kpi-manu', av + ve);
+      window.g3 = new Chart(c2, { type: 'doughnut', plugins: [centroRosca],
+        data: { labels: ['Em dia', 'A vencer', 'Vencida'], datasets: [{ data: tot ? [ok, av, ve] : [1, 0, 0], backgroundColor: ['#10b981', '#f59e0b', '#ef4444'], borderWidth: 0, spacing: 3, borderRadius: 6 }] },
+        options: { maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'bottom', labels: { usePointStyle: true } } } } });
+
+      const dias = [...Array(14)].map((_, i) => { const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - 13 + i); return d; });
+      const cont = {}; db.logs.forEach(l => { const k = new Date(l.data).toLocaleDateString('pt-BR'); cont[k] = (cont[k] || 0) + 1; });
+      const grad = c3.getContext('2d').createLinearGradient(0, 0, 0, 200); grad.addColorStop(0, 'rgba(6,182,212,0.45)'); grad.addColorStop(1, 'rgba(6,182,212,0)');
+      window.g4 = new Chart(c3, { type: 'line',
+        data: { labels: dias.map(d => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })), datasets: [{ label: 'Ações', data: dias.map(d => cont[d.toLocaleDateString('pt-BR')] || 0), borderColor: '#06b6d4', backgroundColor: grad, fill: true, tension: 0.4, pointRadius: 3, pointBackgroundColor: '#06b6d4' }] },
+        options: { maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } }, x: { grid: { display: false } } } } });
     }
 
     const linksMenu = document.querySelectorAll('.nav-link');
@@ -1390,6 +1416,66 @@
       IA.hist.push({ u: t, ia: r.replace(/<[^>]+>/g, '').slice(0, 300) });
       add(r, false);
     }
+
+    // --- LOGIN POR PIN (teclado na tela, entra sozinho ao digitar o 4º dígito) ---
+    let pinBuf = '', pinFalhas = 0, pinBloq = 0, instalarEvt = null;
+    function pinRender() { document.querySelectorAll('#pin-dots span').forEach((s, i) => s.className = 'w-4 h-4 rounded-full border-2 transition ' + (i < pinBuf.length ? 'bg-cyan-400 border-cyan-400 scale-110' : 'border-slate-600')); }
+    function pinMsg(t, cor) { const m = document.getElementById('pin-msg'); m.textContent = t; m.className = 'text-center text-xs h-4 ' + cor; }
+    function pinTecla(d) { if (pinBuf.length >= 4) return; pinBuf += d; if (navigator.vibrate) navigator.vibrate(10); pinRender(); if (pinBuf.length === 4) setTimeout(pinEntrar, 150); }
+    function pinApagar(tudo) { pinBuf = tudo ? '' : pinBuf.slice(0, -1); pinRender(); }
+    function pinEntrar() {
+      if (!nuvemPronta) { pinMsg('☁ Sincronizando…', 'text-cyan-400'); return setTimeout(pinEntrar, 700); }
+      if (Date.now() < pinBloq) { pinMsg('Muitas tentativas. Aguarde 30s.', 'text-amber-400'); pinBuf = ''; pinRender(); return; }
+      const u = db.usuarios.find(x => x.pin && x.pin === pinBuf);
+      if (u) { localStorage.setItem('guepar_logado', 'true'); localStorage.setItem('guepar_email', u.login); localStorage.setItem('guepar_role', u.role); pinBuf = ''; pinRender(); arrancarSistema(u.login, u.role); return; }
+      if (++pinFalhas >= 5) { pinBloq = Date.now() + 30000; pinFalhas = 0; }
+      pinMsg('PIN incorreto', 'text-red-400'); if (navigator.vibrate) navigator.vibrate([60, 40, 60]);
+      setTimeout(() => { pinBuf = ''; pinRender(); }, 400);
+    }
+    function trocarLogin(email) { document.getElementById('login-pin').classList.toggle('hidden', email); document.getElementById('form-login').classList.toggle('hidden', !email); }
+    function instalarApp() { if (instalarEvt) { instalarEvt.prompt(); instalarEvt = null; document.getElementById('btn-instalar').classList.add('hidden'); } }
+    window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); instalarEvt = e; document.getElementById('btn-instalar').classList.remove('hidden'); });
+    if (/iphone|ipad/i.test(navigator.userAgent) && !navigator.standalone) document.getElementById('dica-ios').classList.remove('hidden');
+    document.addEventListener('keydown', e => { const v = document.getElementById('login-pin'); if (!v || v.offsetParent === null) return; if (/^\d$/.test(e.key)) pinTecla(e.key); else if (e.key === 'Backspace') pinApagar(); });
+    pinRender();
+
+    // --- LOGIN POR FACIAL / BIOMETRIA (WebAuthn: Face ID, rosto ou digital do aparelho) ---
+    const b64 = b => btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    const unb64 = s => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
+    async function bioSuportada() { try { return !!(window.PublicKeyCredential && await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()); } catch (e) { return false; } }
+    async function ativarBiometria() {
+      const login = localStorage.getItem('guepar_email'); if (!login) return;
+      if (!(await bioSuportada())) { alert('Este aparelho ou navegador não tem facial/biometria disponível. É preciso abrir o app por HTTPS e ter bloqueio de tela configurado.'); return; }
+      try {
+        const cred = await navigator.credentials.create({ publicKey: {
+          challenge: crypto.getRandomValues(new Uint8Array(32)),
+          rp: { name: 'Guepar vs RobÔ', id: location.hostname },
+          user: { id: new TextEncoder().encode(login).slice(0, 64), name: login, displayName: login },
+          pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
+          authenticatorSelection: { authenticatorAttachment: 'platform', userVerification: 'required', residentKey: 'preferred' },
+          timeout: 60000 } });
+        localStorage.setItem('guepar_bio', JSON.stringify({ id: b64(cred.rawId), login }));
+        auditarAcao('EDICAO', 'Ativou login por facial/biometria neste aparelho'); salvarDB();
+        alert('✅ Facial/biometria ativada! Na próxima vez, é só tocar em "Entrar com Facial".');
+      } catch (e) { alert('Não foi possível ativar: ' + (e.name === 'NotAllowedError' ? 'cancelado.' : e.message)); }
+    }
+    async function entrarBiometria() {
+      const bio = JSON.parse(localStorage.getItem('guepar_bio') || 'null');
+      if (!bio) { alert('Entre uma vez com o PIN e toque em "Ativar facial neste aparelho" no menu.'); return; }
+      if (!nuvemPronta) { alert('Sincronizando com a nuvem... tente de novo em alguns segundos.'); return; }
+      try {
+        await navigator.credentials.get({ publicKey: { challenge: crypto.getRandomValues(new Uint8Array(32)), rpId: location.hostname,
+          allowCredentials: [{ type: 'public-key', id: unb64(bio.id), transports: ['internal'] }], userVerification: 'required', timeout: 60000 } });
+        const u = db.usuarios.find(x => x.login === bio.login);
+        if (!u) { localStorage.removeItem('guepar_bio'); alert('Este usuário não existe mais.'); return; }
+        localStorage.setItem('guepar_logado', 'true'); localStorage.setItem('guepar_email', u.login); localStorage.setItem('guepar_role', u.role);
+        arrancarSistema(u.login, u.role);
+      } catch (e) { if (e.name !== 'NotAllowedError') alert('Falha na biometria: ' + e.message); }
+    }
+    window.addEventListener('DOMContentLoaded', () => bioSuportada().then(ok => {
+      if (ok && localStorage.getItem('guepar_bio')) document.getElementById('btn-bio').classList.remove('hidden');
+      if (ok) { const b = document.getElementById('btn-ativar-bio'); b.classList.remove('hidden'); b.classList.add('flex'); }
+    }));
 
     // --- REGISTO DO PWA ---
     if ('serviceWorker' in navigator) {
