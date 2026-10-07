@@ -270,7 +270,7 @@
             <table class="w-full text-left border-collapse min-w-[600px]">
               <thead>
                 <tr class="bg-slate-800/30 text-xs text-gray-400 uppercase tracking-wider border-b border-slate-700/50">
-                  <th class="p-4 text-translate" data-pt="Foto" data-en="Photo">Foto</th>
+                  <th class="p-4 text-translate" data-pt="Fotos" data-en="Photos">Fotos</th>
                   <th class="p-4 text-translate" data-pt="Nome da Peça" data-en="Part Name">Nome da Peça</th>
                   <th class="p-4 text-translate" data-pt="Estoque Atual" data-en="Current Stock">Estoque Atual</th>
                   <th class="p-4 text-translate" data-pt="Estoque Mínimo" data-en="Min Stock">Estoque Mínimo</th>
@@ -475,20 +475,34 @@
               <div><label class="block text-xs font-bold text-emerald-400 mb-1 text-translate" data-pt="Reserva (Kits)" data-en="Spares">Reserva (Kits)</label><input type="number" id="peca-sobre" min="0" value="0" class="w-full bg-slate-950 border border-emerald-700/50 rounded-xl px-3 py-2 text-white outline-none"></div>
               <div><label class="block text-xs font-bold text-cyan-400 mb-1 text-translate" data-pt="Custo Unit. (R$)" data-en="Unit Cost ($)">Custo Unit. (R$)</label><input type="number" id="peca-custo" min="0" step="0.01" value="0" class="w-full bg-slate-950 border border-cyan-700/50 rounded-xl px-3 py-2 text-white outline-none"></div>
             </div>
-            <div>
-              <label class="block text-xs font-bold text-gray-400 mb-1 text-translate" data-pt="Foto da peça" data-en="Part photo">Foto da peça</label>
+            <div class="space-y-3">
+              <label class="block text-xs font-bold text-gray-400 text-translate" data-pt="Fotos da peça (até 2)" data-en="Part photos (up to 2)">Fotos da peça (até 2)</label>
               <div class="flex items-center gap-3">
                 <div class="w-24 h-24 rounded-xl bg-slate-950 border border-dashed border-slate-700 overflow-hidden flex items-center justify-center shrink-0">
-                  <img id="peca-foto-prev" class="hidden w-full h-full object-cover" alt="Foto da peça"><i id="peca-foto-vazio" class="ph ph-camera text-3xl text-gray-600"></i>
+                  <img id="peca-foto1-prev" class="hidden w-full h-full object-cover" alt=""><i id="peca-foto1-vazio" class="ph ph-camera text-3xl text-gray-600"></i>
                 </div>
-                <div class="flex flex-col gap-2 flex-1">
-                  <button type="button" onclick="document.getElementById('peca-foto-cam').click()" class="bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-bold py-2.5 rounded-xl cursor-pointer flex items-center justify-center gap-2"><i class="ph ph-camera"></i> Tirar foto</button>
-                  <button type="button" onclick="document.getElementById('peca-foto-gal').click()" class="bg-slate-800 hover:bg-slate-700 text-gray-200 text-sm font-bold py-2 rounded-xl cursor-pointer flex items-center justify-center gap-2"><i class="ph ph-image"></i> Galeria</button>
-                  <button type="button" id="peca-foto-rm" onclick="mostrarFoto('')" class="hidden text-xs text-red-400 cursor-pointer">Remover foto</button>
+                <div class="flex flex-col gap-1.5 flex-1">
+                  <p class="text-xs font-bold text-cyan-400">1 · Peça inteira</p>
+                  <button type="button" onclick="document.getElementById('peca-foto1-cam').click()" class="bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-bold py-2 rounded-xl cursor-pointer flex items-center justify-center gap-2"><i class="ph ph-camera"></i> Tirar foto</button>
+                  <button type="button" onclick="document.getElementById('peca-foto1-gal').click()" class="bg-slate-800 hover:bg-slate-700 text-gray-200 text-xs font-bold py-1.5 rounded-xl cursor-pointer flex items-center justify-center gap-2"><i class="ph ph-image"></i> Galeria</button>
+                  <button type="button" id="peca-foto1-rm" onclick="mostrarFoto(1, '')" class="hidden text-xs text-red-400 cursor-pointer">Remover</button>
                 </div>
+                <input type="file" id="peca-foto1-cam" accept="image/*" capture="environment" class="hidden" onchange="lerFoto(this, 1)">
+                <input type="file" id="peca-foto1-gal" accept="image/*" class="hidden" onchange="lerFoto(this, 1)">
               </div>
-              <input type="file" id="peca-foto-cam" accept="image/*" capture="environment" class="hidden" onchange="lerFoto(this)">
-              <input type="file" id="peca-foto-gal" accept="image/*" class="hidden" onchange="lerFoto(this)">
+              <div class="flex items-center gap-3">
+                <div class="w-24 h-24 rounded-xl bg-slate-950 border border-dashed border-slate-700 overflow-hidden flex items-center justify-center shrink-0">
+                  <img id="peca-foto2-prev" class="hidden w-full h-full object-cover" alt=""><i id="peca-foto2-vazio" class="ph ph-barcode text-3xl text-gray-600"></i>
+                </div>
+                <div class="flex flex-col gap-1.5 flex-1">
+                  <p class="text-xs font-bold text-cyan-400">2 · Código de barras</p>
+                  <button type="button" onclick="document.getElementById('peca-foto2-cam').click()" class="bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-bold py-2 rounded-xl cursor-pointer flex items-center justify-center gap-2"><i class="ph ph-camera"></i> Tirar foto</button>
+                  <button type="button" onclick="document.getElementById('peca-foto2-gal').click()" class="bg-slate-800 hover:bg-slate-700 text-gray-200 text-xs font-bold py-1.5 rounded-xl cursor-pointer flex items-center justify-center gap-2"><i class="ph ph-image"></i> Galeria</button>
+                  <button type="button" id="peca-foto2-rm" onclick="mostrarFoto(2, '')" class="hidden text-xs text-red-400 cursor-pointer">Remover</button>
+                </div>
+                <input type="file" id="peca-foto2-cam" accept="image/*" capture="environment" class="hidden" onchange="lerFoto(this, 2)">
+                <input type="file" id="peca-foto2-gal" accept="image/*" class="hidden" onchange="lerFoto(this, 2)">
+              </div>
             </div>
             <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl mt-4 cursor-pointer text-translate" data-pt="Salvar Registo" data-en="Save Record">Salvar Registo</button>
           </form>
@@ -769,7 +783,7 @@
       return diff;
     }
 
-    function snap(o, del) { return Object.keys(o || {}).filter(k => k !== 'dataHora' && k !== 'foto').map(k => { const v = (k === 'senha' || k === 'pin') ? '••••••' : String(o[k]); return { campo: k, de: del ? v : '(Vazio)', para: del ? '(Removido)' : v }; }); }
+    function snap(o, del) { return Object.keys(o || {}).filter(k => k !== 'dataHora' && k !== 'foto' && k !== 'foto2').map(k => { const v = (k === 'senha' || k === 'pin') ? '••••••' : String(o[k]); return { campo: k, de: del ? v : '(Vazio)', para: del ? '(Removido)' : v }; }); }
     function auditarAcao(acao, detalhes, alteracoes = null) {
       const utilizador = localStorage.getItem('guepar_email') ? localStorage.getItem('guepar_email') : 'Sistema';
       db.logs.unshift({ data: new Date().toISOString(), utilizador: utilizador, acao: acao, detalhes: detalhes, alteracoes: alteracoes });
@@ -911,7 +925,7 @@
       let html = `<html><head><title>${titulos[tipo]}</title><style>body { font-family: sans-serif; padding: 20px; } table { width: 100%; border-collapse: collapse; margin-top: 15px; } th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }</style></head><body><h1>${titulos[tipo]}</h1>`;
       
       if (tipo === 'pecas' || tipo === 'tudo') {
-        html += `<h2>Peças do Robô</h2><p>${db.pecas.length} peça(s) · ${db.pecas.filter(p => p.estoque < p.min).length} em estado crítico · emitido em ${new Date().toLocaleString('pt-BR')}</p><table><tr><th>Foto</th><th>Cód.</th><th>Peça</th><th>Estoque</th><th>Mínimo</th><th>Reserva</th><th>Situação</th></tr>` + db.pecas.map(p => `<tr style="page-break-inside:avoid"><td style="width:110px">${fotoOk(p.foto) ? `<img src="${p.foto}" style="width:100px;height:100px;object-fit:cover;border-radius:6px">` : '<span style="color:#999">sem foto</span>'}</td><td>${esc(p.cod || '')}</td><td><b>${esc(p.nome)}</b></td><td>${p.estoque}</td><td>${p.min}</td><td>${p.sobressalentes || 0}</td><td style="font-weight:bold;color:${p.estoque < p.min ? '#c00' : '#080'}">${p.estoque < p.min ? 'CRÍTICO' : 'OK'}</td></tr>`).join('') + `</table>`;
+        html += `<h2>Peças do Robô</h2><p>${db.pecas.length} peça(s) · ${db.pecas.filter(p => p.estoque < p.min).length} em estado crítico · emitido em ${new Date().toLocaleString('pt-BR')}</p><table><tr><th>Foto da peça</th><th>Código de barras</th><th>Cód.</th><th>Peça</th><th>Estoque</th><th>Mínimo</th><th>Reserva</th><th>Situação</th></tr>` + db.pecas.map(p => `<tr style="page-break-inside:avoid"><td style="width:110px">${relFoto(p.foto)}</td><td style="width:160px">${relFoto(p.foto2, 150)}</td><td>${esc(p.cod || '')}</td><td><b>${esc(p.nome)}</b></td><td>${p.estoque}</td><td>${p.min}</td><td>${p.sobressalentes || 0}</td><td style="font-weight:bold;color:${p.estoque < p.min ? '#c00' : '#080'}">${p.estoque < p.min ? 'CRÍTICO' : 'OK'}</td></tr>`).join('') + `</table>`;
       }
       if (tipo === 'guepar' || tipo === 'tudo') {
         html += `<h2>Guepar</h2><table><tr><th>Item</th><th>Qtd</th></tr>` + db.guepar.map(g => `<tr><td>${esc(g.nome)}</td><td>${g.estoque}</td></tr>`).join('') + `</table>`;
@@ -974,7 +988,7 @@
         const critico = p.estoque < p.min;
         return `
           <tr class="border-b border-slate-800/30 hover:bg-slate-800/50">
-            <td class="p-3">${fotoOk(p.foto) ? `<img src="${p.foto}" onclick="verFoto(${i})" class="w-12 h-12 object-cover rounded-lg border border-slate-700 cursor-pointer" alt="">` : '<div class="w-12 h-12 rounded-lg bg-slate-800/60 flex items-center justify-center text-gray-600"><i class="ph ph-image"></i></div>'}</td>
+            <td class="p-3">${miniFotos(p, i)}</td>
             <td class="p-4">${esc(p.nome)}<div class="text-[10px] text-gray-500 font-mono">${esc(p.cod || '')}</div></td>
             <td class="p-4 ${critico ? 'text-red-400 font-bold' : 'text-white'}">${p.estoque}</td>
             <td class="p-4 text-gray-400">${p.min}</td>
@@ -1102,7 +1116,7 @@
 
     function prepararEdicao(tipo, index) {
       if(tipo === 'peca') {
-        const i = db.pecas[index]; document.getElementById('peca-edit-id').value = index; document.getElementById('peca-nome').value = i.nome; document.getElementById('peca-atual').value = i.estoque; document.getElementById('peca-min').value = i.min; document.getElementById('peca-sobre').value = i.sobressalentes; document.getElementById('peca-custo').value = i.custo ? i.custo : 0; mostrarFoto(i.foto || ''); document.getElementById('titulo-modal-peca').textContent = "Editar Peça"; abrirModal('modal-add-peca');
+        const i = db.pecas[index]; document.getElementById('peca-edit-id').value = index; document.getElementById('peca-nome').value = i.nome; document.getElementById('peca-atual').value = i.estoque; document.getElementById('peca-min').value = i.min; document.getElementById('peca-sobre').value = i.sobressalentes; document.getElementById('peca-custo').value = i.custo ? i.custo : 0; mostrarFotos(i.foto, i.foto2); document.getElementById('titulo-modal-peca').textContent = "Editar Peça"; abrirModal('modal-add-peca');
       }
       if(tipo === 'guepar') {
         const i = db.guepar[index]; document.getElementById('guepar-edit-id').value = index; document.getElementById('guepar-nome').value = i.nome; document.getElementById('guepar-marca').value = i.marca; document.getElementById('guepar-qtd').value = i.estoque; document.getElementById('guepar-custo').value = i.custo ? i.custo : 0; document.getElementById('titulo-modal-guepar').textContent = "Editar Item Guepar"; abrirModal('modal-add-guepar');
@@ -1122,7 +1136,7 @@
     function fecharModal(id) { 
       document.getElementById(id).classList.add('hidden'); const form = document.querySelector(`#${id} form`);
       if(form) { form.reset(); const hidden = form.querySelector('input[type="hidden"]'); if(hidden) hidden.value = ''; }
-      if(id === 'modal-add-peca') { document.getElementById('titulo-modal-peca').textContent = "Registar Peça"; mostrarFoto(''); }
+      if(id === 'modal-add-peca') { document.getElementById('titulo-modal-peca').textContent = "Registar Peça"; mostrarFotos(); }
       if(id === 'modal-add-guepar') document.getElementById('titulo-modal-guepar').textContent = "Item Guepar";
       if(id === 'modal-add-manutencao') document.getElementById('titulo-modal-manu').textContent = "Ordem de Manutenção";
       if(id === 'modal-add-usuario') document.getElementById('user-pin').placeholder = 'Ex: 1234';
@@ -1130,8 +1144,8 @@
 
     document.getElementById('form-peca').addEventListener('submit', (e) => {
       e.preventDefault(); const id = document.getElementById('peca-edit-id').value;
-      const data = { nome: document.getElementById('peca-nome').value, estoque: parseInt(document.getElementById('peca-atual').value), min: parseInt(document.getElementById('peca-min').value), sobressalentes: parseInt(document.getElementById('peca-sobre').value) || 0, custo: parseFloat(document.getElementById('peca-custo').value) || 0, foto: fotoAtual, cod: (id !== '' && db.pecas[id] && db.pecas[id].cod) || proximoCod() };
-      if(id === "") { db.pecas.push(data); auditarAcao('CRIACAO', `Criou peça: ${data.nome}`, snap(data)); } else { const dict = { nome: 'Nome', estoque: 'Estoque Atual', min: 'Stock Mínimo', sobressalentes: 'Reserva', custo: 'Custo (R$)' }; const antes = db.pecas[id]; const diff = calcularDiff(semFoto(antes), semFoto(data), dict); if ((antes.foto || '') !== (data.foto || '')) diff.push({ campo: 'Foto', de: antes.foto ? 'Com foto' : 'Sem foto', para: data.foto ? 'Com foto' : 'Sem foto' }); db.pecas[id] = data; auditarAcao('EDICAO', `Editou peça: ${data.nome}`, diff); }
+      const data = { nome: document.getElementById('peca-nome').value, estoque: parseInt(document.getElementById('peca-atual').value), min: parseInt(document.getElementById('peca-min').value), sobressalentes: parseInt(document.getElementById('peca-sobre').value) || 0, custo: parseFloat(document.getElementById('peca-custo').value) || 0, foto: fotos[0], foto2: fotos[1], cod: (id !== '' && db.pecas[id] && db.pecas[id].cod) || proximoCod() };
+      if(id === "") { db.pecas.push(data); auditarAcao('CRIACAO', `Criou peça: ${data.nome}`, snap(data)); } else { const dict = { nome: 'Nome', estoque: 'Estoque Atual', min: 'Stock Mínimo', sobressalentes: 'Reserva', custo: 'Custo (R$)' }; const antes = db.pecas[id]; const diff = calcularDiff(semFoto(antes), semFoto(data), dict); [['foto', 'Foto da peça'], ['foto2', 'Foto do código de barras']].forEach(([k, nm]) => { if ((antes[k] || '') !== (data[k] || '')) diff.push({ campo: nm, de: antes[k] ? 'Com foto' : 'Sem foto', para: data[k] ? 'Com foto' : 'Sem foto' }); }); db.pecas[id] = data; auditarAcao('EDICAO', `Editou peça: ${data.nome}`, diff); }
       salvarDB(); fecharModal('modal-add-peca');
     });
 
@@ -1330,7 +1344,7 @@
       let r = `📦 <b>${esc(it.nome)}</b>${it.marca ? ' (' + esc(it.marca) + ')' : ''}: <b>${it.estoque}</b> em estoque`;
       if (it.t === 'peca') r += `, mínimo ${it.min}, reserva ${it.sobressalentes || 0} kit(s)` + (it.estoque < it.min ? ' — ⚠️ <b>abaixo do mínimo</b>' : ' — ✅ ok');
       if (role === 'admin') r += `<br>💰 Custo unitário ${fmtMoeda.format(it.custo || 0)} · imobilizado ${fmtMoeda.format(tot * (it.custo || 0))}`;
-      if (fotoOk(it.foto)) r = `<img src="${it.foto}" class="w-24 h-24 object-cover rounded-xl mb-2 border border-slate-700" alt=""><br>` + r;
+      const fts = [it.foto, it.foto2].filter(fotoOk); if (fts.length) r = fts.map(f => `<img src="${f}" class="w-24 h-24 object-cover rounded-xl mb-2 mr-2 border border-slate-700 inline-block" alt="">`).join('') + '<br>' + r;
       const emp = db.emprestimos.filter(e => e.item === it.nome);
       if (emp.length) r += `<br>🛠️ Emprestado a: ${emp.map(e => esc(e.pessoa)).join(', ')}`;
       return r;
@@ -1543,36 +1557,44 @@
       if (abrir) setTimeout(() => { b.dataset.v = '0'; b.textContent = '🔑 Ver meu PIN'; }, 8000);
     }
 
-    // --- FOTO DA PEÇA (câmera ou galeria, comprimida para caber no aparelho e na nuvem) ---
-    let fotoAtual = '';
+    // --- FOTOS DA PEÇA: até 2 (1 = peça inteira, 2 = código de barras) ---
+    let fotos = ['', ''];
     const fotoOk = f => typeof f === 'string' && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+\/=]+$/.test(f);
-    const semFoto = o => { const r = { ...(o || {}) }; delete r.foto; return r; };
+    const semFoto = o => { const r = { ...(o || {}) }; delete r.foto; delete r.foto2; return r; };
+    const relFoto = (f, w = 100) => fotoOk(f) ? `<img src="${f}" style="width:${w}px;max-height:${w}px;object-fit:contain;border-radius:6px">` : '<span style="color:#999">sem foto</span>';
     function proximoCod() { const n = Math.max(0, ...db.pecas.map(p => parseInt(String(p.cod || '').replace(/\D/g, '')) || 0)) + 1; return 'PC-' + String(n).padStart(3, '0'); }
-    function mostrarFoto(f) {
-      fotoAtual = f || '';
-      const im = document.getElementById('peca-foto-prev'), vz = document.getElementById('peca-foto-vazio'), ok = fotoOk(fotoAtual);
-      if (ok) im.src = fotoAtual; else im.removeAttribute('src');
+    function mostrarFoto(n, f) {
+      fotos[n - 1] = f || '';
+      const ok = fotoOk(fotos[n - 1]), im = document.getElementById(`peca-foto${n}-prev`), vz = document.getElementById(`peca-foto${n}-vazio`);
+      if (ok) im.src = fotos[n - 1]; else im.removeAttribute('src');
       im.classList.toggle('hidden', !ok); vz.classList.toggle('hidden', ok);
-      document.getElementById('peca-foto-rm').classList.toggle('hidden', !ok);
+      document.getElementById(`peca-foto${n}-rm`).classList.toggle('hidden', !ok);
     }
-    function lerFoto(inp) {
+    const mostrarFotos = (a, b) => { mostrarFoto(1, a); mostrarFoto(2, b); };
+    function lerFoto(inp, n) {
       const f = inp.files && inp.files[0]; inp.value = ''; if (!f) return;
       const img = new Image(), url = URL.createObjectURL(f);
       img.onload = () => {
-        const k = Math.min(1, 640 / Math.max(img.width, img.height)), c = document.createElement('canvas');
+        const max = n === 2 ? 900 : 640, k = Math.min(1, max / Math.max(img.width, img.height)), c = document.createElement('canvas');
         c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
         c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
-        mostrarFoto(c.toDataURL('image/jpeg', 0.6));
+        mostrarFoto(n, c.toDataURL('image/jpeg', n === 2 ? 0.7 : 0.6));
       };
       img.onerror = () => { URL.revokeObjectURL(url); alert('Não consegui abrir essa imagem.'); };
       img.src = url;
     }
+    function miniFotos(p, i) {
+      const un = (f, rot, ico) => fotoOk(f) ? `<img src="${f}" onclick="verFoto(${i})" title="${rot}" class="w-12 h-12 object-cover rounded-lg border border-slate-700 cursor-pointer" alt="">` : `<div class="w-12 h-12 rounded-lg bg-slate-800/60 flex items-center justify-center text-gray-600" title="${rot}"><i class="ph ph-${ico}"></i></div>`;
+      return `<div class="flex gap-1.5">${un(p.foto, 'Peça inteira', 'image')}${un(p.foto2, 'Código de barras', 'barcode')}</div>`;
+    }
     function verFoto(i) {
-      const p = db.pecas[i]; if (!p || !fotoOk(p.foto)) return;
-      const d = document.createElement('div'); d.className = 'fixed inset-0 bg-black/90 z-[100] flex flex-col items-center justify-center p-4 cursor-pointer'; d.onclick = () => d.remove();
-      const im = document.createElement('img'); im.src = p.foto; im.className = 'max-h-[80vh] max-w-full rounded-2xl';
-      const t = document.createElement('p'); t.className = 'text-white font-bold mt-3'; t.textContent = (p.cod ? p.cod + ' · ' : '') + p.nome;
-      d.append(im, t); document.body.appendChild(d);
+      const p = db.pecas[i]; if (!p) return;
+      const fs = [[p.foto, 'Peça inteira'], [p.foto2, 'Código de barras']].filter(x => fotoOk(x[0])); if (!fs.length) return;
+      const d = document.createElement('div'); d.className = 'fixed inset-0 bg-black/90 z-[100] flex flex-col items-center justify-center p-4 cursor-pointer overflow-y-auto'; d.onclick = () => d.remove();
+      const t = document.createElement('p'); t.className = 'text-white font-bold mb-3 text-center'; t.textContent = (p.cod ? p.cod + ' · ' : '') + p.nome;
+      const w = document.createElement('div'); w.className = 'flex flex-wrap gap-4 justify-center';
+      fs.forEach(([f, rot]) => { const c = document.createElement('div'); c.className = 'text-center'; const im = document.createElement('img'); im.src = f; im.className = 'max-h-[60vh] max-w-full rounded-2xl'; const l = document.createElement('p'); l.className = 'text-xs text-gray-300 mt-1'; l.textContent = rot; c.append(im, l); w.append(c); });
+      d.append(t, w); document.body.appendChild(d);
     }
 
     // --- COMANDO DE VOZ (reconhecimento do navegador, pt-BR) ---
@@ -1614,7 +1636,7 @@
     }
     function IAexecutar(p) {
       if (p.tipo === 'peca') {
-        const d = { nome: p.d.nome, estoque: p.d.estoque || 0, min: p.d.min || 0, sobressalentes: p.d.sobre || 0, custo: p.d.custo || 0, foto: '', cod: proximoCod() };
+        const d = { nome: p.d.nome, estoque: p.d.estoque || 0, min: p.d.min || 0, sobressalentes: p.d.sobre || 0, custo: p.d.custo || 0, foto: '', foto2: '', cod: proximoCod() };
         db.pecas.push(d); auditarAcao('CRIACAO', `Criou peça: ${d.nome} (por voz)`, snap(d)); salvarDB(); renderizarTabelas();
         return `✅ Peça <b>${esc(d.nome)}</b> cadastrada com o código <b>${d.cod}</b>. Depois abra a edição para tirar a foto. 📷`;
       }
