@@ -106,9 +106,17 @@
           <a href="#" data-aba="dashboard" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-xl font-bold text-sm text-cyan-400 bg-cyan-500/10 border border-cyan-500/30 transition" onclick="toggleMenu(true)">
             <i class="ph ph-squares-four text-xl"></i><span class="text-translate" data-pt="Command Center" data-en="Command Center">Command Center</span>
           </a>
-          <a href="#" data-aba="pecas" class="nav-link flex items-center justify-between px-4 py-3 rounded-xl font-semibold text-sm text-gray-400 border border-transparent hover:text-white hover:bg-slate-800 transition" onclick="toggleMenu(true)">
-            <div class="flex items-center space-x-3"><i class="ph ph-cpu text-xl"></i><span class="text-translate" data-pt="Peças do Robô" data-en="Robot Parts">Peças do Robô</span></div>
+          <a href="#" data-aba="pecas" data-cat="mecanica" class="nav-link flex items-center justify-between px-4 py-3 rounded-xl font-semibold text-sm text-gray-400 border border-transparent hover:text-white hover:bg-slate-800 transition" onclick="toggleMenu(true)">
+            <div class="flex items-center space-x-3"><i class="ph ph-gear-six text-xl"></i><span class="text-translate" data-pt="Mecânica" data-en="Mechanics">Mecânica</span></div>
             <span id="badge-pecas" class="badge-alerta bg-red-500/20 text-red-400 border border-red-500/50 hidden">0</span>
+          </a>
+          <a href="#" data-aba="pecas" data-cat="eletrica" class="nav-link flex items-center justify-between px-4 py-3 rounded-xl font-semibold text-sm text-gray-400 border border-transparent hover:text-white hover:bg-slate-800 transition" onclick="toggleMenu(true)">
+            <div class="flex items-center space-x-3"><i class="ph ph-lightning text-xl"></i><span class="text-translate" data-pt="Elétrica" data-en="Electrical">Elétrica</span></div>
+            <span id="badge-eletrica" class="badge-alerta bg-red-500/20 text-red-400 border border-red-500/50 hidden">0</span>
+          </a>
+          <a href="#" data-aba="pecas" data-cat="robo" class="nav-link flex items-center justify-between px-4 py-3 rounded-xl font-semibold text-sm text-gray-400 border border-transparent hover:text-white hover:bg-slate-800 transition" onclick="toggleMenu(true)">
+            <div class="flex items-center space-x-3"><i class="ph ph-cpu text-xl"></i><span class="text-translate" data-pt="Peças do Robô" data-en="Robot Parts">Peças do Robô</span></div>
+            <span id="badge-robo" class="badge-alerta bg-red-500/20 text-red-400 border border-red-500/50 hidden">0</span>
           </a>
           <a href="#" data-aba="guepar" class="nav-link flex items-center justify-between px-4 py-3 rounded-xl font-semibold text-sm text-gray-400 border border-transparent hover:text-white hover:bg-slate-800 transition" onclick="toggleMenu(true)">
             <div class="flex items-center space-x-3"><i class="ph ph-package text-xl"></i><span class="text-translate" data-pt="Guepar Uso" data-en="Guepar Tools">Guepar Uso</span></div>
@@ -255,13 +263,13 @@
               <p class="text-sm text-gray-400 mt-1 text-translate" data-pt="Inventário e Sobressalentes" data-en="Inventory and Spares">Inventário e Sobressalentes</p>
             </div>
             <div class="flex gap-2">
-              <button onclick="exportarExcel(db.pecas, 'Pecas_Robo')" class="bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white px-4 py-2.5 rounded-xl text-sm font-bold border border-emerald-500/30 transition cursor-pointer flex items-center gap-2">
+              <button onclick="exportarExcel(db.pecas.map(p => ({ cod: p.cod, categoria: catNome(catDe(p)), nome: p.nome, estoque: p.estoque, min: p.min, sobressalentes: p.sobressalentes, custo: p.custo })), 'Pecas')" class="bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white px-4 py-2.5 rounded-xl text-sm font-bold border border-emerald-500/30 transition cursor-pointer flex items-center gap-2">
                 <i class="ph ph-file-csv text-lg"></i> CSV
               </button>
               <button onclick="gerarRelatorio('pecas')" class="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold border border-slate-700 flex items-center gap-2 transition cursor-pointer">
                 <i class="ph ph-printer text-lg"></i>
               </button>
-              <button onclick="abrirModal('modal-add-peca')" class="req-vis1 hidden bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-lg flex items-center gap-2 cursor-pointer transition">
+              <button onclick="novaPeca()" class="req-vis1 hidden bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-lg flex items-center gap-2 cursor-pointer transition">
                 <i class="ph ph-plus-circle text-lg"></i> <span class="text-translate" data-pt="Nova Peça" data-en="New Part">Nova Peça</span>
               </button>
             </div>
@@ -475,6 +483,7 @@
               <div><label class="block text-xs font-bold text-emerald-400 mb-1 text-translate" data-pt="Reserva (Kits)" data-en="Spares">Reserva (Kits)</label><input type="number" id="peca-sobre" min="0" value="0" class="w-full bg-slate-950 border border-emerald-700/50 rounded-xl px-3 py-2 text-white outline-none"></div>
               <div><label class="block text-xs font-bold text-cyan-400 mb-1 text-translate" data-pt="Custo Unit. (R$)" data-en="Unit Cost ($)">Custo Unit. (R$)</label><input type="number" id="peca-custo" min="0" step="0.01" value="0" class="w-full bg-slate-950 border border-cyan-700/50 rounded-xl px-3 py-2 text-white outline-none"></div>
             </div>
+            <div class="text-xs text-gray-400"><span class="text-translate" data-pt="Categoria" data-en="Category">Categoria</span>: <b id="peca-cat-rotulo" class="text-cyan-400">Mecânica</b><input type="hidden" id="peca-cat" value="mecanica"><button type="button" id="btn-mover-edit" onclick="moverPeca(parseInt(document.getElementById('peca-edit-id').value), true)" class="hidden ml-3 text-amber-400 font-bold cursor-pointer"><i class="ph ph-arrows-left-right"></i> Mover</button></div>
             <div class="space-y-3">
               <label class="block text-xs font-bold text-gray-400 text-translate" data-pt="Fotos da peça (até 2)" data-en="Part photos (up to 2)">Fotos da peça (até 2)</label>
               <div class="flex items-center gap-3">
@@ -918,14 +927,14 @@
     function formatarDataBR(d) { if(!d) return '-'; const [a,m,dia] = d.split('-'); return `${dia}/${m}/${a}`; }
 
     function gerarRelatorio(tipo) {
-      const titulos = { pecas: 'Relatório de Peças do Robô', guepar: 'Relatório Guepar Uso', manutencoes: 'Relatório de Manutenções', auditoria: 'Relatório de Logs', tudo: 'Relatório Geral' };
+      const titulos = { pecas: 'Relatório de Peças', guepar: 'Relatório Guepar Uso', manutencoes: 'Relatório de Manutenções', auditoria: 'Relatório de Logs', tudo: 'Relatório Geral' };
       const win = window.open('', '_blank');
       if (!win) { alert('Permita pop-ups no navegador.'); return; }
       
       let html = `<html><head><title>${titulos[tipo]}</title><style>body { font-family: sans-serif; padding: 20px; } table { width: 100%; border-collapse: collapse; margin-top: 15px; } th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }</style></head><body><h1>${titulos[tipo]}</h1>`;
       
       if (tipo === 'pecas' || tipo === 'tudo') {
-        html += `<h2>Peças do Robô</h2><p>${db.pecas.length} peça(s) · ${db.pecas.filter(p => p.estoque < p.min).length} em estado crítico · emitido em ${new Date().toLocaleString('pt-BR')}</p><table><tr><th>Foto da peça</th><th>Código de barras</th><th>Cód.</th><th>Peça</th><th>Estoque</th><th>Mínimo</th><th>Reserva</th><th>Situação</th></tr>` + db.pecas.map(p => `<tr style="page-break-inside:avoid"><td style="width:110px">${relFoto(p.foto)}</td><td style="width:160px">${relFoto(p.foto2, 150)}</td><td>${esc(p.cod || '')}</td><td><b>${esc(p.nome)}</b></td><td>${p.estoque}</td><td>${p.min}</td><td>${p.sobressalentes || 0}</td><td style="font-weight:bold;color:${p.estoque < p.min ? '#c00' : '#080'}">${p.estoque < p.min ? 'CRÍTICO' : 'OK'}</td></tr>`).join('') + `</table>`;
+        html += `<p>${db.pecas.length} peça(s) · ${db.pecas.filter(p => p.estoque < p.min).length} em estado crítico · emitido em ${new Date().toLocaleString('pt-BR')}</p>` + CATS.map(c => { const lista = db.pecas.filter(p => catDe(p) === c.id); if (!lista.length) return ''; return `<h2>${c.pt} (${lista.length})</h2><table><tr><th>Foto da peça</th><th>Código de barras</th><th>Cód.</th><th>Peça</th><th>Estoque</th><th>Mínimo</th><th>Reserva</th><th>Situação</th></tr>` + lista.map(p => `<tr style="page-break-inside:avoid"><td style="width:110px">${relFoto(p.foto)}</td><td style="width:160px">${relFoto(p.foto2, 150)}</td><td>${esc(p.cod || '')}</td><td><b>${esc(p.nome)}</b></td><td>${p.estoque}</td><td>${p.min}</td><td>${p.sobressalentes || 0}</td><td style="font-weight:bold;color:${p.estoque < p.min ? '#c00' : '#080'}">${p.estoque < p.min ? 'CRÍTICO' : 'OK'}</td></tr>`).join('') + `</table>`; }).join('');
       }
       if (tipo === 'guepar' || tipo === 'tudo') {
         html += `<h2>Guepar</h2><table><tr><th>Item</th><th>Qtd</th></tr>` + db.guepar.map(g => `<tr><td>${esc(g.nome)}</td><td>${g.estoque}</td></tr>`).join('') + `</table>`;
@@ -971,8 +980,7 @@
       if(elCapital) elCapital.textContent = fmtMoeda.format(totalCapitalGlobal);
       if(elPecasCusto) elPecasCusto.textContent = fmtMoeda.format(totalAtivosRobo);
 
-      const bdgPecas = document.getElementById('badge-pecas');
-      if(pecasCriticas > 0) { bdgPecas.textContent = pecasCriticas; bdgPecas.classList.remove('hidden'); } else { bdgPecas.classList.add('hidden'); }
+      CATS.forEach(c => { const n = db.pecas.filter(p => catDe(p) === c.id && p.estoque < p.min).length, bd = document.getElementById(c.badge); if (bd) { bd.textContent = n; bd.classList.toggle('hidden', n === 0); } });
 
       let saude = 100; if (pecasCriticas > 0) saude -= (pecasCriticas * 5);
       const hSaude = document.getElementById('kpi-saude');
@@ -983,8 +991,8 @@
         else { hDesc.innerHTML = `<i class="ph ph-trend-up"></i> Sistema Estável`; hDesc.className = "text-xs text-emerald-400 mt-1 font-semibold flex items-center gap-1"; }
       }
 
-      db.pecas.forEach(p => { if (!p.cod) p.cod = proximoCod(); });
-      document.getElementById('tabela-pecas').innerHTML = db.pecas.map((p, i) => {
+      db.pecas.forEach(p => { if (!p.cat) p.cat = 'mecanica'; if (!p.cod) p.cod = proximoCod(p.cat); });
+      document.getElementById('tabela-pecas').innerHTML = db.pecas.map((p, i) => ({ p, i })).filter(x => catDe(x.p) === catAtual).map(({ p, i }) => {
         const critico = p.estoque < p.min;
         return `
           <tr class="border-b border-slate-800/30 hover:bg-slate-800/50">
@@ -995,6 +1003,7 @@
             <td class="p-4"><span class="bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded text-xs border border-emerald-500/20">${p.sobressalentes} Kits</span></td>
             <td class="p-4 text-right req-vis1 ${isVis1 ? '' : 'hidden'}">
               <div class="flex justify-end gap-3">
+                <button onclick="moverPeca(${i})" class="text-amber-400 hover:text-white transition" title="Mover de categoria"><i class="ph ph-arrows-left-right text-lg"></i></button>
                 <button onclick="prepararEdicao('peca', ${i})" class="text-cyan-400 hover:text-white transition" title="Editar"><i class="ph ph-pencil-simple text-lg"></i></button>
                 <button onclick="apagarRegistro('peca', ${i})" class="text-red-500 hover:text-white transition ${isAdm ? '' : 'hidden'}" title="Apagar"><i class="ph ph-trash text-lg"></i></button>
               </div>
@@ -1116,7 +1125,7 @@
 
     function prepararEdicao(tipo, index) {
       if(tipo === 'peca') {
-        const i = db.pecas[index]; document.getElementById('peca-edit-id').value = index; document.getElementById('peca-nome').value = i.nome; document.getElementById('peca-atual').value = i.estoque; document.getElementById('peca-min').value = i.min; document.getElementById('peca-sobre').value = i.sobressalentes; document.getElementById('peca-custo').value = i.custo ? i.custo : 0; mostrarFotos(i.foto, i.foto2); document.getElementById('titulo-modal-peca').textContent = "Editar Peça"; abrirModal('modal-add-peca');
+        const i = db.pecas[index]; document.getElementById('peca-edit-id').value = index; document.getElementById('peca-nome').value = i.nome; document.getElementById('peca-atual').value = i.estoque; document.getElementById('peca-min').value = i.min; document.getElementById('peca-sobre').value = i.sobressalentes; document.getElementById('peca-custo').value = i.custo ? i.custo : 0; mostrarFotos(i.foto, i.foto2); setCat(catDe(i)); document.getElementById('btn-mover-edit').classList.remove('hidden'); document.getElementById('titulo-modal-peca').textContent = "Editar Peça"; abrirModal('modal-add-peca');
       }
       if(tipo === 'guepar') {
         const i = db.guepar[index]; document.getElementById('guepar-edit-id').value = index; document.getElementById('guepar-nome').value = i.nome; document.getElementById('guepar-marca').value = i.marca; document.getElementById('guepar-qtd').value = i.estoque; document.getElementById('guepar-custo').value = i.custo ? i.custo : 0; document.getElementById('titulo-modal-guepar').textContent = "Editar Item Guepar"; abrirModal('modal-add-guepar');
@@ -1144,8 +1153,8 @@
 
     document.getElementById('form-peca').addEventListener('submit', (e) => {
       e.preventDefault(); const id = document.getElementById('peca-edit-id').value;
-      const data = { nome: document.getElementById('peca-nome').value, estoque: parseInt(document.getElementById('peca-atual').value), min: parseInt(document.getElementById('peca-min').value), sobressalentes: parseInt(document.getElementById('peca-sobre').value) || 0, custo: parseFloat(document.getElementById('peca-custo').value) || 0, foto: fotos[0], foto2: fotos[1], cod: (id !== '' && db.pecas[id] && db.pecas[id].cod) || proximoCod() };
-      if(id === "") { db.pecas.push(data); auditarAcao('CRIACAO', `Criou peça: ${data.nome}`, snap(data)); } else { const dict = { nome: 'Nome', estoque: 'Estoque Atual', min: 'Stock Mínimo', sobressalentes: 'Reserva', custo: 'Custo (R$)' }; const antes = db.pecas[id]; const diff = calcularDiff(semFoto(antes), semFoto(data), dict); [['foto', 'Foto da peça'], ['foto2', 'Foto do código de barras']].forEach(([k, nm]) => { if ((antes[k] || '') !== (data[k] || '')) diff.push({ campo: nm, de: antes[k] ? 'Com foto' : 'Sem foto', para: data[k] ? 'Com foto' : 'Sem foto' }); }); db.pecas[id] = data; auditarAcao('EDICAO', `Editou peça: ${data.nome}`, diff); }
+      const data = { nome: document.getElementById('peca-nome').value, estoque: parseInt(document.getElementById('peca-atual').value), min: parseInt(document.getElementById('peca-min').value), sobressalentes: parseInt(document.getElementById('peca-sobre').value) || 0, custo: parseFloat(document.getElementById('peca-custo').value) || 0, foto: fotos[0], foto2: fotos[1], cat: document.getElementById('peca-cat').value, cod: (id !== '' && db.pecas[id] && db.pecas[id].cod) || proximoCod(document.getElementById('peca-cat').value) };
+      if(id === "") { db.pecas.push(data); auditarAcao('CRIACAO', `Criou peça: ${data.nome}`, snap(data)); } else { const dict = { nome: 'Nome', estoque: 'Estoque Atual', min: 'Stock Mínimo', sobressalentes: 'Reserva', custo: 'Custo (R$)', cat: 'Categoria' }; const antes = db.pecas[id]; const diff = calcularDiff(semFoto(antes), semFoto(data), dict); [['foto', 'Foto da peça'], ['foto2', 'Foto do código de barras']].forEach(([k, nm]) => { if ((antes[k] || '') !== (data[k] || '')) diff.push({ campo: nm, de: antes[k] ? 'Com foto' : 'Sem foto', para: data[k] ? 'Com foto' : 'Sem foto' }); }); db.pecas[id] = data; auditarAcao('EDICAO', `Editou peça: ${data.nome}`, diff); }
       salvarDB(); fecharModal('modal-add-peca');
     });
 
@@ -1248,6 +1257,7 @@
         if (alvo !== 'ia' && alvo !== 'auditoria') { link.classList.add('text-cyan-400', 'bg-cyan-500/10', 'border-cyan-500/30'); link.classList.remove('text-gray-400', 'border-transparent'); } 
         else if (alvo === 'auditoria') { link.classList.add('bg-amber-500/10'); }
         document.getElementById('aba-' + alvo).classList.remove('hidden');
+        if (link.dataset.cat) { catAtual = link.dataset.cat; renderizarTabelas(); }
         if(alvo === 'ia') document.getElementById('aba-' + alvo).classList.add('flex');
         if(alvo === 'dashboard') iniciarGraficos();
       });
@@ -1342,6 +1352,7 @@
       IA.item = it.nome;
       const tot = it.t === 'peca' ? it.estoque + (it.sobressalentes || 0) : it.estoque;
       let r = `📦 <b>${esc(it.nome)}</b>${it.marca ? ' (' + esc(it.marca) + ')' : ''}: <b>${it.estoque}</b> em estoque`;
+      if (it.t === 'peca') r += ` · ${catNome(catDe(it))}`;
       if (it.t === 'peca') r += `, mínimo ${it.min}, reserva ${it.sobressalentes || 0} kit(s)` + (it.estoque < it.min ? ' — ⚠️ <b>abaixo do mínimo</b>' : ' — ✅ ok');
       if (role === 'admin') r += `<br>💰 Custo unitário ${fmtMoeda.format(it.custo || 0)} · imobilizado ${fmtMoeda.format(tot * (it.custo || 0))}`;
       const fts = [it.foto, it.foto2].filter(fotoOk); if (fts.length) r = fts.map(f => `<img src="${f}" class="w-24 h-24 object-cover rounded-xl mb-2 mr-2 border border-slate-700 inline-block" alt="">`).join('') + '<br>' + r;
@@ -1562,7 +1573,6 @@
     const fotoOk = f => typeof f === 'string' && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+\/=]+$/.test(f);
     const semFoto = o => { const r = { ...(o || {}) }; delete r.foto; delete r.foto2; return r; };
     const relFoto = (f, w = 100) => fotoOk(f) ? `<img src="${f}" style="width:${w}px;max-height:${w}px;object-fit:contain;border-radius:6px">` : '<span style="color:#999">sem foto</span>';
-    function proximoCod() { const n = Math.max(0, ...db.pecas.map(p => parseInt(String(p.cod || '').replace(/\D/g, '')) || 0)) + 1; return 'PC-' + String(n).padStart(3, '0'); }
     function mostrarFoto(n, f) {
       fotos[n - 1] = f || '';
       const ok = fotoOk(fotos[n - 1]), im = document.getElementById(`peca-foto${n}-prev`), vz = document.getElementById(`peca-foto${n}-vazio`);
@@ -1610,7 +1620,8 @@
         custo: pega(/(?:custo|preco|valor)\s*(?:de\s*|e\s*)?(?:r\s+)?(\d+(?:\.\d+)?)/)
       };
       let n = t.replace(/[,.]/g, ' ').replace(/^\s*(adicionar|adicione|cadastrar|cadastre|registrar|registre|criar|crie|incluir|inclua)\s+(uma\s+|um\s+)?(nova\s+|novo\s+)?(pe[çc]a|item)?\s*/i, '').replace(/^(chamad[ao]|de nome|nome)\s+/i, '');
-      n = n.split(/\b(quantidade|estoque|atual|unidades|m[ií]nimo|reserva|sobressalentes?|kits?|custo|pre[çc]o|valor|tenho|temos)\b/i)[0].trim();
+      n = n.split(/\b(quantidade|estoque|atual|unidades|m[ií]nimo|reserva|sobressalentes?|kits?|custo|pre[çc]o|valor|tenho|temos|categoria)\b/i)[0].trim();
+      const mc = q.match(/categoria\s+(?:de\s+|da\s+|do\s+)?(mecanica|eletrica|pecas do robo|robo)/); r.cat = mc ? ({ mecanica: 'mecanica', eletrica: 'eletrica' }[mc[1]] || 'robo') : undefined;
       r.nome = n ? n.charAt(0).toUpperCase() + n.slice(1) : undefined;
       return r;
     }
@@ -1636,14 +1647,57 @@
     }
     function IAexecutar(p) {
       if (p.tipo === 'peca') {
-        const d = { nome: p.d.nome, estoque: p.d.estoque || 0, min: p.d.min || 0, sobressalentes: p.d.sobre || 0, custo: p.d.custo || 0, foto: '', foto2: '', cod: proximoCod() };
+        const d = { nome: p.d.nome, estoque: p.d.estoque || 0, min: p.d.min || 0, sobressalentes: p.d.sobre || 0, custo: p.d.custo || 0, foto: '', foto2: '', cat: p.d.cat || catAtual, cod: proximoCod(p.d.cat || catAtual) };
         db.pecas.push(d); auditarAcao('CRIACAO', `Criou peça: ${d.nome} (por voz)`, snap(d)); salvarDB(); renderizarTabelas();
-        return `✅ Peça <b>${esc(d.nome)}</b> cadastrada com o código <b>${d.cod}</b>. Depois abra a edição para tirar a foto. 📷`;
+        return `✅ Peça <b>${esc(d.nome)}</b> cadastrada em <b>${catNome(d.cat)}</b> com o código <b>${d.cod}</b>. Depois abra a edição para tirar a foto. 📷`;
       }
       const pc = db.pecas.find(x => x.nome === p.nome); if (!pc) return 'Essa peça não existe mais.';
       const a = pc.estoque; pc.estoque += p.qtd;
       auditarAcao('EDICAO', `Estoque de ${pc.nome} alterado por voz`, [{ campo: 'Estoque Atual', de: String(a), para: String(pc.estoque) }]); salvarDB(); renderizarTabelas();
       return `✅ Feito! <b>${esc(pc.nome)}</b> agora tem <b>${pc.estoque}</b> em estoque.`;
+    }
+
+    // --- CATEGORIAS DE PEÇAS: Mecânica (dados antigos), Elétrica e Peças do Robô ---
+    const CATS = [
+      { id: 'mecanica', pt: 'Mecânica', en: 'Mechanics', pref: 'PC', badge: 'badge-pecas' },
+      { id: 'eletrica', pt: 'Elétrica', en: 'Electrical', pref: 'EL', badge: 'badge-eletrica' },
+      { id: 'robo', pt: 'Peças do Robô', en: 'Robot Parts', pref: 'PR', badge: 'badge-robo' }
+    ];
+    let catAtual = 'mecanica';
+    const catDe = p => (p && p.cat) || 'mecanica';
+    const catNome = id => (CATS.find(c => c.id === id) || CATS[0]).pt;
+    function proximoCod(cat) {
+      const pref = (CATS.find(c => c.id === cat) || CATS[0]).pref;
+      return pref + '-' + String(Math.max(0, ...db.pecas.filter(p => String(p.cod || '').startsWith(pref + '-')).map(p => parseInt(String(p.cod).replace(/\D/g, '')) || 0)) + 1).padStart(3, '0');
+    }
+    function setCat(c) { document.getElementById('peca-cat').value = c; document.getElementById('peca-cat-rotulo').textContent = catNome(c); }
+    function novaPeca() { setCat(catAtual); document.getElementById('btn-mover-edit').classList.add('hidden'); abrirModal('modal-add-peca'); }
+    function cabecalhoPecas() {
+      const c = CATS.find(x => x.id === catAtual) || CATS[0], h = document.querySelector('#aba-pecas h1');
+      if (h) { h.dataset.pt = c.pt; h.dataset.en = c.en; h.textContent = localStorage.getItem('guepar_lang') === 'en' ? c.en : c.pt; }
+      const tb = document.getElementById('tabela-pecas');
+      if (tb && !tb.innerHTML.trim()) tb.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-gray-500">Nenhuma peça em ${c.pt} ainda. Toque em "Nova Peça" para cadastrar.</td></tr>`;
+    }
+    const _renderOriginal = renderizarTabelas;
+    renderizarTabelas = function () { _renderOriginal(); cabecalhoPecas(); };
+
+    // --- MOVER PEÇA ENTRE CATEGORIAS ---
+    function moverPeca(i, doModal) {
+      const p = db.pecas[i]; if (!p) return;
+      const d = document.createElement('div'); d.className = 'fixed inset-0 bg-black/70 backdrop-blur-sm z-[100] flex items-center justify-center p-4';
+      const box = document.createElement('div'); box.className = 'bg-slate-900 border border-slate-700 rounded-2xl p-6 w-full max-w-sm space-y-3';
+      const t = document.createElement('p'); t.className = 'text-white font-bold'; t.textContent = `Mover "${p.nome}" de ${catNome(catDe(p))} para:`; box.append(t);
+      CATS.filter(c => c.id !== catDe(p)).forEach(c => { const b = document.createElement('button'); b.className = 'w-full bg-slate-800 hover:bg-cyan-600 text-white font-bold py-3 rounded-xl cursor-pointer transition'; b.textContent = c.pt; b.onclick = () => { d.remove(); aplicarMover(i, c.id, doModal); }; box.append(b); });
+      const x = document.createElement('button'); x.className = 'w-full text-sm text-gray-400 py-2 cursor-pointer'; x.textContent = 'Cancelar'; x.onclick = () => d.remove(); box.append(x);
+      d.append(box); d.onclick = e => { if (e.target === d) d.remove(); }; document.body.appendChild(d);
+    }
+    function aplicarMover(i, nova, doModal) {
+      const p = db.pecas[i]; if (!p) return;
+      const antes = { cat: catDe(p), cod: p.cod };
+      p.cat = nova; p.cod = proximoCod(nova);
+      auditarAcao('EDICAO', `Moveu peça: ${p.nome} (${catNome(antes.cat)} → ${catNome(nova)})`, [{ campo: 'Categoria', de: catNome(antes.cat), para: catNome(nova) }, { campo: 'Código', de: antes.cod || '(Vazio)', para: p.cod }]);
+      salvarDB(); if (doModal) fecharModal('modal-add-peca'); renderizarTabelas();
+      alert(`✅ "${p.nome}" agora está em ${catNome(nova)} (código ${p.cod}).`);
     }
 
     // --- REGISTO DO PWA ---
