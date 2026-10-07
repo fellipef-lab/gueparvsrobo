@@ -132,6 +132,7 @@
         <div class="flex flex-col gap-2 mb-4 px-2">
           <p id="usuario-display" class="text-xs font-bold text-white truncate"></p>
           <span id="usuario-role-display" class="text-[10px] text-cyan-400 font-bold uppercase tracking-wider bg-cyan-500/10 w-fit px-2 py-1 rounded"></span>
+          <button id="btn-meu-pin" onclick="meuPin()" class="text-[11px] text-left text-gray-400 hover:text-cyan-300 font-mono cursor-pointer">🔑 Ver meu PIN</button>
         </div>
         <button id="btn-ativar-bio" onclick="ativarBiometria()" class="hidden w-full mb-2 bg-purple-600/20 hover:bg-purple-600/40 text-purple-300 py-2.5 rounded-xl text-sm font-bold transition justify-center items-center gap-2 cursor-pointer border border-purple-500/30"><i class="ph ph-scan"></i> Ativar facial neste aparelho</button>
         <button id="btn-sair" class="w-full bg-slate-800 hover:bg-red-500/20 text-gray-300 hover:text-red-400 py-2.5 rounded-xl text-sm font-bold transition flex justify-center items-center gap-2 cursor-pointer border border-slate-700 hover:border-red-500/30">
@@ -269,6 +270,7 @@
             <table class="w-full text-left border-collapse min-w-[600px]">
               <thead>
                 <tr class="bg-slate-800/30 text-xs text-gray-400 uppercase tracking-wider border-b border-slate-700/50">
+                  <th class="p-4 text-translate" data-pt="Foto" data-en="Photo">Foto</th>
                   <th class="p-4 text-translate" data-pt="Nome da Peça" data-en="Part Name">Nome da Peça</th>
                   <th class="p-4 text-translate" data-pt="Estoque Atual" data-en="Current Stock">Estoque Atual</th>
                   <th class="p-4 text-translate" data-pt="Estoque Mínimo" data-en="Min Stock">Estoque Mínimo</th>
@@ -449,6 +451,7 @@
             <div class="px-4 pt-3 flex gap-2 overflow-x-auto"><button type="button" onclick="adicionarMensagemIA('Bom dia')" class="shrink-0 text-xs bg-slate-800 hover:bg-purple-600/30 border border-slate-700 text-gray-300 px-3 py-1.5 rounded-full cursor-pointer transition">Bom dia</button><button type="button" onclick="adicionarMensagemIA('Resumo geral')" class="shrink-0 text-xs bg-slate-800 hover:bg-purple-600/30 border border-slate-700 text-gray-300 px-3 py-1.5 rounded-full cursor-pointer transition">Resumo geral</button><button type="button" onclick="adicionarMensagemIA('O que comprar?')" class="shrink-0 text-xs bg-slate-800 hover:bg-purple-600/30 border border-slate-700 text-gray-300 px-3 py-1.5 rounded-full cursor-pointer transition">O que comprar?</button><button type="button" onclick="adicionarMensagemIA('Manutenções')" class="shrink-0 text-xs bg-slate-800 hover:bg-purple-600/30 border border-slate-700 text-gray-300 px-3 py-1.5 rounded-full cursor-pointer transition">Manutenções</button><button type="button" onclick="adicionarMensagemIA('Quem está com ferramentas?')" class="shrink-0 text-xs bg-slate-800 hover:bg-purple-600/30 border border-slate-700 text-gray-300 px-3 py-1.5 rounded-full cursor-pointer transition">Quem está com ferramentas?</button><button type="button" onclick="adicionarMensagemIA('Me conte uma piada')" class="shrink-0 text-xs bg-slate-800 hover:bg-purple-600/30 border border-slate-700 text-gray-300 px-3 py-1.5 rounded-full cursor-pointer transition">Me conte uma piada</button></div>
             <form onsubmit="adicionarMensagemIA(document.getElementById('chat-input').value); return false;" class="p-4 bg-slate-900/80 border-t border-slate-700/50 flex gap-2">
               <input type="text" id="chat-input" placeholder="Escreva a sua pergunta..." autocomplete="off" class="flex-1 bg-slate-950 border border-slate-800 focus:border-purple-500 rounded-xl px-4 text-white outline-none">
+              <button type="button" id="btn-mic" onclick="micChat()" title="Falar" class="px-4 rounded-xl bg-slate-800 border border-slate-700 text-cyan-300 cursor-pointer hover:bg-slate-700 transition"><i class="ph ph-microphone text-xl"></i></button>
               <button type="submit" class="px-6 rounded-xl bg-gradient-to-r from-cyan-600 to-purple-600 text-white font-bold cursor-pointer hover:shadow-lg hover:shadow-purple-500/30 transition"><i class="ph ph-paper-plane-right text-xl"></i></button>
             </form>
           </div>
@@ -461,6 +464,8 @@
         <div class="bento-card p-8 w-full max-w-md mx-4 relative max-h-[90vh] overflow-y-auto">
           <button onclick="fecharModal('modal-add-peca')" class="absolute top-4 right-4 text-gray-400 hover:text-white cursor-pointer"><i class="ph ph-x text-xl"></i></button>
           <h2 class="text-xl font-bold text-white mb-6 flex items-center gap-2"><i class="ph ph-cpu text-emerald-400"></i> <span id="titulo-modal-peca" class="text-translate" data-pt="Registar Peça" data-en="Register Part">Registar Peça</span></h2>
+          <button type="button" id="btn-voz-peca" onclick="ditarPeca()" class="w-full mb-1 bg-purple-600/20 hover:bg-purple-600/40 border border-purple-500/30 text-purple-200 font-bold py-2.5 rounded-xl cursor-pointer flex items-center justify-center gap-2"><i class="ph ph-microphone text-xl"></i> Preencher por voz</button>
+          <p id="voz-peca-msg" class="text-[11px] text-gray-400 mb-4 min-h-[16px]">Diga: "nome servo motor, quantidade 10, mínimo 3, reserva 2, custo 45,50"</p>
           <form id="form-peca" class="space-y-4">
             <input type="hidden" id="peca-edit-id" value="">
             <div><label class="block text-xs font-bold text-gray-400 mb-1 text-translate" data-pt="Nome da Peça" data-en="Part Name">Nome da Peça</label><input type="text" id="peca-nome" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-emerald-500"></div>
@@ -469,6 +474,21 @@
               <div><label class="block text-xs font-bold text-gray-400 mb-1 text-translate" data-pt="Mínimo" data-en="Minimum">Mínimo</label><input type="number" id="peca-min" min="0" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none"></div>
               <div><label class="block text-xs font-bold text-emerald-400 mb-1 text-translate" data-pt="Reserva (Kits)" data-en="Spares">Reserva (Kits)</label><input type="number" id="peca-sobre" min="0" value="0" class="w-full bg-slate-950 border border-emerald-700/50 rounded-xl px-3 py-2 text-white outline-none"></div>
               <div><label class="block text-xs font-bold text-cyan-400 mb-1 text-translate" data-pt="Custo Unit. (R$)" data-en="Unit Cost ($)">Custo Unit. (R$)</label><input type="number" id="peca-custo" min="0" step="0.01" value="0" class="w-full bg-slate-950 border border-cyan-700/50 rounded-xl px-3 py-2 text-white outline-none"></div>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-gray-400 mb-1 text-translate" data-pt="Foto da peça" data-en="Part photo">Foto da peça</label>
+              <div class="flex items-center gap-3">
+                <div class="w-24 h-24 rounded-xl bg-slate-950 border border-dashed border-slate-700 overflow-hidden flex items-center justify-center shrink-0">
+                  <img id="peca-foto-prev" class="hidden w-full h-full object-cover" alt="Foto da peça"><i id="peca-foto-vazio" class="ph ph-camera text-3xl text-gray-600"></i>
+                </div>
+                <div class="flex flex-col gap-2 flex-1">
+                  <button type="button" onclick="document.getElementById('peca-foto-cam').click()" class="bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-bold py-2.5 rounded-xl cursor-pointer flex items-center justify-center gap-2"><i class="ph ph-camera"></i> Tirar foto</button>
+                  <button type="button" onclick="document.getElementById('peca-foto-gal').click()" class="bg-slate-800 hover:bg-slate-700 text-gray-200 text-sm font-bold py-2 rounded-xl cursor-pointer flex items-center justify-center gap-2"><i class="ph ph-image"></i> Galeria</button>
+                  <button type="button" id="peca-foto-rm" onclick="mostrarFoto('')" class="hidden text-xs text-red-400 cursor-pointer">Remover foto</button>
+                </div>
+              </div>
+              <input type="file" id="peca-foto-cam" accept="image/*" capture="environment" class="hidden" onchange="lerFoto(this)">
+              <input type="file" id="peca-foto-gal" accept="image/*" class="hidden" onchange="lerFoto(this)">
             </div>
             <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl mt-4 cursor-pointer text-translate" data-pt="Salvar Registo" data-en="Save Record">Salvar Registo</button>
           </form>
@@ -737,7 +757,7 @@
       for (let key in novo) {
         let valAntigo = antigo[key] === undefined ? '' : (antigo[key] === null ? '' : String(antigo[key]));
         let valNovo = novo[key] === undefined ? '' : (novo[key] === null ? '' : String(novo[key]));
-        if (key === 'senha') { if (valAntigo !== valNovo) diff.push({ campo: dicionario[key] || key, de: '••••••', para: '•••••• (alterada)' }); continue; }
+        if (key === 'senha' || key === 'pin') { if (valAntigo !== valNovo) diff.push({ campo: dicionario[key] || key, de: '••••••', para: '•••••• (alterada)' }); continue; }
         if (valAntigo !== valNovo) {
           diff.push({ 
             campo: dicionario[key] ? dicionario[key] : key, 
@@ -749,7 +769,7 @@
       return diff;
     }
 
-    function snap(o, del) { return Object.keys(o || {}).filter(k => k !== 'dataHora').map(k => { const v = k === 'senha' ? '••••••' : String(o[k]); return { campo: k, de: del ? v : '(Vazio)', para: del ? '(Removido)' : v }; }); }
+    function snap(o, del) { return Object.keys(o || {}).filter(k => k !== 'dataHora' && k !== 'foto').map(k => { const v = (k === 'senha' || k === 'pin') ? '••••••' : String(o[k]); return { campo: k, de: del ? v : '(Vazio)', para: del ? '(Removido)' : v }; }); }
     function auditarAcao(acao, detalhes, alteracoes = null) {
       const utilizador = localStorage.getItem('guepar_email') ? localStorage.getItem('guepar_email') : 'Sistema';
       db.logs.unshift({ data: new Date().toISOString(), utilizador: utilizador, acao: acao, detalhes: detalhes, alteracoes: alteracoes });
@@ -757,7 +777,7 @@
     }
 
     async function salvarDB() {
-      localStorage.setItem('gueparDB', JSON.stringify(db));
+      try { localStorage.setItem('gueparDB', JSON.stringify(db)); } catch (e) { alert('⚠️ Memória do aparelho cheia (muitas fotos). Os dados seguem para a nuvem, mas remova fotos antigas ou tire fotos menores.'); }
       Cloud.agendarEnvio();
       renderizarTabelas();
       atualizarListaEmprestimo();
@@ -804,6 +824,7 @@
     }
 
     function exportarBackup() {
+      if (!ehSuper()) { alert('Acesso negado: o backup contém PINs e senhas, e só o administrador principal pode baixá-lo.'); return; }
       const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(db));
       const link = document.createElement("a");
       link.setAttribute("href", dataStr);
@@ -890,7 +911,7 @@
       let html = `<html><head><title>${titulos[tipo]}</title><style>body { font-family: sans-serif; padding: 20px; } table { width: 100%; border-collapse: collapse; margin-top: 15px; } th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }</style></head><body><h1>${titulos[tipo]}</h1>`;
       
       if (tipo === 'pecas' || tipo === 'tudo') {
-        html += `<h2>Peças</h2><table><tr><th>Peça</th><th>Estoque</th><th>Mínimo</th></tr>` + db.pecas.map(p => `<tr><td>${esc(p.nome)}</td><td>${p.estoque}</td><td>${p.min}</td></tr>`).join('') + `</table>`;
+        html += `<h2>Peças do Robô</h2><p>${db.pecas.length} peça(s) · ${db.pecas.filter(p => p.estoque < p.min).length} em estado crítico · emitido em ${new Date().toLocaleString('pt-BR')}</p><table><tr><th>Foto</th><th>Cód.</th><th>Peça</th><th>Estoque</th><th>Mínimo</th><th>Reserva</th><th>Situação</th></tr>` + db.pecas.map(p => `<tr style="page-break-inside:avoid"><td style="width:110px">${fotoOk(p.foto) ? `<img src="${p.foto}" style="width:100px;height:100px;object-fit:cover;border-radius:6px">` : '<span style="color:#999">sem foto</span>'}</td><td>${esc(p.cod || '')}</td><td><b>${esc(p.nome)}</b></td><td>${p.estoque}</td><td>${p.min}</td><td>${p.sobressalentes || 0}</td><td style="font-weight:bold;color:${p.estoque < p.min ? '#c00' : '#080'}">${p.estoque < p.min ? 'CRÍTICO' : 'OK'}</td></tr>`).join('') + `</table>`;
       }
       if (tipo === 'guepar' || tipo === 'tudo') {
         html += `<h2>Guepar</h2><table><tr><th>Item</th><th>Qtd</th></tr>` + db.guepar.map(g => `<tr><td>${esc(g.nome)}</td><td>${g.estoque}</td></tr>`).join('') + `</table>`;
@@ -948,11 +969,13 @@
         else { hDesc.innerHTML = `<i class="ph ph-trend-up"></i> Sistema Estável`; hDesc.className = "text-xs text-emerald-400 mt-1 font-semibold flex items-center gap-1"; }
       }
 
+      db.pecas.forEach(p => { if (!p.cod) p.cod = proximoCod(); });
       document.getElementById('tabela-pecas').innerHTML = db.pecas.map((p, i) => {
         const critico = p.estoque < p.min;
         return `
           <tr class="border-b border-slate-800/30 hover:bg-slate-800/50">
-            <td class="p-4">${esc(p.nome)}</td>
+            <td class="p-3">${fotoOk(p.foto) ? `<img src="${p.foto}" onclick="verFoto(${i})" class="w-12 h-12 object-cover rounded-lg border border-slate-700 cursor-pointer" alt="">` : '<div class="w-12 h-12 rounded-lg bg-slate-800/60 flex items-center justify-center text-gray-600"><i class="ph ph-image"></i></div>'}</td>
+            <td class="p-4">${esc(p.nome)}<div class="text-[10px] text-gray-500 font-mono">${esc(p.cod || '')}</div></td>
             <td class="p-4 ${critico ? 'text-red-400 font-bold' : 'text-white'}">${p.estoque}</td>
             <td class="p-4 text-gray-400">${p.min}</td>
             <td class="p-4"><span class="bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded text-xs border border-emerald-500/20">${p.sobressalentes} Kits</span></td>
@@ -1018,7 +1041,7 @@
       document.getElementById('tabela-usuarios').innerHTML = db.usuarios.map((u, i) => `
         <tr class="border-b border-slate-800/30 hover:bg-slate-800/50">
           <td class="p-4 font-medium text-white">${esc(u.login)}</td>
-          <td class="p-4 font-mono text-cyan-400 font-bold">${u.pin || '---'}</td>
+          <td class="p-4 font-mono text-cyan-400 font-bold">${podeVerPin(u) ? esc(u.pin || '---') : '••••'}</td>
           <td class="p-4 text-purple-400 uppercase text-xs font-bold">${u.role}</td>
           <td class="p-4 text-right flex justify-end gap-3">
             <button onclick="prepararEdicao('usuario', ${i})" class="text-cyan-400 hover:text-white transition" title="Editar"><i class="ph ph-pencil-simple text-lg"></i></button>
@@ -1070,8 +1093,8 @@
       tab.innerHTML = (Array.isArray(log.alteracoes) ? log.alteracoes : Object.values(log.alteracoes)).map(alt => `
         <tr class="border-b border-slate-800/50 hover:bg-slate-800/80 transition">
           <td class="p-3 font-bold text-white">${esc(alt.campo)}</td>
-          <td class="p-3 text-red-400 line-through decoration-red-900/50">${esc(alt.de)}</td>
-          <td class="p-3 text-emerald-400 font-bold">${esc(alt.para)}</td>
+          <td class="p-3 text-red-400 line-through decoration-red-900/50">${esc(mk(alt, alt.de))}</td>
+          <td class="p-3 text-emerald-400 font-bold">${esc(mk(alt, alt.para))}</td>
         </tr>
       `).join('');
       abrirModal('modal-diff');
@@ -1079,7 +1102,7 @@
 
     function prepararEdicao(tipo, index) {
       if(tipo === 'peca') {
-        const i = db.pecas[index]; document.getElementById('peca-edit-id').value = index; document.getElementById('peca-nome').value = i.nome; document.getElementById('peca-atual').value = i.estoque; document.getElementById('peca-min').value = i.min; document.getElementById('peca-sobre').value = i.sobressalentes; document.getElementById('peca-custo').value = i.custo ? i.custo : 0; document.getElementById('titulo-modal-peca').textContent = "Editar Peça"; abrirModal('modal-add-peca');
+        const i = db.pecas[index]; document.getElementById('peca-edit-id').value = index; document.getElementById('peca-nome').value = i.nome; document.getElementById('peca-atual').value = i.estoque; document.getElementById('peca-min').value = i.min; document.getElementById('peca-sobre').value = i.sobressalentes; document.getElementById('peca-custo').value = i.custo ? i.custo : 0; mostrarFoto(i.foto || ''); document.getElementById('titulo-modal-peca').textContent = "Editar Peça"; abrirModal('modal-add-peca');
       }
       if(tipo === 'guepar') {
         const i = db.guepar[index]; document.getElementById('guepar-edit-id').value = index; document.getElementById('guepar-nome').value = i.nome; document.getElementById('guepar-marca').value = i.marca; document.getElementById('guepar-qtd').value = i.estoque; document.getElementById('guepar-custo').value = i.custo ? i.custo : 0; document.getElementById('titulo-modal-guepar').textContent = "Editar Item Guepar"; abrirModal('modal-add-guepar');
@@ -1091,7 +1114,7 @@
         document.getElementById('manu-ultima').value = i.ultima; document.getElementById('manu-validade').value = i.validade; document.getElementById('titulo-modal-manu').textContent = "Editar Manutenção"; abrirModal('modal-add-manutencao');
       }
       if(tipo === 'usuario') {
-        const i = db.usuarios[index]; document.getElementById('user-edit-id').value = index; document.getElementById('user-login').value = i.login; document.getElementById('user-senha').value = i.senha; document.getElementById('user-pin').value = i.pin || ''; document.getElementById('user-role').value = i.role; abrirModal('modal-add-usuario');
+        const i = db.usuarios[index]; document.getElementById('user-edit-id').value = index; document.getElementById('user-login').value = i.login; document.getElementById('user-senha').value = i.senha; document.getElementById('user-pin').value = podeVerPin(i) ? (i.pin || '') : ''; document.getElementById('user-pin').placeholder = podeVerPin(i) ? 'Ex: 1234' : 'Oculto — deixe vazio para manter'; document.getElementById('user-role').value = i.role; abrirModal('modal-add-usuario');
       }
     }
 
@@ -1099,15 +1122,16 @@
     function fecharModal(id) { 
       document.getElementById(id).classList.add('hidden'); const form = document.querySelector(`#${id} form`);
       if(form) { form.reset(); const hidden = form.querySelector('input[type="hidden"]'); if(hidden) hidden.value = ''; }
-      if(id === 'modal-add-peca') document.getElementById('titulo-modal-peca').textContent = "Registar Peça";
+      if(id === 'modal-add-peca') { document.getElementById('titulo-modal-peca').textContent = "Registar Peça"; mostrarFoto(''); }
       if(id === 'modal-add-guepar') document.getElementById('titulo-modal-guepar').textContent = "Item Guepar";
       if(id === 'modal-add-manutencao') document.getElementById('titulo-modal-manu').textContent = "Ordem de Manutenção";
+      if(id === 'modal-add-usuario') document.getElementById('user-pin').placeholder = 'Ex: 1234';
     }
 
     document.getElementById('form-peca').addEventListener('submit', (e) => {
       e.preventDefault(); const id = document.getElementById('peca-edit-id').value;
-      const data = { nome: document.getElementById('peca-nome').value, estoque: parseInt(document.getElementById('peca-atual').value), min: parseInt(document.getElementById('peca-min').value), sobressalentes: parseInt(document.getElementById('peca-sobre').value) || 0, custo: parseFloat(document.getElementById('peca-custo').value) || 0 };
-      if(id === "") { db.pecas.push(data); auditarAcao('CRIACAO', `Criou peça: ${data.nome}`, snap(data)); } else { const dict = { nome: 'Nome', estoque: 'Estoque Atual', min: 'Stock Mínimo', sobressalentes: 'Reserva', custo: 'Custo (R$)' }; const diff = calcularDiff(db.pecas[id], data, dict); db.pecas[id] = data; auditarAcao('EDICAO', `Editou peça: ${data.nome}`, diff); }
+      const data = { nome: document.getElementById('peca-nome').value, estoque: parseInt(document.getElementById('peca-atual').value), min: parseInt(document.getElementById('peca-min').value), sobressalentes: parseInt(document.getElementById('peca-sobre').value) || 0, custo: parseFloat(document.getElementById('peca-custo').value) || 0, foto: fotoAtual, cod: (id !== '' && db.pecas[id] && db.pecas[id].cod) || proximoCod() };
+      if(id === "") { db.pecas.push(data); auditarAcao('CRIACAO', `Criou peça: ${data.nome}`, snap(data)); } else { const dict = { nome: 'Nome', estoque: 'Estoque Atual', min: 'Stock Mínimo', sobressalentes: 'Reserva', custo: 'Custo (R$)' }; const antes = db.pecas[id]; const diff = calcularDiff(semFoto(antes), semFoto(data), dict); if ((antes.foto || '') !== (data.foto || '')) diff.push({ campo: 'Foto', de: antes.foto ? 'Com foto' : 'Sem foto', para: data.foto ? 'Com foto' : 'Sem foto' }); db.pecas[id] = data; auditarAcao('EDICAO', `Editou peça: ${data.nome}`, diff); }
       salvarDB(); fecharModal('modal-add-peca');
     });
 
@@ -1138,7 +1162,7 @@
       const data = { 
         login: document.getElementById('user-login').value, 
         senha: document.getElementById('user-senha').value, 
-        pin: document.getElementById('user-pin').value || '',
+        pin: document.getElementById('user-pin').value || (id !== '' && db.usuarios[id] ? (db.usuarios[id].pin || '') : ''),
         role: document.getElementById('user-role').value 
       };
 
@@ -1306,6 +1330,7 @@
       let r = `📦 <b>${esc(it.nome)}</b>${it.marca ? ' (' + esc(it.marca) + ')' : ''}: <b>${it.estoque}</b> em estoque`;
       if (it.t === 'peca') r += `, mínimo ${it.min}, reserva ${it.sobressalentes || 0} kit(s)` + (it.estoque < it.min ? ' — ⚠️ <b>abaixo do mínimo</b>' : ' — ✅ ok');
       if (role === 'admin') r += `<br>💰 Custo unitário ${fmtMoeda.format(it.custo || 0)} · imobilizado ${fmtMoeda.format(tot * (it.custo || 0))}`;
+      if (fotoOk(it.foto)) r = `<img src="${it.foto}" class="w-24 h-24 object-cover rounded-xl mb-2 border border-slate-700" alt=""><br>` + r;
       const emp = db.emprestimos.filter(e => e.item === it.nome);
       if (emp.length) r += `<br>🛠️ Emprestado a: ${emp.map(e => esc(e.pessoa)).join(', ')}`;
       return r;
@@ -1336,6 +1361,12 @@
       const sauda = h < 5 ? 'Boa madrugada' : h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite';
       const s = IAstatus(), brl = v => fmtMoeda.format(v);
 
+      const podeEditar = role === 'admin' || role === 'visitante1';
+      if (IA.pend) {
+        const p = IA.pend; IA.pend = null;
+        if (/^(sim|confirm|pode|isso|ok|certo|claro|positivo|manda|salva|fecha)/.test(q)) return IAexecutar(p);
+        if (/^(nao|cancel|deixa|esquece|para)/.test(q)) return '👍 Cancelado, nada foi alterado.';
+      }
       if (/^(oi+|ola|opa|e ai|eae|fala|hey|hello|hi|salve|bom dia|boa tarde|boa noite|tudo bem|tudo bom|como vai|como voce esta)\b/.test(q)) {
         const eco = has(q, 'bom dia') ? 'Bom dia' : has(q, 'boa tarde') ? 'Boa tarde' : has(q, 'boa noite') ? 'Boa noite' : sauda;
         const bem = has(q, 'tudo bem', 'tudo bom', 'como vai', 'como voce esta') ? ' Estou ótimo, obrigado por perguntar! 😄' : '';
@@ -1344,9 +1375,28 @@
       if (has(q, 'obrigad', 'valeu', 'thanks', 'brigadao')) return pick(['Por nada! 😊 Qualquer coisa é só chamar.', 'Disponha! Estou aqui sempre que precisar. 🤖', 'Imagina, é um prazer ajudar!']);
       if (/^(tchau|ate mais|ate logo|flw|falou|xau)/.test(q)) return pick(['Até mais! Bom trabalho por aí. 👋', 'Tchau! Fico de olho em tudo por aqui. 🤖']);
       if (has(q, 'quem e voce', 'quem es tu', 'seu nome', 'quem te criou')) return 'Sou o <b>Guepar Copilot</b> 🤖, assistente do painel Guepar vs RobÔ. Consulto estoque, ferramentas e manutenções em tempo real, faço contas e busco respostas para perguntas gerais.';
-      if (has(q, 'o que voce faz', 'o que voce sabe', 'ajuda', 'help', 'comandos', 'o que posso perguntar')) return 'Posso:<br>• 👋 conversar (bom dia, boa tarde…)<br>• 📊 <b>resumo geral</b> e <b>o que comprar</b><br>• 📦 consultar itens ("quanto tem de graxa?")<br>• 🛠️ ver quem está com cada ferramenta<br>• 🔧 manutenções vencidas e próximas<br>• 💰 capital investido (admin)<br>• 🧮 contas ("15% de 2300")<br>• 📚 perguntas gerais ("quem foi Santos Dumont?")<br>• 🎲 piadas, curiosidades, cara ou coroa';
+      if (has(q, 'o que voce faz', 'o que voce sabe', 'ajuda', 'help', 'comandos', 'o que posso perguntar')) return 'Posso:<br>• 👋 conversar (bom dia, boa tarde…)<br>• 📊 <b>resumo geral</b> e <b>o que comprar</b><br>• 📦 consultar itens ("quanto tem de graxa?")<br>• 🛠️ ver quem está com cada ferramenta<br>• 🔧 manutenções vencidas e próximas<br>• 💰 capital investido (admin)<br>• 🧮 contas ("15% de 2300")<br>• 📚 perguntas gerais ("quem foi Santos Dumont?")<br>• 🎤 <b>voz</b>: toque no microfone e diga "adicionar peça servo motor, quantidade 10, mínimo 3" ou "retirei 2 de bateria"<br>• 🎲 piadas, curiosidades, cara ou coroa';
       if (has(q, 'que horas', 'horas sao')) return `🕒 Agora são <b>${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</b>.`;
       if (has(q, 'que dia', 'data de hoje', 'dia da semana', 'qual a data')) return `📅 Hoje é <b>${new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</b>.`;
+      const qv = vozNum(q), neg = /^(retirei|retirar|tirar|tire|baixa|baixar|usei|usar|gastei)/.test(qv);
+      const mv = qv.match(/^(?:adicion\w*|some|soma|acrescent\w*|repor|repon\w*|entrada de|chegou|chegaram|retirei|retirar|tirar|tire|baixa|baixar|usei|usar|gastei)\s+(\d+)\s+(?:unidades?\s+|pecas?\s+)?(?:de\s+|da\s+|do\s+|na\s+|no\s+|ao\s+|a\s+)?(.+)$/);
+      if (mv) {
+        if (!podeEditar) return '🔒 Seu acesso não permite alterar o estoque.';
+        const it = achaItem(mv[2]), pc = it && db.pecas.find(p => p.nome === it.nome);
+        if (!pc) return `Não encontrei nenhuma peça parecida com "<b>${esc(mv[2])}</b>". Diga o nome como está cadastrado.`;
+        const qtd = parseInt(mv[1]) * (neg ? -1 : 1);
+        if (pc.estoque + qtd < 0) return `⚠️ <b>${esc(pc.nome)}</b> só tem ${pc.estoque} em estoque, não dá para retirar ${-qtd}.`;
+        IA.pend = { tipo: 'estoque', nome: pc.nome, qtd };
+        return `${qtd > 0 ? '➕' : '➖'} ${Math.abs(qtd)} un. em <b>${esc(pc.nome)}</b>: de ${pc.estoque} para <b>${pc.estoque + qtd}</b>.<br>Confirma? (diga <b>sim</b> ou <b>não</b>)`;
+      }
+      if (/^(adicion\w*|cadastr\w*|registr\w*|cri[ae]\w*|inclu\w*)\s+(uma\s+|um\s+)?(nova\s+|novo\s+)?(peca|item)\b/.test(q)) {
+        if (!podeEditar) return '🔒 Seu acesso não permite cadastrar peças.';
+        const d = vozParse(t);
+        if (!d.nome) return 'Qual o nome da peça? Ex.: <i>"adicionar peça servo motor, quantidade 10, mínimo 3"</i>';
+        if (db.pecas.some(p => norm(p.nome) === norm(d.nome))) return `Já existe uma peça chamada <b>${esc(d.nome)}</b>. Para somar, diga "adicionar 5 de ${esc(d.nome)}".`;
+        IA.pend = { tipo: 'peca', d };
+        return `🆕 Cadastrar peça:<br>• Nome: <b>${esc(d.nome)}</b><br>• Estoque: ${d.estoque ?? 0} · Mínimo: ${d.min ?? 0} · Reserva: ${d.sobre ?? 0}${d.custo != null ? ' · Custo: ' + brl(d.custo) : ''}<br>Confirma? (diga <b>sim</b> ou <b>não</b>)`;
+      }
       const c = calc(q); if (c !== null) return `🧮 Resultado: <b>${c.toLocaleString('pt-BR')}</b>`;
       if (has(q, 'piada', 'engracad', 'me faz rir')) return '😄 ' + pick(PIADAS);
       if (has(q, 'curiosidade', 'fato curioso', 'me surpreenda')) return '💡 ' + pick(FATOS);
@@ -1404,8 +1454,9 @@
       return pick(['Hmm, essa eu não consegui responder agora 🤔 Sem internet eu só sei do seu painel. Tente: <b>resumo geral</b>, <b>o que comprar?</b> ou <b>quanto tem de [item]?</b>', 'Não achei uma boa resposta para isso. Reformule a pergunta ou digite <b>ajuda</b> para ver tudo o que eu faço. 🤖']);
     }
 
-    async function adicionarMensagemIA(t) {
+    async function adicionarMensagemIA(t, voz) {
       if (!t || !t.trim()) return;
+      IA.voz = !!voz;
       const box = document.getElementById('chat-mensagens'); document.getElementById('chat-input').value = '';
       const add = (h, u) => { box.insertAdjacentHTML('beforeend', u ? `<div class="flex gap-4 chat-mensagem flex-row-reverse mb-4"><div class="w-10 h-10 rounded-xl bg-slate-700 flex items-center justify-center border border-slate-600 shrink-0"><i class="ph ph-user text-white"></i></div><div class="bg-cyan-600 text-white p-4 rounded-2xl rounded-tr-none text-sm">${h}</div></div>` : `<div class="flex gap-4 chat-mensagem mb-4"><div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center shrink-0"><i class="ph ph-robot text-white text-xl"></i></div><div class="bg-slate-800/80 border border-slate-700 p-4 rounded-2xl rounded-tl-none text-sm text-gray-200 leading-relaxed">${h}</div></div>`); box.scrollTop = box.scrollHeight; };
       add(esc(t), true);
@@ -1415,6 +1466,8 @@
       const d = document.getElementById('ia-digitando'); if (d) d.remove();
       IA.hist.push({ u: t, ia: r.replace(/<[^>]+>/g, '').slice(0, 300) });
       add(r, false);
+      if (IA.voz && 'speechSynthesis' in window) { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(r.replace(/<[^>]+>/g, ' ').replace(/&[a-z#0-9]+;/g, ' ').replace(/[\u{1F300}-\u{1FAFF}\u2600-\u27BF]/gu, '')); u.lang = 'pt-BR'; speechSynthesis.speak(u); }
+      IA.voz = false;
     }
 
     // --- LOGIN POR PIN (teclado na tela, entra sozinho ao digitar o 4º dígito) ---
@@ -1476,6 +1529,100 @@
       if (ok && localStorage.getItem('guepar_bio')) document.getElementById('btn-bio').classList.remove('hidden');
       if (ok) { const b = document.getElementById('btn-ativar-bio'); b.classList.remove('hidden'); b.classList.add('flex'); }
     }));
+
+    // --- PRIVACIDADE DE PIN: cada um vê só o seu; o admin principal vê todos ---
+    const SUPER_ADMINS = ['fellipe.f@grupodime.com.br'];   // para incluir outro login, adicione aqui
+    const logado = () => (localStorage.getItem('guepar_email') || '').toLowerCase();
+    const ehSuper = () => SUPER_ADMINS.includes(logado()) && localStorage.getItem('guepar_role') === 'admin';
+    const podeVerPin = u => ehSuper() || String(u.login || '').toLowerCase() === logado();
+    const mk = (alt, v) => (/senha|palavra/i.test(alt.campo) || (/pin/i.test(alt.campo) && !ehSuper())) ? '••••' : v;
+    function meuPin() {
+      const u = db.usuarios.find(x => String(x.login).toLowerCase() === logado()), b = document.getElementById('btn-meu-pin'); if (!u) return;
+      const abrir = b.dataset.v !== '1'; b.dataset.v = abrir ? '1' : '0';
+      b.textContent = abrir ? '🔑 PIN: ' + (u.pin || 'não definido') : '🔑 Ver meu PIN';
+      if (abrir) setTimeout(() => { b.dataset.v = '0'; b.textContent = '🔑 Ver meu PIN'; }, 8000);
+    }
+
+    // --- FOTO DA PEÇA (câmera ou galeria, comprimida para caber no aparelho e na nuvem) ---
+    let fotoAtual = '';
+    const fotoOk = f => typeof f === 'string' && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+\/=]+$/.test(f);
+    const semFoto = o => { const r = { ...(o || {}) }; delete r.foto; return r; };
+    function proximoCod() { const n = Math.max(0, ...db.pecas.map(p => parseInt(String(p.cod || '').replace(/\D/g, '')) || 0)) + 1; return 'PC-' + String(n).padStart(3, '0'); }
+    function mostrarFoto(f) {
+      fotoAtual = f || '';
+      const im = document.getElementById('peca-foto-prev'), vz = document.getElementById('peca-foto-vazio'), ok = fotoOk(fotoAtual);
+      if (ok) im.src = fotoAtual; else im.removeAttribute('src');
+      im.classList.toggle('hidden', !ok); vz.classList.toggle('hidden', ok);
+      document.getElementById('peca-foto-rm').classList.toggle('hidden', !ok);
+    }
+    function lerFoto(inp) {
+      const f = inp.files && inp.files[0]; inp.value = ''; if (!f) return;
+      const img = new Image(), url = URL.createObjectURL(f);
+      img.onload = () => {
+        const k = Math.min(1, 640 / Math.max(img.width, img.height)), c = document.createElement('canvas');
+        c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
+        mostrarFoto(c.toDataURL('image/jpeg', 0.6));
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); alert('Não consegui abrir essa imagem.'); };
+      img.src = url;
+    }
+    function verFoto(i) {
+      const p = db.pecas[i]; if (!p || !fotoOk(p.foto)) return;
+      const d = document.createElement('div'); d.className = 'fixed inset-0 bg-black/90 z-[100] flex flex-col items-center justify-center p-4 cursor-pointer'; d.onclick = () => d.remove();
+      const im = document.createElement('img'); im.src = p.foto; im.className = 'max-h-[80vh] max-w-full rounded-2xl';
+      const t = document.createElement('p'); t.className = 'text-white font-bold mt-3'; t.textContent = (p.cod ? p.cod + ' · ' : '') + p.nome;
+      d.append(im, t); document.body.appendChild(d);
+    }
+
+    // --- COMANDO DE VOZ (reconhecimento do navegador, pt-BR) ---
+    const NUMP = { zero: 0, um: 1, uma: 1, dois: 2, duas: 2, tres: 3, quatro: 4, cinco: 5, seis: 6, sete: 7, oito: 8, nove: 9, dez: 10, onze: 11, doze: 12, treze: 13, catorze: 14, quinze: 15, dezesseis: 16, dezessete: 17, dezoito: 18, dezenove: 19, vinte: 20, trinta: 30, quarenta: 40, cinquenta: 50, cem: 100 };
+    const vozNum = s => s.replace(new RegExp('\\b(' + Object.keys(NUMP).join('|') + ')\\b', 'g'), m => NUMP[m]);
+    function vozParse(t) {
+      const q = vozNum(norm(t).replace(/(\d)\s*virgula\s*(\d)/g, '$1.$2').replace(/(\d),(\d)/g, '$1.$2'));
+      const pega = re => { const m = q.match(re); return m ? parseFloat(m[1]) : undefined; };
+      const r = {
+        estoque: pega(/(?:quantidade|estoque|atual|unidades|tenho|temos)\s*(?:de\s*|e\s*)?(\d+(?:\.\d+)?)/),
+        min: pega(/minim[oa]\s*(?:de\s*|e\s*)?(\d+(?:\.\d+)?)/),
+        sobre: pega(/(?:reserva|sobressalentes?|kits?)\s*(?:de\s*|e\s*)?(\d+(?:\.\d+)?)/),
+        custo: pega(/(?:custo|preco|valor)\s*(?:de\s*|e\s*)?(?:r\s+)?(\d+(?:\.\d+)?)/)
+      };
+      let n = t.replace(/[,.]/g, ' ').replace(/^\s*(adicionar|adicione|cadastrar|cadastre|registrar|registre|criar|crie|incluir|inclua)\s+(uma\s+|um\s+)?(nova\s+|novo\s+)?(pe[çc]a|item)?\s*/i, '').replace(/^(chamad[ao]|de nome|nome)\s+/i, '');
+      n = n.split(/\b(quantidade|estoque|atual|unidades|m[ií]nimo|reserva|sobressalentes?|kits?|custo|pre[çc]o|valor|tenho|temos)\b/i)[0].trim();
+      r.nome = n ? n.charAt(0).toUpperCase() + n.slice(1) : undefined;
+      return r;
+    }
+    let vozRec = null;
+    function ouvir(btn, parcial, final) {
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SR) { alert('Seu navegador não suporta comando de voz. Use o Chrome (Android/PC) ou o Safari (iPhone), abrindo o app por HTTPS.'); return; }
+      if (vozRec) { vozRec.stop(); return; }
+      const r = new SR(); vozRec = r; r.lang = 'pt-BR'; r.interimResults = true; r.continuous = false;
+      btn.classList.add('animate-pulse', 'ring-2', 'ring-red-500');
+      r.onresult = e => { let t = ''; for (const x of e.results) t += x[0].transcript; t = t.trim(); if (e.results[e.results.length - 1].isFinal) final(t); else parcial(t); };
+      r.onerror = e => { const m = { 'not-allowed': 'Permita o uso do microfone no navegador.', 'service-not-allowed': 'Permita o uso do microfone no navegador.', 'no-speech': 'Não ouvi nada, tente de novo.', 'network': 'Sem internet para reconhecer a voz.' }[e.error]; if (m) alert(m); };
+      r.onend = () => { vozRec = null; btn.classList.remove('animate-pulse', 'ring-2', 'ring-red-500'); };
+      r.start();
+    }
+    function micChat() { const inp = document.getElementById('chat-input'); ouvir(document.getElementById('btn-mic'), t => { inp.value = t; }, t => { inp.value = ''; adicionarMensagemIA(t, true); }); }
+    function ditarPeca() {
+      const msg = document.getElementById('voz-peca-msg'), set = (id, v) => { if (v !== undefined) document.getElementById(id).value = v; };
+      ouvir(document.getElementById('btn-voz-peca'), t => { msg.textContent = '🎤 ' + t; }, t => {
+        const d = vozParse(t); set('peca-nome', d.nome); set('peca-atual', d.estoque); set('peca-min', d.min); set('peca-sobre', d.sobre); set('peca-custo', d.custo);
+        msg.textContent = '✅ Entendi: ' + t + ' — confira os campos e toque em Salvar.';
+      });
+    }
+    function IAexecutar(p) {
+      if (p.tipo === 'peca') {
+        const d = { nome: p.d.nome, estoque: p.d.estoque || 0, min: p.d.min || 0, sobressalentes: p.d.sobre || 0, custo: p.d.custo || 0, foto: '', cod: proximoCod() };
+        db.pecas.push(d); auditarAcao('CRIACAO', `Criou peça: ${d.nome} (por voz)`, snap(d)); salvarDB(); renderizarTabelas();
+        return `✅ Peça <b>${esc(d.nome)}</b> cadastrada com o código <b>${d.cod}</b>. Depois abra a edição para tirar a foto. 📷`;
+      }
+      const pc = db.pecas.find(x => x.nome === p.nome); if (!pc) return 'Essa peça não existe mais.';
+      const a = pc.estoque; pc.estoque += p.qtd;
+      auditarAcao('EDICAO', `Estoque de ${pc.nome} alterado por voz`, [{ campo: 'Estoque Atual', de: String(a), para: String(pc.estoque) }]); salvarDB(); renderizarTabelas();
+      return `✅ Feito! <b>${esc(pc.nome)}</b> agora tem <b>${pc.estoque}</b> em estoque.`;
+    }
 
     // --- REGISTO DO PWA ---
     if ('serviceWorker' in navigator) {
