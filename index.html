@@ -55,11 +55,11 @@
     <form id="form-login" class="space-y-4">
       <div>
         <label class="block text-xs uppercase font-bold text-gray-400 mb-1 text-translate" data-pt="Acesso (Nome ou E-mail)" data-en="Access (Name or Email)">Acesso (Nome ou E-mail)</label>
-        <input type="text" id="login-id" value="fellipe.f@grupodime.com.br" required class="w-full bg-slate-800/80 border border-slate-700 focus:border-cyan-500 outline-none rounded-xl px-4 py-3 text-white transition" placeholder="Digite o seu utilizador">
+        <input type="text" id="login-id" required autocomplete="username" class="w-full bg-slate-800/80 border border-slate-700 focus:border-cyan-500 outline-none rounded-xl px-4 py-3 text-white transition" placeholder="Digite o seu utilizador">
       </div>
       <div>
         <label class="block text-xs uppercase font-bold text-gray-400 mb-1 text-translate" data-pt="Palavra-passe" data-en="Password">Palavra-passe</label>
-        <input type="password" id="login-senha" value="123456" required class="w-full bg-slate-800/80 border border-slate-700 focus:border-cyan-500 outline-none rounded-xl px-4 py-3 text-white transition">
+        <input type="password" id="login-senha" required autocomplete="current-password" class="w-full bg-slate-800/80 border border-slate-700 focus:border-cyan-500 outline-none rounded-xl px-4 py-3 text-white transition">
       </div>
       <button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-cyan-900/50 transition">
         <span class="text-translate" data-pt="Aceder ao Painel" data-en="Login to Dashboard">Aceder ao Painel</span> <i class="ph ph-arrow-right text-xl"></i>
@@ -226,30 +226,6 @@
             <div class="bento-card col-span-1 md:col-span-4 lg:col-span-6 p-6">
               <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2"><i class="ph ph-activity text-cyan-400"></i> <span class="text-translate" data-pt="Ciclo de Manutenção" data-en="Maintenance Cycle">Ciclo de Manutenção</span></h3>
               <div class="relative h-48 w-full flex justify-center"><canvas id="chartDoughnut"></canvas></div>
-            </div>
-          <div class="bento-card col-span-1 md:col-span-4 lg:col-span-7 p-6">
-              <h3 class="text-sm font-bold text-white mb-1 flex items-center gap-2"><i class="ph ph-lightning text-amber-400"></i> <span class="text-translate" data-pt="Central de Ações" data-en="Action Center">Central de Ações</span></h3>
-              <p class="text-xs text-gray-500 mb-4 text-translate" data-pt="O que resolver agora, da maior para a menor urgência" data-en="What to fix now, most urgent first">O que resolver agora, da maior para a menor urgência</p>
-              <div id="ins-acoes" class="space-y-2"></div>
-            </div>
-            <div class="bento-card col-span-1 md:col-span-4 lg:col-span-5 p-6">
-              <h3 class="text-sm font-bold text-white mb-1 flex items-center gap-2"><i class="ph ph-calendar-check text-cyan-400"></i> <span class="text-translate" data-pt="Próximas Manutenções" data-en="Upcoming Maintenance">Próximas Manutenções</span></h3>
-              <p class="text-xs text-gray-500 mb-4 text-translate" data-pt="A barra mostra os dias restantes (base de 90 dias)" data-en="Bar shows days left (90-day scale)">A barra mostra os dias restantes (base de 90 dias)</p>
-              <div id="ins-manut" class="space-y-3"></div>
-            </div>
-            <div class="bento-card col-span-1 md:col-span-4 lg:col-span-6 p-6">
-              <h3 class="text-sm font-bold text-white mb-1 flex items-center gap-2"><i class="ph ph-shield-check text-emerald-400"></i> <span class="text-translate" data-pt="Cobertura das Peças" data-en="Parts Coverage">Cobertura das Peças</span></h3>
-              <p class="text-xs text-gray-500 mb-4 text-translate" data-pt="Estoque atual comparado ao mínimo (a linha marca 100%)" data-en="Current stock vs minimum (line marks 100%)">Estoque atual comparado ao mínimo (a linha marca 100%)</p>
-              <div id="ins-cobertura" class="space-y-3"></div>
-            </div>
-            <div class="bento-card col-span-1 md:col-span-4 lg:col-span-6 p-6 req-admin hidden">
-              <h3 class="text-sm font-bold text-white mb-1 flex items-center gap-2"><i class="ph ph-coins text-purple-400"></i> <span class="text-translate" data-pt="Onde Está o Dinheiro" data-en="Where the Money Is">Onde Está o Dinheiro</span></h3>
-              <p class="text-xs text-gray-500 mb-4 text-translate" data-pt="Peças com maior valor parado (estoque + sobressalentes)" data-en="Parts with most capital tied up">Peças com maior valor parado (estoque + sobressalentes)</p>
-              <div id="ins-capital" class="space-y-3"></div>
-            </div>
-            <div class="bento-card col-span-1 md:col-span-4 lg:col-span-12 p-6">
-              <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2"><i class="ph ph-clock-counter-clockwise text-cyan-400"></i> <span class="text-translate" data-pt="Atividade Recente" data-en="Recent Activity">Atividade Recente</span></h3>
-              <div id="ins-atividade" class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2"></div>
             </div>
           </div>
         </section>
@@ -449,11 +425,12 @@
             <div id="chat-mensagens" class="flex-1 p-4 md:p-6 overflow-y-auto space-y-6">
               <div class="flex gap-4 chat-mensagem">
                 <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center shrink-0"><i class="ph ph-robot text-white text-xl"></i></div>
-                <div class="bg-slate-800/80 border border-slate-700 p-4 rounded-2xl rounded-tl-none text-sm text-gray-200 text-translate" data-pt="A sua Gestão Inteligente 5.0 está ativa. Pergunte-me sobre stock crítico, alertas de atraso, ou resumo financeiro de peças." data-en="Your Smart Management 5.0 is active. Ask me about critical stock, delay alerts, or financial summary.">
-                  A sua Gestão Inteligente 5.0 está ativa. Pergunte-me sobre stock crítico, alertas de atraso, ou resumo financeiro de peças.
+                <div class="bg-slate-800/80 border border-slate-700 p-4 rounded-2xl rounded-tl-none text-sm text-gray-200 text-translate" data-pt="Olá! Sou o Guepar Copilot 🤖 Diga bom dia, peça um resumo, pergunte sobre estoque, ferramentas e manutenções, faça uma conta ou me pergunte qualquer coisa!" data-en="Hi! I am Guepar Copilot 🤖 Say hello, ask for a summary, check stock, tools and maintenance, or ask me anything!">
+                  Olá! Sou o Guepar Copilot 🤖 Diga bom dia, peça um resumo, pergunte sobre estoque, ferramentas e manutenções, faça uma conta ou me pergunte qualquer coisa!
                 </div>
               </div>
             </div>
+            <div class="px-4 pt-3 flex gap-2 overflow-x-auto"><button type="button" onclick="adicionarMensagemIA('Bom dia')" class="shrink-0 text-xs bg-slate-800 hover:bg-purple-600/30 border border-slate-700 text-gray-300 px-3 py-1.5 rounded-full cursor-pointer transition">Bom dia</button><button type="button" onclick="adicionarMensagemIA('Resumo geral')" class="shrink-0 text-xs bg-slate-800 hover:bg-purple-600/30 border border-slate-700 text-gray-300 px-3 py-1.5 rounded-full cursor-pointer transition">Resumo geral</button><button type="button" onclick="adicionarMensagemIA('O que comprar?')" class="shrink-0 text-xs bg-slate-800 hover:bg-purple-600/30 border border-slate-700 text-gray-300 px-3 py-1.5 rounded-full cursor-pointer transition">O que comprar?</button><button type="button" onclick="adicionarMensagemIA('Manutenções')" class="shrink-0 text-xs bg-slate-800 hover:bg-purple-600/30 border border-slate-700 text-gray-300 px-3 py-1.5 rounded-full cursor-pointer transition">Manutenções</button><button type="button" onclick="adicionarMensagemIA('Quem está com ferramentas?')" class="shrink-0 text-xs bg-slate-800 hover:bg-purple-600/30 border border-slate-700 text-gray-300 px-3 py-1.5 rounded-full cursor-pointer transition">Quem está com ferramentas?</button><button type="button" onclick="adicionarMensagemIA('Me conte uma piada')" class="shrink-0 text-xs bg-slate-800 hover:bg-purple-600/30 border border-slate-700 text-gray-300 px-3 py-1.5 rounded-full cursor-pointer transition">Me conte uma piada</button></div>
             <form onsubmit="adicionarMensagemIA(document.getElementById('chat-input').value); return false;" class="p-4 bg-slate-900/80 border-t border-slate-700/50 flex gap-2">
               <input type="text" id="chat-input" placeholder="Escreva a sua pergunta..." autocomplete="off" class="flex-1 bg-slate-950 border border-slate-800 focus:border-purple-500 rounded-xl px-4 text-white outline-none">
               <button type="submit" class="px-6 rounded-xl bg-gradient-to-r from-cyan-600 to-purple-600 text-white font-bold cursor-pointer hover:shadow-lg hover:shadow-purple-500/30 transition"><i class="ph ph-paper-plane-right text-xl"></i></button>
@@ -895,11 +872,12 @@
       let html = `<html><head><title>${titulos[tipo]}</title><style>body { font-family: sans-serif; padding: 20px; } table { width: 100%; border-collapse: collapse; margin-top: 15px; } th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }</style></head><body><h1>${titulos[tipo]}</h1>`;
       
       if (tipo === 'pecas' || tipo === 'tudo') {
-        html += `<h2>Peças</h2><table><tr><th>Peça</th><th>Estoque</th><th>Mínimo</th></tr>` + db.pecas.map(p => `<tr><td>${p.nome}</td><td>${p.estoque}</td><td>${p.min}</td></tr>`).join('') + `</table>`;
+        html += `<h2>Peças</h2><table><tr><th>Peça</th><th>Estoque</th><th>Mínimo</th></tr>` + db.pecas.map(p => `<tr><td>${esc(p.nome)}</td><td>${p.estoque}</td><td>${p.min}</td></tr>`).join('') + `</table>`;
       }
       if (tipo === 'guepar' || tipo === 'tudo') {
-        html += `<h2>Guepar</h2><table><tr><th>Item</th><th>Qtd</th></tr>` + db.guepar.map(g => `<tr><td>${g.nome}</td><td>${g.estoque}</td></tr>`).join('') + `</table>`;
+        html += `<h2>Guepar</h2><table><tr><th>Item</th><th>Qtd</th></tr>` + db.guepar.map(g => `<tr><td>${esc(g.nome)}</td><td>${g.estoque}</td></tr>`).join('') + `</table>`;
       }
+      if (tipo === 'manutencoes' || tipo === 'tudo') html += `<h2>Manutenções</h2><table><tr><th>Equipamento</th><th>Tipo</th><th>Última</th><th>Validade</th></tr>` + db.manutencoes.map(m => `<tr><td>${esc(m.equip)}</td><td>${esc(m.tipo)}</td><td>${formatarDataBR(m.ultima)}</td><td>${formatarDataBR(m.validade)}</td></tr>`).join('') + `</table>`;
       html += `<script>window.print();<\/script></body></html>`;
       win.document.write(html); win.document.close();
     }
@@ -956,7 +934,7 @@
         const critico = p.estoque < p.min;
         return `
           <tr class="border-b border-slate-800/30 hover:bg-slate-800/50">
-            <td class="p-4">${p.nome}</td>
+            <td class="p-4">${esc(p.nome)}</td>
             <td class="p-4 ${critico ? 'text-red-400 font-bold' : 'text-white'}">${p.estoque}</td>
             <td class="p-4 text-gray-400">${p.min}</td>
             <td class="p-4"><span class="bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded text-xs border border-emerald-500/20">${p.sobressalentes} Kits</span></td>
@@ -972,8 +950,8 @@
 
       document.getElementById('tabela-guepar').innerHTML = db.guepar.map((g, i) => `
         <tr class="border-b border-slate-800/30 hover:bg-slate-800/50">
-          <td class="p-4 font-medium">${g.nome}</td>
-          <td class="p-4 text-gray-400">${g.marca}</td>
+          <td class="p-4 font-medium">${esc(g.nome)}</td>
+          <td class="p-4 text-gray-400">${esc(g.marca)}</td>
           <td class="p-4 text-cyan-400 font-bold">${g.estoque}</td>
           <td class="p-4 text-right req-vis1 ${isVis1 ? '' : 'hidden'}">
             <div class="flex justify-end gap-3">
@@ -991,8 +969,8 @@
         else if (horasPassadas > 24) { corLinha = 'text-amber-400 font-bold'; alerta = '<i class="ph ph-clock ml-1" title="Atenção"></i>'; }
         return `
           <tr class="border-b border-slate-800/30 hover:bg-slate-800/50">
-            <td class="p-4 font-bold ${corLinha} flex items-center"><i class="ph ph-user mr-2 text-amber-500"></i> ${e.pessoa} ${alerta}</td>
-            <td class="p-4 text-gray-300">${e.item}</td>
+            <td class="p-4 font-bold ${corLinha} flex items-center"><i class="ph ph-user mr-2 text-amber-500"></i> ${esc(e.pessoa)} ${alerta}</td>
+            <td class="p-4 text-gray-300">${esc(e.item)}</td>
             <td class="p-4 text-right req-vis1 ${isVis1 ? '' : 'hidden'}">
               <button onclick="devolverEmprestimo(${i})" class="text-xs bg-slate-800 px-3 py-1 rounded text-white border border-slate-700 cursor-pointer hover:bg-slate-700 transition text-translate" data-pt="Devolver" data-en="Return">Devolver</button>
             </td>
@@ -1006,8 +984,8 @@
 
       document.getElementById('tabela-manutencoes').innerHTML = db.manutencoes.map((m, i) => `
         <tr class="border-b border-slate-800/30 hover:bg-slate-800/50">
-          <td class="p-4 font-medium text-white">${m.equip}</td>
-          <td class="p-4"><span class="bg-slate-800 px-2 py-1 border border-slate-700 text-cyan-300 text-xs rounded">${m.tipo}</span></td>
+          <td class="p-4 font-medium text-white">${esc(m.equip)}</td>
+          <td class="p-4"><span class="bg-slate-800 px-2 py-1 border border-slate-700 text-cyan-300 text-xs rounded">${esc(m.tipo)}</span></td>
           <td class="p-4 text-gray-400">${formatarDataBR(m.ultima)}</td>
           <td class="p-4 text-gray-300">${formatarDataBR(m.validade)}</td>
           <td class="p-4 text-right req-vis1 ${isVis1 ? '' : 'hidden'}">
@@ -1021,7 +999,7 @@
         
       document.getElementById('tabela-usuarios').innerHTML = db.usuarios.map((u, i) => `
         <tr class="border-b border-slate-800/30 hover:bg-slate-800/50">
-          <td class="p-4 font-medium text-white">${u.login}</td>
+          <td class="p-4 font-medium text-white">${esc(u.login)}</td>
           <td class="p-4 font-mono text-cyan-400 font-bold">${u.pin || '---'}</td>
           <td class="p-4 text-purple-400 uppercase text-xs font-bold">${u.role}</td>
           <td class="p-4 text-right flex justify-end gap-3">
@@ -1051,10 +1029,10 @@
           return `
             <tr class="border-b border-slate-800/30 hover:bg-slate-800/50">
               <td class="p-4 text-gray-400 text-xs">${d.toLocaleDateString('pt-BR')} ${d.toLocaleTimeString('pt-BR')}</td>
-              <td class="p-4 font-medium">${l.utilizador}</td>
+              <td class="p-4 font-medium">${esc(l.utilizador)}</td>
               <td class="p-4 font-bold ${corAcao} text-xs">${l.acao}</td>
               <td class="p-4 text-gray-300 text-sm flex items-center justify-between">
-                <span class="truncate">${l.detalhes}</span>
+                <span class="truncate">${esc(l.detalhes)}</span>
                 <div class="flex items-center">${btnDetalhes}${btnLixeira}</div>
               </td>
             </tr>
@@ -1065,7 +1043,7 @@
 
     function atualizarListaEmprestimo() {
       const s = document.getElementById('emp-item-select');
-      s.innerHTML = `<option value="">Selecionar...</option>` + db.guepar.map(g => `<option value="${g.nome}">${g.nome} (${g.estoque})</option>`).join('') + `<option value="Outro">Outro...</option>`;
+      s.innerHTML = `<option value="">Selecionar...</option>` + db.guepar.map(g => `<option value="${esc(g.nome)}">${esc(g.nome)} (${g.estoque})</option>`).join('') + `<option value="Outro">Outro...</option>`;
     }
 
     function abrirModalDiff(index) {
@@ -1073,9 +1051,9 @@
       if (!log || !log.alteracoes) return;
       tab.innerHTML = log.alteracoes.map(alt => `
         <tr class="border-b border-slate-800/50 hover:bg-slate-800/80 transition">
-          <td class="p-3 font-bold text-white">${alt.campo}</td>
-          <td class="p-3 text-red-400 line-through decoration-red-900/50">${alt.de}</td>
-          <td class="p-3 text-emerald-400 font-bold">${alt.para}</td>
+          <td class="p-3 font-bold text-white">${esc(alt.campo)}</td>
+          <td class="p-3 text-red-400 line-through decoration-red-900/50">${esc(alt.de)}</td>
+          <td class="p-3 text-emerald-400 font-bold">${esc(alt.para)}</td>
         </tr>
       `).join('');
       abrirModal('modal-diff');
@@ -1142,7 +1120,7 @@
       const data = { 
         login: document.getElementById('user-login').value, 
         senha: document.getElementById('user-senha').value, 
-        pin: document.getElementById('user-pin').value || '1234',
+        pin: document.getElementById('user-pin').value || '',
         role: document.getElementById('user-role').value 
       };
 
@@ -1191,35 +1169,6 @@
         type: 'doughnut', data: { labels: ['OK', 'Aviso', 'Atraso'], datasets: [{ data: [emDia, atencao, vencida], backgroundColor: ['#10b981', '#f59e0b', '#ef4444'], borderWidth: 0 }] },
         options: { maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'bottom' } } }
       });
-      renderizarInsights();
-    }
-    function renderizarInsights() {
-      const $ = id => document.getElementById(id); if (!$('ins-acoes')) return;
-      const hoje = new Date();
-      const esc = v => String(v == null ? '' : v).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-      const moeda = v => (typeof fmtMoeda !== 'undefined' ? fmtMoeda.format(v) : v.toFixed(2));
-      const cor = n => n >= 3 ? ['red', 'Crítico'] : n === 2 ? ['amber', 'Atenção'] : ['emerald', 'OK'];
-      const acoes = []; let crit = 0, venc = 0, avis = 0, atr = 0;
-      db.pecas.forEach(p => { if (p.estoque < p.min) { crit++; acoes.push({ n: 3, ic: 'ph-package', t: 'Repor ' + p.nome, d: 'Estoque ' + p.estoque + ' de mínimo ' + p.min + ' (faltam ' + (p.min - p.estoque) + ')' }); } });
-      const manut = db.manutencoes.map(m => ({ m, dias: Math.ceil((new Date(m.validade) - hoje) / 864e5) })).filter(x => !isNaN(x.dias)).sort((a, b) => a.dias - b.dias);
-      manut.forEach(x => {
-        if (x.dias < 0) { venc++; acoes.push({ n: 3, ic: 'ph-wrench', t: x.m.equip + ': ' + x.m.tipo, d: 'Vencida há ' + (-x.dias) + ' dia(s)' }); }
-        else if (x.dias <= 15) { avis++; acoes.push({ n: 2, ic: 'ph-wrench', t: x.m.equip + ': ' + x.m.tipo, d: 'Vence em ' + x.dias + ' dia(s)' }); }
-      });
-      db.emprestimos.forEach(e => { const h = (hoje.getTime() - (e.dataHora || 0)) / 36e5; if (h > 24) { atr++; acoes.push({ n: 2, ic: 'ph-hand-coins', t: e.item + ' com ' + e.pessoa, d: 'Fora há ' + Math.floor(h) + ' h' }); } });
-      acoes.sort((a, b) => b.n - a.n);
-      $('ins-acoes').innerHTML = acoes.length ? acoes.slice(0, 6).map(a => { const c = cor(a.n)[0]; return '<div class="flex items-center gap-3 p-3 rounded-xl bg-' + c + '-500/10 border border-' + c + '-500/20"><i class="ph ' + a.ic + ' text-xl text-' + c + '-400"></i><div class="min-w-0 flex-1"><p class="text-sm font-bold text-white truncate">' + esc(a.t) + '</p><p class="text-xs text-gray-400">' + esc(a.d) + '</p></div><span class="text-[11px] font-bold text-' + c + '-400">' + cor(a.n)[1] + '</span></div>'; }).join('') + (acoes.length > 6 ? '<p class="text-xs text-gray-500 pt-1">e mais ' + (acoes.length - 6) + ' pendência(s)</p>' : '')
-        : '<div class="p-6 text-center rounded-xl bg-emerald-500/10 border border-emerald-500/20"><i class="ph ph-check-circle text-3xl text-emerald-400"></i><p class="text-sm text-white font-bold mt-2">Tudo em dia</p><p class="text-xs text-gray-400">Nenhuma ação pendente agora.</p></div>';
-      // Saúde operacional: combina estoque, manutenção e empréstimos
-      const saude = Math.max(0, 100 - crit * 6 - venc * 10 - avis * 4 - atr * 3);
-      const hs = $('kpi-saude'), hd = $('kpi-saude-desc');
-      if (hs) hs.textContent = saude + '%';
-      if (hd) { const ok = saude >= 80; hd.className = 'text-xs mt-1 font-semibold flex items-center gap-1 ' + (ok ? 'text-emerald-400' : saude >= 50 ? 'text-amber-400' : 'text-red-400'); hd.innerHTML = '<i class="ph ' + (ok ? 'ph-trend-up' : 'ph-warning') + '"></i> ' + (ok ? 'Sistema Estável' : acoes.length + ' pendência(s) afetando a operação'); }
-      $('ins-manut').innerHTML = manut.length ? manut.slice(0, 5).map(x => { const c = x.dias < 0 ? 'red' : x.dias <= 15 ? 'amber' : 'emerald'; const w = Math.max(4, Math.min(100, x.dias / 90 * 100)); return '<div><div class="flex justify-between text-xs mb-1"><span class="text-white font-semibold truncate pr-2">' + esc(x.m.equip) + '</span><span class="text-' + c + '-400 font-bold shrink-0">' + (x.dias < 0 ? 'atrasada ' + (-x.dias) + ' d' : x.dias + ' d') + '</span></div><div class="h-2 rounded-full bg-slate-800"><div class="h-2 rounded-full bg-' + c + '-500" style="width:' + w + '%"></div></div></div>'; }).join('') : '<p class="text-sm text-gray-500">Nenhuma manutenção cadastrada.</p>';
-      $('ins-cobertura').innerHTML = db.pecas.length ? db.pecas.map(p => { const pct = p.min > 0 ? p.estoque / p.min * 100 : 100; const c = pct < 100 ? 'red' : pct < 150 ? 'amber' : 'emerald'; return '<div><div class="flex justify-between text-xs mb-1"><span class="text-white font-semibold truncate pr-2">' + esc(p.nome) + '</span><span class="text-gray-400 shrink-0">' + p.estoque + ' / ' + p.min + ' (' + Math.round(pct) + '%)</span></div><div class="relative h-2 rounded-full bg-slate-800"><div class="h-2 rounded-full bg-' + c + '-500" style="width:' + Math.min(100, pct / 2) + '%"></div><div class="absolute top-[-3px] h-[14px] w-px bg-white/60" style="left:50%"></div></div></div>'; }).join('') : '<p class="text-sm text-gray-500">Nenhuma peça cadastrada.</p>';
-      const cap = db.pecas.map(p => ({ n: p.nome, v: ((p.estoque || 0) + (p.sobressalentes || 0)) * (p.custo || 0) })).sort((a, b) => b.v - a.v).slice(0, 5), mx = cap.length ? Math.max(cap[0].v, 1) : 1;
-      if ($('ins-capital')) $('ins-capital').innerHTML = cap.length ? cap.map(x => '<div><div class="flex justify-between text-xs mb-1"><span class="text-white font-semibold truncate pr-2">' + esc(x.n) + '</span><span class="text-purple-300 font-bold shrink-0">' + moeda(x.v) + '</span></div><div class="h-2 rounded-full bg-slate-800"><div class="h-2 rounded-full bg-purple-500" style="width:' + Math.max(3, x.v / mx * 100) + '%"></div></div></div>').join('') : '<p class="text-sm text-gray-500">Nenhuma peça cadastrada.</p>';
-      $('ins-atividade').innerHTML = db.logs.length ? db.logs.slice(0, 8).map(l => '<div class="flex gap-3 text-xs py-1.5 border-b border-white/5"><span class="text-gray-500 shrink-0 w-28">' + esc(new Date(l.data).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })) + '</span><span class="text-gray-300 truncate"><b class="text-white">' + esc(l.acao) + '</b> ' + esc(l.detalhes) + ' <span class="text-gray-500">por ' + esc((l.utilizador || '').split('@')[0]) + '</span></span></div>').join('') : '<p class="text-sm text-gray-500">As ações feitas no painel aparecem aqui.</p>';
     }
 
     const linksMenu = document.querySelectorAll('.nav-link');
@@ -1238,8 +1187,7 @@
         if(alvo === 'ia') document.getElementById('aba-' + alvo).classList.add('flex');
         if(alvo === 'dashboard') iniciarGraficos();
       });
-    }
-);
+    });
 
     function arrancarSistema(login_id, role) {
       document.body.classList.remove('items-center', 'justify-center');
@@ -1288,53 +1236,159 @@
       }
     }
 
-    // --- IA COM SUPORTE PARA NUVEM ---
-    async function adicionarMensagemIA(t) {
-      if(!t || t.trim() === '') return;
-      const chatMsgs = document.getElementById('chat-mensagens'); 
-      document.getElementById('chat-input').value = '';
-      
-      chatMsgs.innerHTML += `
-        <div class="flex gap-4 chat-mensagem flex-row-reverse mb-4">
-          <div class="w-10 h-10 rounded-xl bg-slate-700 flex items-center justify-center border border-slate-600 shrink-0"><i class="ph ph-user text-white"></i></div>
-          <div class="bg-cyan-600 text-white p-4 rounded-2xl rounded-tr-none text-sm">${t}</div>
-        </div>
-      `;
-      chatMsgs.scrollTop = chatMsgs.scrollHeight;
+    // --- GUEPAR COPILOT: IA local + Wikipédia + LLM opcional ---
+    const IA_ENDPOINT = '';   // opcional: URL do seu proxy de LLM (POST {pergunta, contexto, historico} -> {resposta})
+    const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const IA = { hist: [], item: null };
+    const norm = s => String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9+\-*\/().,%^ ]/g, ' ').replace(/\s+/g, ' ').trim();
+    const has = (q, ...w) => w.some(x => q.includes(x));
+    const pick = a => a[Math.floor(Math.random() * a.length)];
+    const horasAtraso = e => (Date.now() - (e.dataHora || Date.now())) / 3600000;
+    const nomeUser = () => { const n = (localStorage.getItem('guepar_email') || '').split('@')[0].split(/[._\s]/)[0]; return n ? n[0].toUpperCase() + n.slice(1) : ''; };
+    const PIADAS = ['Por que o robô foi ao médico? Estava com um vírus... e a bateria também não ajudava! 🤖', 'Meu estoque e eu temos algo em comum: quando mais preciso, ele está no mínimo. 📉', 'Qual o café preferido do robô? O espresso-ssor! ☕', 'A parafusadeira nunca mente: ela sempre dá o aperto certo. 🔧'];
+    const FATOS = ['A palavra "robô" vem da peça teatral R.U.R. (1920), do tcheco Karel Čapek, derivada de "robota", que significa trabalho forçado.', 'Manutenção preditiva troca o "quebrou, conserta" por "vai quebrar, previne", e costuma reduzir bastante as paradas não planejadas.', 'O polvo tem três corações e sangue azul. 🐙', 'A Coreia do Sul está entre os países com maior densidade de robôs industriais por trabalhador.'];
+    const MOTIV = ['Cada peça no lugar é uma parada a menos amanhã. Você está organizando o futuro da operação! 🚀', 'Dia puxado? Respire: o painel está sob controle e eu fico de olho no resto. 💙', 'Grandes operações são feitas de pequenos checklists bem-feitos. Bora! 💪'];
 
-      const loadingId = 'loading-' + Date.now();
-      chatMsgs.innerHTML += `<div id="${loadingId}" class="text-cyan-400 text-xs mt-2 italic flex items-center gap-2"><i class="ph ph-spinner animate-spin text-lg"></i> Processando IA na nuvem...</div>`;
-      chatMsgs.scrollTop = chatMsgs.scrollHeight;
-
+    const todosItens = () => [...db.pecas.map(p => ({ t: 'peca', ...p })), ...db.guepar.map(g => ({ t: 'guepar', ...g }))];
+    function achaItem(q) {
+      const stop = ['tem', 'temos', 'quanto', 'quantos', 'quantas', 'qual', 'quais', 'estoque', 'stock', 'custo', 'valor', 'preco', 'quanta', 'ainda', 'sobrou', 'restam', 'sobre', 'para', 'pra', 'com', 'que', 'por', 'uma', 'dos', 'das', 'nos', 'nas', 'item', 'peca', 'pecas', 'ferramenta'];
+      const w = q.split(' ').filter(x => x.length > 2 && !stop.includes(x));
+      let best = null, bs = 0;
+      todosItens().forEach(it => {
+        const ns = norm(it.nome).split(' '); let s = 0;
+        w.forEach(x => { if (ns.some(y => y.includes(x) || (x.length > 3 && y.length > 3 && x.includes(y)))) s += 2; else if (x.length > 4 && ns.some(y => y.slice(0, 4) === x.slice(0, 4))) s += 1; });
+        if (s > bs) { bs = s; best = it; }
+      });
+      return best;
+    }
+    function IAstatus() {
+      const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+      const manu = db.manutencoes.map(m => ({ ...m, d: Math.round((new Date(m.validade + 'T00:00:00') - hoje) / 864e5) }));
+      return { crit: db.pecas.filter(p => p.estoque < p.min), atr: db.emprestimos.filter(e => horasAtraso(e) > 24), venc: manu.filter(m => m.d < 0), prox: manu.filter(m => m.d >= 0 && m.d <= 15), manu };
+    }
+    function resumo() {
+      const s = IAstatus();
+      return [
+        s.crit.length ? `⚠️ <b>${s.crit.length}</b> peça(s) abaixo do mínimo: ${s.crit.map(p => esc(p.nome)).join(', ')}` : '✅ Estoque de peças saudável',
+        s.atr.length ? `🛠️ <b>${s.atr.length}</b> ferramenta(s) emprestada(s) há mais de 24h` : '✅ Nenhum empréstimo atrasado',
+        s.venc.length ? `🔴 <b>${s.venc.length}</b> manutenção(ões) vencida(s): ${s.venc.map(m => esc(m.equip)).join(', ')}` : s.prox.length ? `🟡 <b>${s.prox.length}</b> manutenção(ões) vencem em até 15 dias` : '✅ Manutenções em dia'
+      ].join('<br>');
+    }
+    function itemHtml(it, role) {
+      IA.item = it.nome;
+      const tot = it.t === 'peca' ? it.estoque + (it.sobressalentes || 0) : it.estoque;
+      let r = `📦 <b>${esc(it.nome)}</b>${it.marca ? ' (' + esc(it.marca) + ')' : ''}: <b>${it.estoque}</b> em estoque`;
+      if (it.t === 'peca') r += `, mínimo ${it.min}, reserva ${it.sobressalentes || 0} kit(s)` + (it.estoque < it.min ? ' — ⚠️ <b>abaixo do mínimo</b>' : ' — ✅ ok');
+      if (role === 'admin') r += `<br>💰 Custo unitário ${fmtMoeda.format(it.custo || 0)} · imobilizado ${fmtMoeda.format(tot * (it.custo || 0))}`;
+      const emp = db.emprestimos.filter(e => e.item === it.nome);
+      if (emp.length) r += `<br>🛠️ Emprestado a: ${emp.map(e => esc(e.pessoa)).join(', ')}`;
+      return r;
+    }
+    function calc(q) {
+      if (!/\d\s*[+*\/x^]\s*\d|\d\s+-\s+\d|\d\s*%\s*de\s*\d|\)\s*[*\/+-]|[*\/]\s*\(/.test(q)) return null;
+      const e = q.replace(/(\d+(?:[.,]\d+)?)\s*%\s*de\s*(\d+(?:[.,]\d+)?)/g, '($1/100*$2)').replace(/(\d),(\d)/g, '$1.$2').replace(/\bx\b/g, '*').replace(/\^/g, '**').replace(/[^0-9+\-*\/().% ]/g, '');
+      if (!/^[0-9+\-*\/().\s]+$/.test(e)) return null;
+      try { const r = Function('"use strict";return (' + e + ')')(); if (typeof r === 'number' && isFinite(r)) return +r.toFixed(6); } catch (x) { }
+      return null;
+    }
+    async function wiki(t) {
       try {
-        await new Promise(r => setTimeout(r, 1000)); 
-        
-        let respostaReal = "Desculpe, não compreendi. Tente perguntar sobre <b>stock crítico</b>, <b>alertas de atraso</b>, ou <b>resumo financeiro de peças</b>.";
-        const query = t.toLowerCase();
+        const sub = t.replace(/^(me )?(diga|fale|explique|conte)( me)?( sobre| de)?\s*/i, '').replace(/^(o que (é|e|significa|são|sao|foi)|quem (é|e|foi|era)|qual (é|e) (o|a)|what is|who is)\s+/i, '').replace(/[?!.]+$/g, '').trim();
+        if (sub.length < 2) return null;
+        const ctl = new AbortController(); setTimeout(() => ctl.abort(), 7000);
+        const j = await (await fetch('https://pt.wikipedia.org/w/api.php?action=query&list=search&srlimit=1&format=json&origin=*&srsearch=' + encodeURIComponent(sub), { signal: ctl.signal })).json();
+        const pg = j.query && j.query.search[0]; if (!pg) return null;
+        const r = await (await fetch('https://pt.wikipedia.org/api/rest_v1/page/summary/' + encodeURIComponent(pg.title), { signal: ctl.signal })).json();
+        if (!r.extract) return null;
+        const ex = r.extract.length > 600 ? r.extract.slice(0, 600).replace(/\s+\S*$/, '') + '…' : r.extract;
+        return `📚 <b>${esc(r.title)}</b><br>${esc(ex)}<br><a class="text-cyan-400 underline" target="_blank" rel="noopener" href="${esc(r.content_urls.desktop.page)}">Ler mais na Wikipédia</a>`;
+      } catch (e) { return null; }
+    }
 
-        if (query.includes('stock') || query.includes('falt') || query.includes('crítico')) {
-          const criticos = db.pecas.filter(p => p.estoque < p.min);
-          respostaReal = criticos.length > 0 ? `Atenção! Encontrei peças em estado crítico:<br><br>` + criticos.map(p => `• <b>${p.nome}</b>: Só temos ${p.estoque} (Mínimo: ${p.min})`).join('<br>') : "O seu stock de peças está saudável.";
-        } else if (query.includes('alerta') || query.includes('atraso') || query.includes('empréstimo') || query.includes('ferramenta')) {
-          const atrasados = db.emprestimos.filter(e => ((new Date().getTime() - (e.dataHora ? e.dataHora : 0)) / 3600000) > 24);
-          respostaReal = atrasados.length > 0 ? `Temos ferramentas em falta há mais de 24h:<br><br>` + atrasados.map(e => `• <b>${e.pessoa}</b> está com: ${e.item}`).join('<br>') : "Todos os empréstimos estão dentro do prazo previsto.";
-        } else if (query.includes('resumo') || query.includes('capital') || query.includes('dinheiro') || query.includes('custo') || query.includes('robô')) {
-          let totalPecas = 0; db.pecas.forEach(p => totalPecas += ((p.estoque + (p.sobressalentes ? p.sobressalentes : 0)) * (p.custo ? p.custo : 0)));
-          respostaReal = `O valor total em <b>Ativos de Robótica (Spare Parts)</b> imobilizados é de <b>${fmtMoeda.format(totalPecas)}</b>.`;
-        }
+    async function IAresponder(t) {
+      const q = norm(t), nome = nomeUser(), h = new Date().getHours(), role = localStorage.getItem('guepar_role');
+      const sauda = h < 5 ? 'Boa madrugada' : h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite';
+      const s = IAstatus(), brl = v => fmtMoeda.format(v);
 
-        document.getElementById(loadingId).remove();
-        chatMsgs.innerHTML += `
-          <div class="flex gap-4 chat-mensagem mb-4">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center shrink-0"><i class="ph ph-robot text-white text-xl"></i></div>
-            <div class="bg-slate-800/80 border border-slate-700 p-4 rounded-2xl rounded-tl-none text-sm text-gray-200 leading-relaxed">${respostaReal}</div>
-          </div>
-        `;
-        chatMsgs.scrollTop = chatMsgs.scrollHeight;
-      } catch(e) {
-        document.getElementById(loadingId).remove();
-        chatMsgs.innerHTML += `<div class="text-red-400 text-xs mb-4">Erro de conexão com a IA.</div>`;
+      if (/^(oi+|ola|opa|e ai|eae|fala|hey|hello|hi|salve|bom dia|boa tarde|boa noite|tudo bem|tudo bom|como vai|como voce esta)\b/.test(q)) {
+        const eco = has(q, 'bom dia') ? 'Bom dia' : has(q, 'boa tarde') ? 'Boa tarde' : has(q, 'boa noite') ? 'Boa noite' : sauda;
+        const bem = has(q, 'tudo bem', 'tudo bom', 'como vai', 'como voce esta') ? ' Estou ótimo, obrigado por perguntar! 😄' : '';
+        return `${eco}${nome ? ', ' + esc(nome) : ''}! 👋${bem}<br>Resumo de agora:<br><br>${resumo()}<br><br>Em que posso ajudar?`;
       }
+      if (has(q, 'obrigad', 'valeu', 'thanks', 'brigadao')) return pick(['Por nada! 😊 Qualquer coisa é só chamar.', 'Disponha! Estou aqui sempre que precisar. 🤖', 'Imagina, é um prazer ajudar!']);
+      if (/^(tchau|ate mais|ate logo|flw|falou|xau)/.test(q)) return pick(['Até mais! Bom trabalho por aí. 👋', 'Tchau! Fico de olho em tudo por aqui. 🤖']);
+      if (has(q, 'quem e voce', 'quem es tu', 'seu nome', 'quem te criou')) return 'Sou o <b>Guepar Copilot</b> 🤖, assistente do painel Guepar vs RobÔ. Consulto estoque, ferramentas e manutenções em tempo real, faço contas e busco respostas para perguntas gerais.';
+      if (has(q, 'o que voce faz', 'o que voce sabe', 'ajuda', 'help', 'comandos', 'o que posso perguntar')) return 'Posso:<br>• 👋 conversar (bom dia, boa tarde…)<br>• 📊 <b>resumo geral</b> e <b>o que comprar</b><br>• 📦 consultar itens ("quanto tem de graxa?")<br>• 🛠️ ver quem está com cada ferramenta<br>• 🔧 manutenções vencidas e próximas<br>• 💰 capital investido (admin)<br>• 🧮 contas ("15% de 2300")<br>• 📚 perguntas gerais ("quem foi Santos Dumont?")<br>• 🎲 piadas, curiosidades, cara ou coroa';
+      if (has(q, 'que horas', 'horas sao')) return `🕒 Agora são <b>${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</b>.`;
+      if (has(q, 'que dia', 'data de hoje', 'dia da semana', 'qual a data')) return `📅 Hoje é <b>${new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</b>.`;
+      const c = calc(q); if (c !== null) return `🧮 Resultado: <b>${c.toLocaleString('pt-BR')}</b>`;
+      if (has(q, 'piada', 'engracad', 'me faz rir')) return '😄 ' + pick(PIADAS);
+      if (has(q, 'curiosidade', 'fato curioso', 'me surpreenda')) return '💡 ' + pick(FATOS);
+      if (has(q, 'motiva', 'desanimad', 'cansad', 'estressad')) return '💪 ' + pick(MOTIV);
+      if (has(q, 'cara ou coroa')) return '🪙 Deu <b>' + pick(['cara', 'coroa']) + '</b>!';
+      if (/\bdado\b/.test(q)) return '🎲 Rolei o dado: <b>' + (1 + Math.floor(Math.random() * 6)) + '</b>';
+      if (has(q, 'resumo', 'status', 'visao geral', 'panorama', 'situacao', 'como esta tudo', 'novidade')) return `📊 <b>Panorama geral</b><br><br>${resumo()}`;
+
+      if (has(q, 'comprar', 'repor', 'reposicao', 'o que preciso')) {
+        if (!s.crit.length) return '✅ Nada urgente para comprar: todas as peças estão acima do mínimo.';
+        let tot = 0;
+        const l = s.crit.map(p => { const n = Math.ceil(p.min * 1.5) - p.estoque, v = n * (p.custo || 0); tot += v; return `• <b>${esc(p.nome)}</b>: comprar <b>${n}</b> un.${role === 'admin' ? ' (≈ ' + brl(v) + ')' : ''} <span class="text-gray-400">— tem ${p.estoque}, mínimo ${p.min}</span>`; });
+        return `🛒 <b>Sugestão de compra</b> (repondo até 1,5× o mínimo):<br><br>${l.join('<br>')}${role === 'admin' ? '<br><br>Total estimado: <b>' + brl(tot) + '</b>' : ''}`;
+      }
+      if (has(q, 'critico', 'falt', 'abaixo do minimo', 'acabando')) return s.crit.length ? `⚠️ Peças em estado crítico:<br><br>` + s.crit.map(p => `• <b>${esc(p.nome)}</b>: ${p.estoque} (mínimo ${p.min})`).join('<br>') : '✅ Seu estoque de peças está saudável.';
+      const pq = [...new Set(db.emprestimos.map(e => e.pessoa))].find(p => norm(p).split(' ').some(x => x.length > 2 && q.includes(x)));
+      if (pq && has(q, 'pegou', 'retirou', 'com ', 'emprest', 'ferrament', 'ficou')) return `🛠️ <b>${esc(pq)}</b> está com: ` + db.emprestimos.filter(e => e.pessoa === pq).map(e => `${esc(e.item)} (${Math.floor(horasAtraso(e))}h)`).join(', ');
+      if (has(q, 'atraso', 'atrasad', 'alerta', 'emprest', 'devolv', 'quem esta com', 'quem pegou', 'ferramentas')) {
+        if (!db.emprestimos.length) return '✅ Nenhuma ferramenta emprestada no momento.';
+        return `🛠️ <b>Empréstimos ativos</b><br><br>` + db.emprestimos.map(e => { const hh = horasAtraso(e); return `• <b>${esc(e.pessoa)}</b> — ${esc(e.item)} (${Math.floor(hh)}h${hh > 48 ? ' 🔴 atrasado' : hh > 24 ? ' 🟡 atenção' : ''})`; }).join('<br>');
+      }
+      if (has(q, 'manuten', 'vencid', 'revisa', 'lubrifica', 'validade')) {
+        if (!s.manu.length) return 'Nenhuma manutenção cadastrada ainda.';
+        const f = m => `• <b>${esc(m.equip)}</b> — ${esc(m.tipo)} · ${formatarDataBR(m.validade)} (${m.d < 0 ? 'vencida há ' + (-m.d) + ' dia(s)' : m.d === 0 ? 'vence hoje' : 'em ' + m.d + ' dia(s)'})`;
+        return `🔧 <b>Manutenções</b> (${s.venc.length} vencida(s), ${s.prox.length} a vencer em 15 dias)<br><br>` + [...s.manu].sort((a, b) => a.d - b.d).slice(0, 6).map(f).join('<br>');
+      }
+      if (has(q, 'auditoria', 'historico', 'ultimas acoes', 'quem mexeu')) {
+        if (role !== 'admin') return '🔒 A auditoria é exclusiva do administrador.';
+        return `📜 <b>Últimas ações</b><br><br>` + (db.logs.slice(0, 5).map(l => `• ${new Date(l.data).toLocaleString('pt-BR')} — <b>${esc(l.utilizador)}</b>: ${esc(l.detalhes)}`).join('<br>') || 'Sem registros.');
+      }
+      if (has(q, 'usuario', 'utilizador', 'acessos')) {
+        if (role !== 'admin') return '🔒 A gestão de acessos é exclusiva do administrador.';
+        return `👥 Há <b>${db.usuarios.length}</b> conta(s): ${['admin', 'visitante1', 'visitante'].map(r => db.usuarios.filter(u => u.role === r).length + ' ' + r).join(', ')}.`;
+      }
+
+      const geral = /^(o que (e|foi|sao|significa)|quem (e|foi|era)|qual (e|a|o)|quando|onde|por que|porque|como funciona|quantos anos)/.test(q);
+      let it = achaItem(q);
+      if (!it && IA.item && q.split(' ').length < 8 && has(q, 'custo', 'valor', 'preco', 'minimo', 'reserva', 'dele', 'dela', 'e ele', 'e ela')) it = todosItens().find(x => x.nome === IA.item);
+      if (it && !(geral && !has(q, 'estoque', 'tem ', 'temos', 'tenho'))) return itemHtml(it, role);
+
+      if (has(q, 'capital', 'dinheiro', 'investid', 'patrimonio', 'financeiro', 'valor total', 'custo total', 'gasto', 'quanto vale')) {
+        if (role !== 'admin') return '🔒 Os valores financeiros são exclusivos do administrador.';
+        const robo = db.pecas.reduce((a, p) => a + (p.estoque + (p.sobressalentes || 0)) * (p.custo || 0), 0);
+        const gp = db.guepar.reduce((a, g) => a + g.estoque * (g.custo || 0), 0);
+        return `💰 <b>Capital inventariado: ${brl(robo + gp)}</b><br>• Ativos de robótica: ${brl(robo)}<br>• Material Guepar: ${brl(gp)}`;
+      }
+
+      if (IA_ENDPOINT) {
+        try {
+          const r = await fetch(IA_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pergunta: t, contexto: resumo().replace(/<[^>]+>/g, ''), historico: IA.hist.slice(-6) }) });
+          const j = await r.json(); if (j.resposta) return esc(j.resposta).replace(/\n/g, '<br>');
+        } catch (e) { }
+      }
+      if (geral || t.includes('?')) { const w = await wiki(t); if (w) return w; }
+      return pick(['Hmm, essa eu não consegui responder agora 🤔 Sem internet eu só sei do seu painel. Tente: <b>resumo geral</b>, <b>o que comprar?</b> ou <b>quanto tem de [item]?</b>', 'Não achei uma boa resposta para isso. Reformule a pergunta ou digite <b>ajuda</b> para ver tudo o que eu faço. 🤖']);
+    }
+
+    async function adicionarMensagemIA(t) {
+      if (!t || !t.trim()) return;
+      const box = document.getElementById('chat-mensagens'); document.getElementById('chat-input').value = '';
+      const add = (h, u) => { box.insertAdjacentHTML('beforeend', u ? `<div class="flex gap-4 chat-mensagem flex-row-reverse mb-4"><div class="w-10 h-10 rounded-xl bg-slate-700 flex items-center justify-center border border-slate-600 shrink-0"><i class="ph ph-user text-white"></i></div><div class="bg-cyan-600 text-white p-4 rounded-2xl rounded-tr-none text-sm">${h}</div></div>` : `<div class="flex gap-4 chat-mensagem mb-4"><div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center shrink-0"><i class="ph ph-robot text-white text-xl"></i></div><div class="bg-slate-800/80 border border-slate-700 p-4 rounded-2xl rounded-tl-none text-sm text-gray-200 leading-relaxed">${h}</div></div>`); box.scrollTop = box.scrollHeight; };
+      add(esc(t), true);
+      box.insertAdjacentHTML('beforeend', '<div id="ia-digitando" class="text-cyan-400 text-xs mb-4 italic flex items-center gap-2"><i class="ph ph-spinner animate-spin text-lg"></i> Pensando…</div>');
+      box.scrollTop = box.scrollHeight;
+      let r; try { await new Promise(x => setTimeout(x, 350)); r = await IAresponder(t.trim()); } catch (e) { r = 'Ops, tive um problema ao processar. Tente de novo. 🔄'; }
+      const d = document.getElementById('ia-digitando'); if (d) d.remove();
+      IA.hist.push({ u: t, ia: r.replace(/<[^>]+>/g, '').slice(0, 300) });
+      add(r, false);
     }
 
     // --- REGISTO DO PWA ---
