@@ -1962,38 +1962,59 @@
     // --- LOGIN POR FACIAL / BIOMETRIA (WebAuthn: Face ID, rosto ou digital do aparelho) ---
     const b64 = b => btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
     const unb64 = s => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
-    async function bioSuportada() { try { return !!(window.PublicKeyCredential && await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()); } catch (e) { return false; } }
-    async function ativarBiometria() {
-      const login = localStorage.getItem('guepar_email'); if (!login) return;
-      if (!(await bioSuportada())) { alert('Este aparelho ou navegador não tem facial/biometria disponível. É preciso abrir o app por HTTPS e ter bloqueio de tela configurado.'); return; }
-      try {
-        const cred = await navigator.credentials.create({ publicKey: {
-          challenge: crypto.getRandomValues(new Uint8Array(32)),
-          rp: { name: 'Guepar vs RobÔ', id: location.hostname },
-          user: { id: new TextEncoder().encode(login).slice(0, 64), name: login, displayName: login },
-          pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
-          authenticatorSelection: { authenticatorAttachment: 'platform', userVerification: 'required', residentKey: 'preferred' },
-          timeout: 60000 } });
-        localStorage.setItem('guepar_bio', JSON.stringify({ id: b64(cred.rawId), login }));
-        auditarAcao('EDICAO', 'Ativou login por facial/biometria neste aparelho'); salvarDB();
-        alert('✅ Facial/biometria ativada! Na próxima vez, é só tocar em "Entrar com Facial".');
-      } catch (e) { alert('Não foi possível ativar: ' + (e.name === 'NotAllowedError' ? 'cancelado.' : e.message)); }
+    // A verificação é feita UMA vez ao abrir o app. No clique, o Face ID/digital é chamado na hora:
+    // o iPhone (Safari) só permite a leitura imediatamente após o toque.
+    let BIO_PLATAFORMA = null;   // true = aparelho tem rosto/digital próprio; false = não; null = ainda verificando
+    const bioApi = () => !!(window.PublicKeyCredential && navigator.credentials && window.isSecureContext);
+    async function bioSuportada() { try { return !!(bioApi() && await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()); } catch (e) { return false; } }
+    function msgBio(e, ativando) {
+      const n = e && e.name;
+      if (n === 'NotAllowedError') return 'A leitura foi cancelada ou o tempo acabou. Toque de novo e confirme com o rosto ou a digital.';
+      if (n === 'NotSupportedError') return 'Este aparelho não tem rosto/digital disponível para apps. Cadastre o rosto ou a digital nas configurações do celular e tente de novo.';
+      if (n === 'SecurityError') return 'Abra o app pelo endereço oficial (https://…github.io/…). A facial não funciona por arquivo no computador nem por endereço sem https.';
+      if (n === 'InvalidStateError') return ativando ? 'A facial já está cadastrada neste aparelho.' : 'Cadastro da facial inválido neste aparelho. Ative de novo pelo menu.';
+      if (n === 'AbortError') return 'A leitura foi interrompida. Tente de novo.';
+      return (e && e.message) || 'Erro desconhecido.';
     }
-    async function entrarBiometria() {
+    function ativarBiometria() {
+      const login = localStorage.getItem('guepar_email'); if (!login) return;
+      if (!bioApi()) { alert('Este navegador não permite facial/biometria. Use o Chrome (Android/PC) ou o Safari (iPhone), abrindo o app pelo endereço https.'); return; }
+      if (BIO_PLATAFORMA === false && !confirm('Este aparelho não informou ter leitor de rosto/digital próprio.\n\nVocê pode tentar mesmo assim (no computador, o navegador pode oferecer usar o celular para confirmar). Continuar?')) return;
+      const publicKey = {
+        challenge: crypto.getRandomValues(new Uint8Array(32)),
+        rp: { name: 'Guepar vs RobÔ', id: location.hostname },
+        user: { id: crypto.getRandomValues(new Uint8Array(16)), name: login, displayName: login },
+        pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
+        authenticatorSelection: { userVerification: 'required', residentKey: 'preferred', ...(BIO_PLATAFORMA ? { authenticatorAttachment: 'platform' } : {}) },
+        timeout: 60000
+      };
+      // chamado direto no toque (sem esperar nada antes), senão o iPhone bloqueia
+      navigator.credentials.create({ publicKey }).then(cred => {
+        let transports = [];
+        try { transports = (cred.response.getTransports && cred.response.getTransports()) || []; } catch (e) { }
+        localStorage.setItem('guepar_bio', JSON.stringify({ id: b64(cred.rawId), login, transports }));
+        auditarAcao('EDICAO', 'Ativou login por facial/biometria neste aparelho'); salvarDB();
+        alert('✅ Facial/biometria ativada! Na próxima vez, é só tocar em "Entrar com Facial / Biometria" na tela de entrada.');
+      }).catch(e => alert('Não foi possível ativar: ' + msgBio(e, true)));
+    }
+    function entrarBiometria() {
       const bio = JSON.parse(localStorage.getItem('guepar_bio') || 'null');
-      if (!bio) { alert('Entre uma vez com o PIN e toque em "Ativar facial neste aparelho" no menu.'); return; }
+      if (!bio) { alert('Entre uma vez com login e senha e toque em "Ativar facial neste aparelho" no menu.'); return; }
       const s = Sessao.lista().find(x => String(x.login).toLowerCase() === String(bio.login).toLowerCase());
       if (!s) { alert('Por segurança, entre uma vez com login e senha neste aparelho. Depois a facial volta a funcionar.'); trocarLogin(true); document.getElementById('login-id').value = bio.login; return; }
-      try {
-        await navigator.credentials.get({ publicKey: { challenge: crypto.getRandomValues(new Uint8Array(32)), rpId: location.hostname,
-          allowCredentials: [{ type: 'public-key', id: unb64(bio.id), transports: ['internal'] }], userVerification: 'required', timeout: 60000 } });
-        await entrarSessaoGuardada(s);
-      } catch (e) { if (e.name !== 'NotAllowedError') alert('Falha na biometria: ' + e.message); }
+      const cred = { type: 'public-key', id: unb64(bio.id) };
+      if (bio.transports && bio.transports.length) cred.transports = bio.transports;
+      navigator.credentials.get({ publicKey: { challenge: crypto.getRandomValues(new Uint8Array(32)), rpId: location.hostname, allowCredentials: [cred], userVerification: 'required', timeout: 60000 } })
+        .then(() => entrarSessaoGuardada(s))
+        .catch(e => { if (e.name !== 'NotAllowedError') alert('Falha na biometria: ' + msgBio(e, false)); });
     }
-    window.addEventListener('DOMContentLoaded', () => bioSuportada().then(ok => {
-      if (ok && localStorage.getItem('guepar_bio')) document.getElementById('btn-bio').classList.remove('hidden');
-      if (ok) { const b = document.getElementById('btn-ativar-bio'); b.classList.remove('hidden'); b.classList.add('flex'); }
-    }));
+    window.addEventListener('DOMContentLoaded', () => {
+      if (!bioApi()) return;
+      // botões aparecem em qualquer aparelho compatível; a verificação do leitor roda em segundo plano
+      if (localStorage.getItem('guepar_bio')) document.getElementById('btn-bio').classList.remove('hidden');
+      const b = document.getElementById('btn-ativar-bio'); b.classList.remove('hidden'); b.classList.add('flex');
+      bioSuportada().then(ok => { BIO_PLATAFORMA = ok; });
+    });
 
     // --- PRIVACIDADE DE PIN: cada um vê só o seu; o admin principal vê todos ---
     const SUPER_ADMINS = ['fellipe.f@grupodime.com.br'];   // para incluir outro login, adicione aqui
