@@ -81,6 +81,8 @@
         <span class="text-translate" data-pt="Aceder ao Painel" data-en="Login to Dashboard">Aceder ao Painel</span> <i class="ph ph-arrow-right text-xl"></i>
       </button>
       
+      <button type="button" onclick="esqueciSenha()" class="w-full text-sm font-bold text-gray-400 hover:text-white py-1 cursor-pointer">Esqueci minha senha</button>
+
       <!-- BOTÃO DE LOGIN RÁPIDO POR PIN -->
       <button type="button" onclick="trocarLogin(false)" class="w-full text-sm font-bold text-cyan-400 py-2 cursor-pointer">← Voltar ao PIN</button>
     </form>
@@ -574,6 +576,7 @@
             <input type="hidden" id="user-edit-id" value="">
             <div><label class="block text-xs font-bold text-gray-400 mb-1 text-translate" data-pt="Utilizador / E-mail" data-en="User / Email">Utilizador / E-mail</label><input type="text" id="user-login" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-purple-500" placeholder="Ex: Operador Carlos"></div>
             <div><label class="block text-xs font-bold text-gray-400 mb-1 text-translate" data-pt="Senha Principal" data-en="Password">Senha Principal</label><div class="relative"><input type="password" id="user-senha" autocomplete="new-password" placeholder="Mínimo 3 caracteres" class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-3 pr-11 py-2 text-white outline-none focus:border-purple-500"><button type="button" onclick="verSenha('user-senha', this)" title="Mostrar senha" aria-label="Mostrar senha" class="absolute inset-y-0 right-0 px-3 text-gray-400 hover:text-white cursor-pointer"><i class="ph ph-eye text-lg"></i></button></div></div>
+            <div><label class="block text-xs font-bold text-gray-400 mb-1">E-mail para recuperar a senha (opcional)</label><input type="email" id="user-recuperacao" autocomplete="off" inputmode="email" placeholder="Ex: nome@grupodime.com.br" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-purple-500"><p class="text-[11px] text-gray-500 mt-1">Com e-mail, a pessoa usa "Esqueci minha senha" sozinha. Para incluir ou trocar o e-mail, defina também uma senha.</p></div>
             <div><label class="block text-xs font-bold text-cyan-400 mb-1 text-translate" data-pt="PIN Rápido (4 Dígitos)" data-en="Quick PIN (4 Digits)">PIN Rápido (4 Dígitos)</label><input type="text" id="user-pin" maxlength="4" pattern="\d{4}" class="w-full bg-slate-950 border border-cyan-800/80 rounded-xl px-3 py-2 text-cyan-300 font-mono tracking-widest outline-none focus:border-cyan-400" placeholder="Ex: 1234"></div>
             <div>
               <label class="block text-xs font-bold text-gray-400 mb-1 text-translate" data-pt="Permissão" data-en="Role">Permissão</label>
@@ -899,20 +902,43 @@
       if (/network|unavailable/.test(c) || /network|offline|failed to fetch/i.test(String(e && e.message))) return 'Sem internet. O primeiro acesso em cada aparelho precisa de internet; depois, o PIN funciona offline.';
       if (/too-many-requests/.test(c)) return 'Muitas tentativas. Aguarde alguns minutos.';
       if (/operation-not-allowed/.test(c)) return 'O login por e-mail/senha não está ativado no Firebase (Authentication → Método de login).';
+      if (/email-already-in-use/.test(c)) return 'Esse e-mail de recuperação já está em uso por outro acesso.';
+      if (/PERMISSION_DENIED|permission/i.test(c + ' ' + String(e && e.message))) return 'O Firebase ainda está com as regras antigas. Publique as regras novas (arquivo regras-firebase.json) em Realtime Database → Regras.';
       return (e && e.message) || 'Não foi possível entrar.';
     }
-    async function criarConta(app, login, senha) {
+    const emailValido = e => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(e || '').trim());
+    // emailReal: se informado, a conta usa esse e-mail e a pessoa pode recuperar a senha sozinha
+    async function criarConta(app, login, senha, emailReal) {
       if (String(senha || '').length < 3) throw new Error(`A senha de "${login}" precisa ter pelo menos 3 caracteres.`);
-      const email = 'u' + chaveLogin(login).slice(0, 16) + '.' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5) + DOMINIO_LOGIN;
+      const sintetico = 'u' + chaveLogin(login).slice(0, 16) + '.' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5) + DOMINIO_LOGIN;
+      const email = emailValido(emailReal) ? String(emailReal).trim().toLowerCase() : sintetico;
       const r = await app.auth().createUserWithEmailAndPassword(email, SENHA_PREFIXO + senha);
-      return { uid: r.user.uid, email };
+      return { uid: r.user.uid, email, recuperacao: email === sintetico ? null : email };
     }
-    async function criarContaSecundaria(login, senha) {   // cria o acesso de outra pessoa sem desconectar quem está usando
+    async function criarContaSecundaria(login, senha, emailReal) {   // cria o acesso de outra pessoa sem desconectar quem está usando
       const a = firebase.apps.find(x => x.name === 'criador') || firebase.initializeApp(FIREBASE_CONFIG, 'criador');
       await a.auth().setPersistence(firebase.auth.Auth.Persistence.NONE);
-      const r = await criarConta(a, login, senha);
+      const r = await criarConta(a, login, senha, emailReal);
       await a.auth().signOut();
       return r;
+    }
+    const mascararEmail = e => { const [u, d] = String(e).split('@'); return (u.slice(0, 2) + '•••') + '@' + d; };
+    async function esqueciSenha() {
+      if (!configOk()) { alert('O app ainda não está ligado ao Firebase.'); return; }
+      const login = (document.getElementById('login-id').value.trim() || prompt('Digite o seu login (nome ou e-mail):') || '').trim();
+      if (!login) return;
+      try {
+        const reg = (await publico().database().ref('guepar_logins/' + chaveLogin(login)).get()).val();
+        if (!reg) {
+          const meta = (await publico().database().ref('guepar_meta').get()).val();
+          alert(meta ? 'Não encontrei esse login. Confira como ele foi cadastrado.' : 'O sistema ainda não terminou a atualização de segurança. Peça ao administrador para ver ou trocar sua senha.');
+          return;
+        }
+        if (!reg.rec) { alert('Este acesso não tem e-mail de recuperação.\n\nPeça a um administrador para definir uma nova senha em "Acessos" → Editar (e, se quiser, cadastrar um e-mail para você recuperar sozinho da próxima vez).'); return; }
+        publico().auth().languageCode = 'pt-BR';
+        await publico().auth().sendPasswordResetEmail(reg.email);
+        alert(`📧 Enviamos um link para ${mascararEmail(reg.email)}.\n\nAbra o e-mail (veja também o spam), crie a nova senha (mínimo 6 caracteres) e depois entre aqui com ela.`);
+      } catch (e) { alert(msgErroLogin(e)); }
     }
     async function loginSenha(login, senha) {
       if (!configOk()) throw new Error('O app ainda não está ligado ao Firebase (falta preencher FIREBASE_CONFIG).');
@@ -924,7 +950,13 @@
         throw new Error('Credenciais inválidas!');
       }
       const app = Sessao.app(chave);
-      const cred = await app.auth().signInWithEmailAndPassword(reg.email, SENHA_PREFIXO + senha);
+      let cred;
+      try { cred = await app.auth().signInWithEmailAndPassword(reg.email, SENHA_PREFIXO + senha); }
+      catch (e) {
+        // senha criada pelo link de "Esqueci minha senha" é guardada exatamente como foi digitada
+        if (!reg.rec || senha.length < 6 || !/invalid-credential|wrong-password|invalid-login/.test(String(e.code))) throw e;
+        cred = await app.auth().signInWithEmailAndPassword(reg.email, senha);
+      }
       await concluirLogin(app, chave, cred.user);
     }
     async function concluirLogin(app, chave, user) {
@@ -990,21 +1022,23 @@
       const aviso = document.getElementById('pin-msg'), prog = t => { if (aviso) { aviso.textContent = t; aviso.className = 'text-center text-xs h-4 text-cyan-400'; } };
       prog('Criando o acesso do administrador…');
       const chaveEu = chaveLogin(eu.login), appEu = Sessao.app(chaveEu);
-      const contaEu = await criarConta(appEu, eu.login, senha);
+      // login que já é um e-mail vira e-mail de recuperação (se já estiver em uso, cria sem recuperação)
+      const criarComEmail = async (fn, u, s) => { if (emailValido(u.login)) { try { return await fn(u.login, s, u.login); } catch (e) { if (!/email-already-in-use/.test(String(e.code))) throw e; } } return fn(u.login, s, null); };
+      const contaEu = await criarComEmail((l, s, em) => criarConta(appEu, l, s, em), eu, senha);
       await appEu.database().ref('guepar_papeis/' + contaEu.uid).set('admin');
       const contas = { [chaveEu]: { ...contaEu, u: eu } }, pulados = [];
       for (const u of usuarios) {
         const ch = chaveLogin(u.login);
         if (!u.login || contas[ch]) continue;
         prog('Criando acesso: ' + u.login + '…');
-        try { contas[ch] = { ...(await criarContaSecundaria(u.login, String(u.senha || ''))), u }; } catch (e) { pulados.push(u.login + ' (' + (e.message || e.code) + ')'); }
+        try { contas[ch] = { ...(await criarComEmail(criarContaSecundaria, u, String(u.senha || ''))), u }; } catch (e) { pulados.push(u.login + ' (' + (e.message || e.code) + ')'); }
       }
       prog('Copiando os dados…');
       const up = {};
       Object.entries(contas).forEach(([ch, c]) => {
-        up['guepar_usuarios/' + c.uid] = { login: c.u.login, role: c.u.role, email: c.email };
+        up['guepar_usuarios/' + c.uid] = { login: c.u.login, role: c.u.role, email: c.email, recuperacao: c.recuperacao || null };
         up['guepar_papeis/' + c.uid] = c.u.role;
-        up['guepar_logins/' + ch] = { email: c.email };
+        up['guepar_logins/' + ch] = { email: c.email, rec: !!c.recuperacao };
         if (c.u.pin) up['guepar_pins/' + c.uid] = String(c.u.pin);
       });
       COLS.forEach(col => arrDe(antigo[col]).forEach((it, i) => {
@@ -1032,7 +1066,7 @@
         banco.ref('guepar_pins').on('value', s => { this.pins = s.val() || {}; this.montar(); }, () => { });
       },
       montar() {
-        db.usuarios = Object.entries(this.lista).map(([uid, u]) => ({ uid, login: u.login, role: u.role, email: u.email, pin: this.pins[uid] ? String(this.pins[uid]) : '' }))
+        db.usuarios = Object.entries(this.lista).map(([uid, u]) => ({ uid, login: u.login, role: u.role, email: u.email, recuperacao: u.recuperacao || '', pin: this.pins[uid] ? String(this.pins[uid]) : '' }))
           .sort((a, b) => String(a.login).localeCompare(String(b.login)));
         if (appVisivel()) renderizarTabelas();
       }
@@ -1485,7 +1519,7 @@
         document.getElementById('manu-ultima').value = i.ultima; document.getElementById('manu-validade').value = i.validade; document.getElementById('titulo-modal-manu').textContent = "Editar Manutenção"; abrirModal('modal-add-manutencao');
       }
       if(tipo === 'usuario') {
-        const i = db.usuarios[index]; document.getElementById('user-edit-id').value = index; document.getElementById('user-login').value = i.login; document.getElementById('user-senha').value = ''; document.getElementById('user-senha').placeholder = 'Deixe vazio para manter a senha atual'; document.getElementById('user-pin').value = podeVerPin(i) ? (i.pin || '') : ''; document.getElementById('user-pin').placeholder = podeVerPin(i) ? 'Ex: 1234' : 'Oculto — deixe vazio para manter'; document.getElementById('user-role').value = i.role; abrirModal('modal-add-usuario');
+        const i = db.usuarios[index]; document.getElementById('user-edit-id').value = index; document.getElementById('user-login').value = i.login; document.getElementById('user-recuperacao').value = i.recuperacao || ''; document.getElementById('user-senha').value = ''; document.getElementById('user-senha').placeholder = 'Deixe vazio para manter a senha atual'; document.getElementById('user-pin').value = podeVerPin(i) ? (i.pin || '') : ''; document.getElementById('user-pin').placeholder = podeVerPin(i) ? 'Ex: 1234' : 'Oculto — deixe vazio para manter'; document.getElementById('user-role').value = i.role; abrirModal('modal-add-usuario');
       }
     }
 
@@ -1553,20 +1587,27 @@
       if (data.pin && !/^\d{4}$/.test(data.pin)) { alert('O PIN precisa ter 4 números.'); return; }
       if (db.usuarios.some(u => u !== antes && chaveLogin(u.login) === chaveLogin(data.login))) { alert('Já existe um acesso com esse login.'); return; }
       if (data.pin && db.usuarios.some(u => u !== antes && u.pin === data.pin)) { alert('Esse PIN já é usado por outro acesso. Escolha outro.'); return; }
+      const rec = document.getElementById('user-recuperacao').value.trim().toLowerCase();
+      if (rec && !emailValido(rec)) { alert('Confira o e-mail de recuperação.'); return; }
+      const recMudou = rec !== ((antes && antes.recuperacao) || '');
+      if (antes && recMudou && !data.senha) { alert('Para incluir, trocar ou tirar o e-mail de recuperação, defina também uma senha nova.'); return; }
+      // acesso com e-mail de recuperação: a nova senha é criada pela própria pessoa, pelo link enviado ao e-mail
+      const porLink = !!(antes && data.senha && antes.recuperacao && !recMudou);
 
       const btn = e.submitter; if (btn) { btn.disabled = true; btn.dataset.txt = btn.textContent; btn.textContent = 'Salvando…'; }
       try {
-        let uid = antes ? antes.uid : null, email = antes ? antes.email : null;
+        let uid = antes ? antes.uid : null, email = antes ? antes.email : null, recuperacao = (antes && antes.recuperacao) || null;
         const up = {};
-        if (!antes || data.senha) {   // novo acesso ou nova senha: cria a conta no Firebase
-          const c = await criarContaSecundaria(data.login, data.senha);
+        if (!antes || (data.senha && !porLink)) {   // novo acesso ou nova senha: cria a conta no Firebase
+          const c = await criarContaSecundaria(data.login, data.senha, rec || null);
           if (antes) { up['guepar_usuarios/' + antes.uid] = null; up['guepar_papeis/' + antes.uid] = null; up['guepar_pins/' + antes.uid] = null; }
-          uid = c.uid; email = c.email;
+          uid = c.uid; email = c.email; recuperacao = c.recuperacao;
         }
+        if (porLink) { publico().auth().languageCode = 'pt-BR'; await publico().auth().sendPasswordResetEmail(antes.recuperacao); data.senha = ''; alert(`📧 Esse acesso tem e-mail de recuperação: enviamos um link para ${mascararEmail(antes.recuperacao)} criar a nova senha.\n(Se a pessoa não tiver acesso ao e-mail, apague o e-mail de recuperação e defina a senha de novo.)`); }
         if (antes && chaveLogin(antes.login) !== chaveLogin(data.login)) up['guepar_logins/' + chaveLogin(antes.login)] = null;
-        up['guepar_usuarios/' + uid] = { login: data.login, role: data.role, email };
+        up['guepar_usuarios/' + uid] = { login: data.login, role: data.role, email, recuperacao: recuperacao || null };
         up['guepar_papeis/' + uid] = data.role;
-        up['guepar_logins/' + chaveLogin(data.login)] = { email };
+        up['guepar_logins/' + chaveLogin(data.login)] = { email, rec: !!recuperacao };
         up['guepar_pins/' + uid] = data.pin || null;
         const souEu = antes && antes.uid === S.uid;
         await S.app.database().ref().update(up);
@@ -1579,6 +1620,8 @@
         else {
           const diff = calcularDiff({ login: antes.login, role: antes.role, pin: antes.pin }, { login: data.login, role: data.role, pin: data.pin }, { login: 'Login de Acesso', pin: 'PIN Rápido', role: 'Nível de Permissão' });
           if (data.senha) diff.push({ campo: 'Palavra-passe', de: '••••••', para: '•••••• (alterada)' });
+          if (porLink) diff.push({ campo: 'Palavra-passe', de: '••••••', para: 'Link de nova senha enviado por e-mail' });
+          if (recMudou) diff.push({ campo: 'E-mail de recuperação', de: (antes && antes.recuperacao) || '(Vazio)', para: rec || '(Vazio)' });
           auditarAcao('EDICAO', `Editou utilizador: ${data.login}`, diff);
         }
         salvarDB(); fecharModal('modal-add-usuario');
