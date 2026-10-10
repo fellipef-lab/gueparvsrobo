@@ -14,6 +14,9 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 
   <style>
     .chat-mensagem { animation: fadeIn 0.3s ease-out forwards; }
@@ -72,7 +75,7 @@
       </div>
       <div>
         <label class="block text-xs uppercase font-bold text-gray-400 mb-1 text-translate" data-pt="Palavra-passe" data-en="Password">Palavra-passe</label>
-        <input type="password" id="login-senha" required autocomplete="current-password" class="w-full bg-slate-800/80 border border-slate-700 focus:border-cyan-500 outline-none rounded-xl px-4 py-3 text-white transition">
+        <div class="relative"><input type="password" id="login-senha" required autocomplete="current-password" class="w-full bg-slate-800/80 border border-slate-700 focus:border-cyan-500 outline-none rounded-xl pl-4 pr-12 py-3 text-white transition"><button type="button" onclick="verSenha('login-senha', this)" title="Mostrar senha" aria-label="Mostrar senha" class="absolute inset-y-0 right-0 px-4 text-gray-400 hover:text-white cursor-pointer"><i class="ph ph-eye text-lg"></i></button></div>
       </div>
       <button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-cyan-900/50 transition">
         <span class="text-translate" data-pt="Aceder ao Painel" data-en="Login to Dashboard">Aceder ao Painel</span> <i class="ph ph-arrow-right text-xl"></i>
@@ -570,7 +573,7 @@
           <form id="form-usuario" class="space-y-4">
             <input type="hidden" id="user-edit-id" value="">
             <div><label class="block text-xs font-bold text-gray-400 mb-1 text-translate" data-pt="Utilizador / E-mail" data-en="User / Email">Utilizador / E-mail</label><input type="text" id="user-login" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-purple-500" placeholder="Ex: Operador Carlos"></div>
-            <div><label class="block text-xs font-bold text-gray-400 mb-1 text-translate" data-pt="Senha Principal" data-en="Password">Senha Principal</label><input type="password" id="user-senha" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-purple-500"></div>
+            <div><label class="block text-xs font-bold text-gray-400 mb-1 text-translate" data-pt="Senha Principal" data-en="Password">Senha Principal</label><div class="relative"><input type="password" id="user-senha" autocomplete="new-password" placeholder="Mínimo 3 caracteres" class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-3 pr-11 py-2 text-white outline-none focus:border-purple-500"><button type="button" onclick="verSenha('user-senha', this)" title="Mostrar senha" aria-label="Mostrar senha" class="absolute inset-y-0 right-0 px-3 text-gray-400 hover:text-white cursor-pointer"><i class="ph ph-eye text-lg"></i></button></div></div>
             <div><label class="block text-xs font-bold text-cyan-400 mb-1 text-translate" data-pt="PIN Rápido (4 Dígitos)" data-en="Quick PIN (4 Digits)">PIN Rápido (4 Dígitos)</label><input type="text" id="user-pin" maxlength="4" pattern="\d{4}" class="w-full bg-slate-950 border border-cyan-800/80 rounded-xl px-3 py-2 text-cyan-300 font-mono tracking-widest outline-none focus:border-cyan-400" placeholder="Ex: 1234"></div>
             <div>
               <label class="block text-xs font-bold text-gray-400 mb-1 text-translate" data-pt="Permissão" data-en="Role">Permissão</label>
@@ -627,129 +630,416 @@
 
   <!-- JAVASCRIPT LOGIC -->
   <script>
-    const defaultDB = {
-      usuarios: [
-        { login: 'fellipe.f@grupodime.com.br', senha: '123456', pin: '1234', role: 'admin' },
-        { login: 'Operador', senha: '123', pin: '0000', role: 'visitante1' },
-        { login: 'Leitura', senha: '123', pin: '1111', role: 'visitante' }
-      ],
-      pecas: [
-        { nome: 'Bateria de Lítio', estoque: 1, min: 2, sobressalentes: 1, custo: 1250.00 },
-        { nome: 'Sensores Ultrassónicos', estoque: 12, min: 4, sobressalentes: 2, custo: 450.00 }
-      ],
-      guepar: [
-        { nome: 'Parafusadeira Industrial', marca: 'Bosch', estoque: 3, custo: 890.00 },
-        { nome: 'Graxa Branca', marca: 'Guepar', estoque: 12, custo: 45.00 }
-      ],
-      emprestimos: [],
-      manutencoes: [
-        { equip: 'Robô Alpha - Motor', tipo: 'Lubrificação (Graxa)', ultima: '2026-09-10', validade: '2026-12-10' }
-      ],
-      logs: []
-    };
-
-    let db = JSON.parse(localStorage.getItem('gueparDB')) ? JSON.parse(localStorage.getItem('gueparDB')) : defaultDB;
-    
-    if (!db.usuarios) db.usuarios = defaultDB.usuarios;
-    if (!db.logs) db.logs = [];
-
     /* =====================================================================
-       FIREBASE (Realtime Database) - sincroniza o db entre todos os aparelhos
-       Continua offline-first: tudo é salvo no aparelho e enviado quando há internet.
+       NUVEM (Firebase) — VERSÃO 2: segura, econômica e sem perder alterações
+       • Login pelo Firebase Authentication: as senhas não ficam mais no banco.
+       • Dados em /guepar2: cada item tem um código próprio e só o que muda é enviado
+         (duas pessoas editando ao mesmo tempo não apagam o trabalho uma da outra).
+       • Fotos em /guepar_fotos: baixadas uma única vez e guardadas no aparelho.
+       • /guepar (formato antigo) NÃO é apagado: fica guardado como backup.
+       • Continua funcionando sem internet: tudo fica salvo no aparelho e é enviado depois.
        ===================================================================== */
-    const FIREBASE_URL = 'https://gueparvsrobo-default-rtdb.firebaseio.com';
-    const FIREBASE_CAMINHO = 'guepar';   // este painel usa /guepar
-    let nuvemPronta = false;             // login só liberado depois da 1ª sincronização
+    const FIREBASE_CONFIG = {
+      apiKey: 'AIzaSyBKmRalzvyvDymDUl0nr2I3EYComxx2_30',
+      authDomain: 'gueparvsrobo.firebaseapp.com',
+      databaseURL: 'https://gueparvsrobo-default-rtdb.firebaseio.com',
+      projectId: 'gueparvsrobo',
+      storageBucket: 'gueparvsrobo.firebasestorage.app',
+      messagingSenderId: '78804181086',
+      appId: '1:78804181086:web:f76b1845c0de2253dad4cf'
+    };
+    const configOk = () => typeof firebase !== 'undefined' && FIREBASE_CONFIG.apiKey && !FIREBASE_CONFIG.apiKey.startsWith('COLE');
+    const COLS = ['pecas', 'guepar', 'emprestimos', 'manutencoes', 'logs'];          // sincronizadas em /guepar2
+    const PODE_ESCREVER = { admin: COLS, visitante1: COLS, visitante: ['logs'] };   // igual às regras do Firebase
+    const DOMINIO_LOGIN = '@usuarios.gueparvsrobo.app';                            // e-mail técnico de cada acesso
+    const SENHA_PREFIXO = 'gp:';   // o Firebase exige 6+ caracteres; assim as senhas curtas atuais continuam valendo
+    const FOTO_REF = '@foto:';
 
-    function normDB(r) {
-      const arr = v => Array.isArray(v) ? v.filter(x => x != null) : (v && typeof v === 'object' ? Object.values(v) : []);
-      const out = Object.assign({}, r || {});
-      ['usuarios', 'pecas', 'guepar', 'emprestimos', 'manutencoes', 'logs'].forEach(k => { out[k] = arr(out[k]); });
-      if (!out.usuarios.length) out.usuarios = defaultDB.usuarios;
-      return out;
+    const lerLS = (k, padrao) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : padrao; } catch (e) { return padrao; } };
+    const gravarLS = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } };
+    const vazioDB = () => ({ usuarios: [], pecas: [], guepar: [], emprestimos: [], manutencoes: [], logs: [] });
+    const arrDe = v => Array.isArray(v) ? v.filter(x => x != null) : (v && typeof v === 'object' ? Object.values(v) : []);
+
+    const S = { app: null, uid: null, papel: null, base: lerLS('gueparBase2', null), servidor: null, conectado: false, fotosNaNuvem: {} };
+
+    let db = lerLS('gueparDB2', null);
+    if (!db) {
+      // 1ª vez nesta versão: se o aparelho tinha alterações da versão antiga que não chegaram a subir,
+      // elas são guardadas e mescladas (sem sobrescrever nada) assim que a nuvem responder.
+      const antigo = lerLS('gueparDB', null);
+      db = vazioDB();
+      if (antigo && localStorage.getItem('guepar_dirty') === '1') { COLS.forEach(k => { db[k] = arrDe(antigo[k]); }); gravarLS('guepar_pendente2', true); }
+    }
+    ['usuarios', ...COLS].forEach(k => { if (!Array.isArray(db[k])) db[k] = []; });
+    db.usuarios = [];
+    let nuvemPronta = true;
+    let ultimosIds = lerLS('gueparIds2', {});
+
+    /* ---------- utilidades ---------- */
+    const novoId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+    function limpo(v) {   // mesmo formato que o Firebase guarda (sem nulos, NaN, listas/objetos vazios)
+      if (v === null || v === undefined) return undefined;
+      if (typeof v === 'number') return Number.isFinite(v) ? v : undefined;
+      if (Array.isArray(v)) { const a = v.map(limpo).filter(x => x !== undefined); return a.length ? a : undefined; }
+      if (typeof v === 'object') { const o = {}; Object.keys(v).sort().forEach(k => { const x = limpo(v[k]); if (x !== undefined) o[k] = x; }); return Object.keys(o).length ? o : undefined; }
+      return v;
+    }
+    const igual = (a, b) => JSON.stringify(limpo(a)) === JSON.stringify(limpo(b));
+    function hashTexto(s) {
+      let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+      for (let i = 0; i < s.length; i++) { const c = s.charCodeAt(i); h1 = Math.imul(h1 ^ c, 2654435761); h2 = Math.imul(h2 ^ c, 1597334677); }
+      h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+      h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+      return (h2 >>> 0).toString(16).padStart(8, '0') + (h1 >>> 0).toString(16).padStart(8, '0') + s.length.toString(36);
+    }
+    const chaveLogin = l => Array.from(new TextEncoder().encode(String(l || '').trim().toLowerCase())).map(b => b.toString(16).padStart(2, '0')).join('');
+    async function hashPin(uid, pin) {
+      const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('guepar-pin:' + uid + ':' + pin));
+      return Array.from(new Uint8Array(b)).map(x => x.toString(16).padStart(2, '0')).join('');
     }
 
+    /* ---------- fotos: separadas dos dados e guardadas no aparelho ---------- */
+    const FOTOS = {};
+    const FotoCache = {
+      p: null,
+      abrir() { if (!this.p) this.p = new Promise(ok => { try { const r = indexedDB.open('guepar_fotos', 1); r.onupgradeneeded = () => r.result.createObjectStore('f'); r.onsuccess = () => ok(r.result); r.onerror = () => ok(null); } catch (e) { ok(null); } }); return this.p; },
+      async ler(h) { const d = await this.abrir(); if (!d) return null; return new Promise(ok => { try { const q = d.transaction('f').objectStore('f').get(h); q.onsuccess = () => ok(q.result || null); q.onerror = () => ok(null); } catch (e) { ok(null); } }); },
+      async gravar(h, v) { const d = await this.abrir(); if (!d) return; try { d.transaction('f', 'readwrite').objectStore('f').put(v, h); } catch (e) { } }
+    };
+    function paraNuvem(item) {   // item do app -> formato guardado na nuvem (fotos viram referência)
+      const o = {}, fotos = {};
+      Object.keys(item || {}).forEach(k => {
+        if (k === '_id') return;
+        let v = item[k];
+        if (typeof v === 'string' && v.startsWith('data:image/')) { const h = hashTexto(v); if (!FOTOS[h]) { FOTOS[h] = v; FotoCache.gravar(h, v); } fotos[h] = v; v = FOTO_REF + h; }
+        o[k] = v;
+      });
+      return { item: limpo(o) || {}, fotos };
+    }
+    const resolverFoto = v => (typeof v === 'string' && v.startsWith(FOTO_REF) && FOTOS[v.slice(FOTO_REF.length)]) || v;
+    function daNuvem(id, it) { const o = { ...it, _id: id }; Object.keys(o).forEach(k => { o[k] = resolverFoto(o[k]); }); return o; }
+    async function carregarFotosFaltando() {
+      const faltam = new Set();
+      COLS.forEach(c => db[c].forEach(it => it && Object.values(it).forEach(v => { if (typeof v === 'string' && v.startsWith(FOTO_REF) && !FOTOS[v.slice(FOTO_REF.length)]) faltam.add(v.slice(FOTO_REF.length)); })));
+      if (!faltam.size) return;
+      let achou = false;
+      await Promise.all([...faltam].map(async h => {
+        let v = await FotoCache.ler(h);
+        if (!v && S.app) { try { v = (await S.app.database().ref('guepar_fotos/' + h).get()).val(); if (v) FotoCache.gravar(h, v); } catch (e) { } }
+        if (v) { FOTOS[h] = v; achou = true; }
+      }));
+      if (!achou) return;
+      COLS.forEach(c => db[c].forEach(it => it && Object.keys(it).forEach(k => { it[k] = resolverFoto(it[k]); })));
+      if (appVisivel()) { renderizarTabelas(); }
+    }
+
+    /* ---------- cópia local (sem fotos, que ficam no IndexedDB) ---------- */
+    function salvarLocal() {
+      const leve = {};
+      COLS.forEach(c => { leve[c] = db[c].map(it => { if (!it || typeof it !== 'object') return it; const o = { ...it }; Object.keys(o).forEach(k => { if (typeof o[k] === 'string' && o[k].startsWith('data:image/')) o[k] = FOTO_REF + hashTexto(o[k]); }); return o; }); });
+      if (!gravarLS('gueparDB2', leve)) console.warn('Memória do aparelho cheia');
+      if (S.base) gravarLS('gueparBase2', S.base);
+      gravarLS('gueparIds2', ultimosIds);
+    }
+    const appVisivel = () => !document.getElementById('tela-app').classList.contains('hidden');
+
+    /* ---------- ids e ordem dos itens ---------- */
+    function garantirIds(col) {
+      const arr = db[col], baseCol = (S.base && S.base[col]) || {}, antes = ultimosIds[col] || [];
+      const presentes = new Set(arr.map(x => x && x._id).filter(Boolean));
+      arr.forEach((it, i) => {
+        if (!it || typeof it !== 'object') return;
+        if (!it._id) { const c = antes[i]; it._id = (c && !presentes.has(c)) ? c : novoId(); presentes.add(it._id); }   // item editado (objeto trocado) mantém o código
+        if (!Number.isFinite(it._ord) && baseCol[it._id] && Number.isFinite(baseCol[it._id]._ord)) it._ord = baseCol[it._id]._ord;
+      });
+      arr.forEach((it, i) => {
+        if (!it || typeof it !== 'object' || Number.isFinite(it._ord)) return;
+        let ant = null, prox = null;
+        for (let j = i - 1; j >= 0; j--) if (arr[j] && Number.isFinite(arr[j]._ord)) { ant = arr[j]._ord; break; }
+        for (let j = i + 1; j < arr.length; j++) if (arr[j] && Number.isFinite(arr[j]._ord)) { prox = arr[j]._ord; break; }
+        it._ord = ant === null ? (prox === null ? i : prox - 1) : (prox === null ? ant + 1 : (ant + prox) / 2);
+      });
+      ultimosIds[col] = arr.map(x => x && x._id);
+    }
+    function diferencas() {
+      const d = {}, pode = PODE_ESCREVER[S.papel] || [];
+      COLS.forEach(col => {
+        if (!pode.includes(col)) return;
+        db[col] = db[col].filter(x => x && typeof x === 'object');
+        garantirIds(col);
+        const baseCol = S.base[col] || {}, vistos = new Set();
+        db[col].forEach(it => {
+          vistos.add(it._id);
+          const { item, fotos } = paraNuvem(it);
+          if (!igual(item, baseCol[it._id])) {
+            d[`guepar2/${col}/${it._id}`] = item;
+            Object.keys(fotos).forEach(h => { if (!S.fotosNaNuvem[h]) d[`guepar_fotos/${h}`] = fotos[h]; });
+          }
+        });
+        Object.keys(baseCol).forEach(id => { if (!vistos.has(id)) d[`guepar2/${col}/${id}`] = null; });
+      });
+      return d;
+    }
+    function aplicarNaBase(caminho, valor) {
+      const p = caminho.split('/');
+      if (p[0] === 'guepar_fotos') { if (valor) S.fotosNaNuvem[p[1]] = true; return; }
+      if (p[0] !== 'guepar2') return;
+      S.base[p[1]] = S.base[p[1]] || {};
+      if (valor == null) delete S.base[p[1]][p[2]]; else S.base[p[1]][p[2]] = valor;
+    }
+    function materializar(base) {
+      const novo = { usuarios: db.usuarios || [] };
+      COLS.forEach(col => {
+        novo[col] = Object.entries(base[col] || {}).filter(([, v]) => v && typeof v === 'object')
+          .map(([id, v]) => daNuvem(id, v)).sort((a, b) => (a._ord ?? 0) - (b._ord ?? 0));
+        ultimosIds[col] = novo[col].map(x => x._id);
+      });
+      return novo;
+    }
+    function mesclarPorConteudo(local) {   // traz itens feitos offline/na versão antiga sem sobrescrever a nuvem
+      COLS.forEach(col => {
+        const assinatura = it => { const o = { ...it }; delete o._id; delete o._ord; return JSON.stringify(paraNuvem(o).item); };
+        const existentes = new Set(db[col].map(assinatura));
+        arrDe(local[col]).forEach(it => { if (it && typeof it === 'object' && !existentes.has(assinatura(it))) { const o = { ...it }; delete o._id; delete o._ord; db[col].push(o); existentes.add(assinatura(o)); } });
+      });
+    }
+
+    /* ---------- sincronização ---------- */
     function atualizarStatusNuvem() {
       const e = document.getElementById('status-nuvem'); if (!e) return;
       const m = {
         ok:    ['☁ Sincronizado', 'text-emerald-400'],
         envio: ['☁ Enviando…', 'text-cyan-400'],
-        erro:  ['☁ Sem conexão - salvo só neste aparelho', 'text-amber-400'],
-        local: ['☁ Só neste aparelho', 'text-gray-400']
-      }[Cloud.estado] || ['☁', 'text-gray-400'];
+        erro:  ['☁ Sem conexão - salvo neste aparelho', 'text-amber-400'],
+        local: ['☁ Conectando…', 'text-gray-400']
+      }[Sync.estado] || ['☁', 'text-gray-400'];
       e.textContent = m[0]; e.className = 'block text-[10px] font-bold mt-1 ' + m[1];
     }
-
-    function aplicarRemoto(novo) {
-      if (JSON.stringify(novo) === JSON.stringify(db)) return;
-      const appAberto = !document.getElementById('tela-app').classList.contains('hidden');
+    const usuarioOcupado = () => {
+      if (!appVisivel()) return false;
       const a = document.activeElement;
-      const ocupado = appAberto && ((a && ['INPUT', 'SELECT', 'TEXTAREA'].includes(a.tagName)) || document.querySelector('.modal-overlay:not(.hidden)'));
-      if (ocupado) { setTimeout(() => Cloud.puxar(), 3000); return; }   // não atrapalha quem está digitando
-      db = novo;
-      localStorage.setItem('gueparDB', JSON.stringify(db));
-      if (appAberto) { renderizarTabelas(); atualizarListaEmprestimo(); iniciarGraficos(); }
-    }
+      return (a && ['INPUT', 'SELECT', 'TEXTAREA'].includes(a.tagName)) || !!document.querySelector('.modal-overlay:not(.hidden)');
+    };
 
-    const Cloud = {
-      url: FIREBASE_URL.replace(/\/+$/, '') + '/' + FIREBASE_CAMINHO + '.json',
-      pend: 0, estado: 'local', timer: null, es: null,
-      dirty: () => localStorage.getItem('guepar_dirty') === '1',
-      setDirty(v) { if (v) localStorage.setItem('guepar_dirty', '1'); else localStorage.removeItem('guepar_dirty'); },
+    const Sync = {
+      estado: 'local', enviando: false, ligado: false, tAplicar: null,
       status(e) { this.estado = e; atualizarStatusNuvem(); },
-      async ler() {
-        const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 8000);
-        try {
-          const r = await fetch(this.url, { signal: ctl.signal, cache: 'no-store' });
-          if (!r.ok) throw new Error('HTTP ' + r.status);
-          return await r.json();
-        } finally { clearTimeout(t); }
+      fila: () => lerLS('gueparFila2', {}),
+      enviar() {
+        if (!S.base) { gravarLS('guepar_pendente2', true); salvarLocal(); return; }   // ainda não falou com a nuvem neste aparelho
+        const d = diferencas();
+        if (Object.keys(d).length) {
+          Object.entries(d).forEach(([p, v]) => aplicarNaBase(p, v));
+          const f = this.fila(); Object.assign(f, d);
+          if (!gravarLS('gueparFila2', f)) console.warn('Fila não coube na memória; envio segue pela conexão aberta.');
+        }
+        salvarLocal();
+        this.descarregar(d);
       },
-      agendarEnvio() { this.setDirty(true); clearTimeout(this.timer); this.timer = setTimeout(() => this.empurrar(), 600); },
-      async empurrar() {
-        if (this.pend) return;
-        this.pend = 1; this.status('envio');
+      async descarregar(extra) {
+        if (!S.app || this.enviando) return;
+        const fila = { ...(extra || {}), ...this.fila() }, chaves = Object.keys(fila);
+        if (!chaves.length) { if (S.conectado) this.status('ok'); return; }
+        this.enviando = true; this.status('envio');
         try {
-          const snap = JSON.stringify(db);
-          const r = await fetch(this.url, { method: 'PUT', body: snap });
-          if (!r.ok) throw new Error('HTTP ' + r.status);
-          if (JSON.stringify(db) === snap) this.setDirty(false); else this.agendarEnvio();  // mudou durante o envio
-          this.status('ok');
-        } catch (e) { this.status('erro'); }      // fica marcado como pendente e tenta de novo
-        finally { this.pend = 0; }
+          await S.app.database().ref().update(fila);
+          const agora = this.fila();
+          chaves.forEach(k => { if (k in agora && JSON.stringify(agora[k]) === JSON.stringify(fila[k])) delete agora[k]; });
+          gravarLS('gueparFila2', agora);
+          this.enviando = false;
+          if (Object.keys(agora).length) this.descarregar(); else this.status(S.conectado ? 'ok' : 'erro');
+        } catch (e) {
+          this.enviando = false;
+          if (/permission/i.test(String(e && (e.code || e.message)))) {
+            gravarLS('gueparFila2', {});
+            alert('⚠️ Algumas alterações não foram salvas na nuvem porque seu acesso não permite. Elas foram desfeitas.');
+            this.aplicar(true);
+          } else { this.status('erro'); setTimeout(() => this.descarregar(), 15000); }
+        }
       },
-      async puxar() {
-        if (this.pend || this.dirty()) { if (this.dirty() && !this.pend) this.empurrar(); return; }
-        try {
-          const raw = await this.ler();
-          if (this.pend || this.dirty()) return;
-          this.status('ok');
-          if (raw == null) { this.setDirty(true); await this.empurrar(); } else aplicarRemoto(normDB(raw));
-        } catch (e) { this.status('erro'); }
+      iniciar() {
+        if (!S.app || this.ligado) return;
+        this.ligado = true;
+        const banco = S.app.database();
+        if (S.base) this.enviar();                     // alterações feitas sem internet desde a última vez
+        banco.ref('.info/connected').on('value', s => { S.conectado = !!s.val(); if (S.conectado) this.descarregar(); else if (this.estado !== 'local') this.status('erro'); });
+        banco.ref('guepar2').on('value', snap => { S.servidor = snap.val() || {}; this.aplicar(); }, () => this.status('erro'));
+        carregarFotosFaltando();
       },
-      async iniciar() {
-        try {
-          const raw = await this.ler();
-          if (raw == null || this.dirty()) { this.setDirty(true); await this.empurrar(); }   // 1ª vez ou alterações feitas offline
-          else { this.status('ok'); aplicarRemoto(normDB(raw)); }
-        } catch (e) { this.status('erro'); }
-        nuvemPronta = true;
-        this.ligar();
-      },
-      ligar() {
-        try {
-          this.es = new EventSource(this.url);
-          let t = null; const ler = () => { clearTimeout(t); t = setTimeout(() => this.puxar(), 200); };
-          this.es.addEventListener('put', ler); this.es.addEventListener('patch', ler);
-          this.es.onerror = () => { if (this.estado === 'ok') this.status('erro'); };
-          this.es.onopen = () => { if (!this.dirty()) this.status('ok'); };
-        } catch (e) { }
-        setInterval(() => this.puxar(), 20000);                                   // garantia extra (e reenvia pendências)
-        window.addEventListener('online', () => this.puxar());
-        document.addEventListener('visibilitychange', () => { if (!document.hidden) this.puxar(); });
+      parar() { if (S.app) { try { S.app.database().ref('guepar2').off(); S.app.database().ref('.info/connected').off(); S.app.database().goOffline(); } catch (e) { } } this.ligado = false; },
+      aplicar(forcar) {
+        if (!S.servidor) return;
+        if (!forcar && usuarioOcupado()) { clearTimeout(this.tAplicar); this.tAplicar = setTimeout(() => this.aplicar(), 2000); return; }   // não atrapalha quem está digitando
+        const pendente = lerLS('guepar_pendente2', false) ? db : null;
+        S.base = {}; COLS.forEach(c => { S.base[c] = { ...((S.servidor || {})[c] || {}) }; });
+        S.fotosNaNuvem = {};
+        COLS.forEach(c => Object.values(S.base[c]).forEach(it => it && Object.values(it).forEach(v => { if (typeof v === 'string' && v.startsWith(FOTO_REF)) S.fotosNaNuvem[v.slice(FOTO_REF.length)] = true; })));
+        db = materializar(S.base);
+        if (pendente) { localStorage.removeItem('guepar_pendente2'); localStorage.removeItem('guepar_dirty'); mesclarPorConteudo(pendente); this.enviar(); }
+        salvarLocal();
+        if (!this.enviando && !Object.keys(this.fila()).length && S.conectado) this.status('ok');
+        if (appVisivel()) { renderizarTabelas(); atualizarListaEmprestimo(); iniciarGraficos(); }
+        carregarFotosFaltando();
       }
     };
-    window.addEventListener('DOMContentLoaded', () => { atualizarStatusNuvem(); Cloud.iniciar(); });
+
+    /* ---------- acesso (login, PIN, sessões guardadas no aparelho) ---------- */
+    let appPublico = null;
+    const publico = () => appPublico || (appPublico = firebase.initializeApp(FIREBASE_CONFIG));
+    const Sessao = {
+      lista: () => lerLS('guepar_sessoes', []),   // [{chave, login, uid, papel, pinHash}] — quem já entrou neste aparelho
+      salvar(l) { gravarLS('guepar_sessoes', l); },
+      app(chave) { const nome = 'u_' + hashTexto(chave); return firebase.apps.find(a => a.name === nome) || firebase.initializeApp(FIREBASE_CONFIG, nome); },
+      usuario(app) { return new Promise(ok => { const off = app.auth().onAuthStateChanged(u => { off(); ok(u); }); }); },
+      atualizar(chave, dados) { this.salvar(this.lista().map(s => s.chave === chave ? { ...s, ...dados } : s)); }
+    };
+    function msgErroLogin(e) {
+      const c = String((e && e.code) || '');
+      if (/invalid-credential|wrong-password|user-not-found|invalid-email|invalid-login/.test(c)) return 'Credenciais inválidas!';
+      if (/network|unavailable/.test(c) || /network|offline|failed to fetch/i.test(String(e && e.message))) return 'Sem internet. O primeiro acesso em cada aparelho precisa de internet; depois, o PIN funciona offline.';
+      if (/too-many-requests/.test(c)) return 'Muitas tentativas. Aguarde alguns minutos.';
+      if (/operation-not-allowed/.test(c)) return 'O login por e-mail/senha não está ativado no Firebase (Authentication → Método de login).';
+      return (e && e.message) || 'Não foi possível entrar.';
+    }
+    async function criarConta(app, login, senha) {
+      if (String(senha || '').length < 3) throw new Error(`A senha de "${login}" precisa ter pelo menos 3 caracteres.`);
+      const email = 'u' + chaveLogin(login).slice(0, 16) + '.' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5) + DOMINIO_LOGIN;
+      const r = await app.auth().createUserWithEmailAndPassword(email, SENHA_PREFIXO + senha);
+      return { uid: r.user.uid, email };
+    }
+    async function criarContaSecundaria(login, senha) {   // cria o acesso de outra pessoa sem desconectar quem está usando
+      const a = firebase.apps.find(x => x.name === 'criador') || firebase.initializeApp(FIREBASE_CONFIG, 'criador');
+      await a.auth().setPersistence(firebase.auth.Auth.Persistence.NONE);
+      const r = await criarConta(a, login, senha);
+      await a.auth().signOut();
+      return r;
+    }
+    async function loginSenha(login, senha) {
+      if (!configOk()) throw new Error('O app ainda não está ligado ao Firebase (falta preencher FIREBASE_CONFIG).');
+      const chave = chaveLogin(login);
+      const reg = (await publico().database().ref('guepar_logins/' + chave).get()).val();
+      if (!reg || !reg.email) {
+        const meta = (await publico().database().ref('guepar_meta').get()).val();
+        if (!meta) return migrar(login, senha);   // 1º acesso depois da atualização
+        throw new Error('Credenciais inválidas!');
+      }
+      const app = Sessao.app(chave);
+      const cred = await app.auth().signInWithEmailAndPassword(reg.email, SENHA_PREFIXO + senha);
+      await concluirLogin(app, chave, cred.user);
+    }
+    async function concluirLogin(app, chave, user) {
+      const banco = app.database();
+      const papel = (await banco.ref('guepar_papeis/' + user.uid).get()).val();
+      if (!papel) { await app.auth().signOut(); throw new Error('Este acesso foi removido. Fale com o administrador.'); }
+      let login = '', pinHash = null;
+      try { const u = (await banco.ref('guepar_usuarios/' + user.uid).get()).val(); if (u) login = u.login; } catch (e) { }   // só o admin lê a lista
+      try { const pin = (await banco.ref('guepar_pins/' + user.uid).get()).val(); if (pin) pinHash = await hashPin(user.uid, String(pin)); } catch (e) { }
+      if (!login) login = document.getElementById('login-id').value.trim() || (Sessao.lista().find(s => s.chave === chave) || {}).login || '';
+      const s = { chave, login, uid: user.uid, papel, pinHash };
+      Sessao.salvar([...Sessao.lista().filter(x => x.chave !== chave), s]);
+      ativarSessao(app, s);
+    }
+    function ativarSessao(app, s) {
+      if (S.app && S.app !== app) Sync.parar();
+      S.app = app; S.uid = s.uid; S.papel = s.papel;
+      try { app.database().goOnline(); } catch (e) { }
+      localStorage.setItem('guepar_sessao', s.chave);
+      localStorage.setItem('guepar_logado', 'true'); localStorage.setItem('guepar_email', s.login); localStorage.setItem('guepar_role', s.papel);
+      ouvirPapel(); Sync.iniciar();
+      if (s.papel === 'admin') Usuarios.ouvir();
+      arrancarSistema(s.login, s.papel);
+    }
+    function ouvirPapel() {   // se o admin mudar ou remover o acesso, vale na hora
+      S.app.database().ref('guepar_papeis/' + S.uid).on('value', snap => {
+        const p = snap.val();
+        if (!p) { alert('Seu acesso foi removido pelo administrador.'); sairLocal(true); return; }
+        if (p !== S.papel) { S.papel = p; localStorage.setItem('guepar_role', p); Sessao.atualizar(localStorage.getItem('guepar_sessao'), { papel: p }); aplicarPermissoes(); renderizarTabelas(); if (p === 'admin') Usuarios.ouvir(); }
+      }, () => { });
+    }
+    function sairLocal(recarregar) {   // sai do painel; quem já entrou neste aparelho continua podendo usar o PIN
+      Sync.parar();
+      ['guepar_logado', 'guepar_email', 'guepar_role', 'guepar_sessao'].forEach(k => localStorage.removeItem(k));
+      if (recarregar) location.reload();
+    }
+    async function retomarSessao() {
+      const chave = localStorage.getItem('guepar_sessao'), s = Sessao.lista().find(x => x.chave === chave);
+      if (localStorage.getItem('guepar_logado') !== 'true') return;
+      if (!s || !configOk()) {   // estava logado na versão antiga
+        sairLocal(false);
+        pinMsg('🔒 Atualização de segurança: entre uma vez com login e senha', 'text-amber-400');
+        return;
+      }
+      arrancarSistema(s.login, s.papel);   // abre na hora com os dados do aparelho (funciona offline)
+      const app = Sessao.app(chave), u = await Sessao.usuario(app);
+      if (!u) { sairLocal(false); location.reload(); return; }
+      S.app = app; S.uid = u.uid; S.papel = s.papel;
+      ouvirPapel(); Sync.iniciar();
+      if (s.papel === 'admin') Usuarios.ouvir();
+    }
+
+    /* ---------- migração única do formato antigo (/guepar) para o novo (/guepar2) ---------- */
+    async function migrar(login, senha) {
+      let antigo = null;
+      try { antigo = (await publico().database().ref('guepar').get()).val(); } catch (e) { }
+      if (!antigo) throw new Error('Credenciais inválidas!');
+      const usuarios = arrDe(antigo.usuarios);
+      const eu = usuarios.find(u => String(u.login).trim().toLowerCase() === login.trim().toLowerCase() && String(u.senha) === senha);
+      if (!eu) throw new Error('Credenciais inválidas!');
+      if (eu.role !== 'admin') throw new Error('O sistema foi atualizado. O primeiro acesso precisa ser feito pelo administrador; depois disso, todos entram normalmente.');
+      if (!confirm('🔒 Atualização de segurança\n\nVou copiar todos os dados para o novo formato seguro e criar os acessos com as MESMAS senhas e PINs de hoje.\nOs dados atuais continuam guardados como backup.\n\nNão feche o app até terminar. Continuar?')) throw new Error('Atualização cancelada.');
+      const aviso = document.getElementById('pin-msg'), prog = t => { if (aviso) { aviso.textContent = t; aviso.className = 'text-center text-xs h-4 text-cyan-400'; } };
+      prog('Criando o acesso do administrador…');
+      const chaveEu = chaveLogin(eu.login), appEu = Sessao.app(chaveEu);
+      const contaEu = await criarConta(appEu, eu.login, senha);
+      await appEu.database().ref('guepar_papeis/' + contaEu.uid).set('admin');
+      const contas = { [chaveEu]: { ...contaEu, u: eu } }, pulados = [];
+      for (const u of usuarios) {
+        const ch = chaveLogin(u.login);
+        if (!u.login || contas[ch]) continue;
+        prog('Criando acesso: ' + u.login + '…');
+        try { contas[ch] = { ...(await criarContaSecundaria(u.login, String(u.senha || ''))), u }; } catch (e) { pulados.push(u.login + ' (' + (e.message || e.code) + ')'); }
+      }
+      prog('Copiando os dados…');
+      const up = {};
+      Object.entries(contas).forEach(([ch, c]) => {
+        up['guepar_usuarios/' + c.uid] = { login: c.u.login, role: c.u.role, email: c.email };
+        up['guepar_papeis/' + c.uid] = c.u.role;
+        up['guepar_logins/' + ch] = { email: c.email };
+        if (c.u.pin) up['guepar_pins/' + c.uid] = String(c.u.pin);
+      });
+      COLS.forEach(col => arrDe(antigo[col]).forEach((it, i) => {
+        if (!it || typeof it !== 'object') return;
+        const { item, fotos } = paraNuvem({ ...it, _ord: i });
+        up[`guepar2/${col}/${novoId()}`] = item;
+        Object.keys(fotos).forEach(h => { up['guepar_fotos/' + h] = fotos[h]; });
+      }));
+      up.guepar_meta = { versao: 2, migradoEm: new Date().toISOString(), migradoPor: eu.login, backupEm: 'guepar' };
+      await appEu.database().ref().update(up);
+      localStorage.removeItem('gueparFila2'); localStorage.removeItem('gueparBase2'); S.base = null;
+      if (pulados.length) alert('⚠️ Estes acessos não puderam ser recriados e precisam ser cadastrados de novo em "Acessos":\n\n' + pulados.join('\n'));
+      await concluirLogin(appEu, chaveEu, appEu.auth().currentUser);
+      auditarAcao('EDICAO', 'Atualização de segurança: dados migrados para o novo formato (backup mantido em /guepar).'); salvarDB();
+      alert('✅ Atualização concluída! Todos continuam com o mesmo login, senha e PIN.\nEm cada aparelho, o primeiro acesso deve ser feito com login e senha; depois, o PIN volta a funcionar.');
+    }
+
+    /* ---------- contas de acesso (somente administrador) ---------- */
+    const Usuarios = {
+      on: false, lista: {}, pins: {},
+      ouvir() {
+        if (this.on || !S.app) return; this.on = true;
+        const banco = S.app.database();
+        banco.ref('guepar_usuarios').on('value', s => { this.lista = s.val() || {}; this.montar(); }, () => { this.on = false; });
+        banco.ref('guepar_pins').on('value', s => { this.pins = s.val() || {}; this.montar(); }, () => { });
+      },
+      montar() {
+        db.usuarios = Object.entries(this.lista).map(([uid, u]) => ({ uid, login: u.login, role: u.role, email: u.email, pin: this.pins[uid] ? String(this.pins[uid]) : '' }))
+          .sort((a, b) => String(a.login).localeCompare(String(b.login)));
+        if (appVisivel()) renderizarTabelas();
+      }
+    };
+
+    window.addEventListener('DOMContentLoaded', () => { atualizarStatusNuvem(); if (localStorage.getItem('guepar_logado') === 'true') retomarSessao(); });
+
 
     function mudarIdioma(lang) {
       document.querySelectorAll('#btn-lang-en, #btn-lang-pt, #btn-lang-en-desk, #btn-lang-pt-desk').forEach(btn => {
@@ -792,7 +1082,7 @@
       return diff;
     }
 
-    function snap(o, del) { return Object.keys(o || {}).filter(k => k !== 'dataHora' && k !== 'foto' && k !== 'foto2').map(k => { const v = (k === 'senha' || k === 'pin') ? '••••••' : String(o[k]); return { campo: k, de: del ? v : '(Vazio)', para: del ? '(Removido)' : v }; }); }
+    function snap(o, del) { return Object.keys(o || {}).filter(k => k !== 'dataHora' && k !== 'foto' && k !== 'foto2' && k[0] !== '_' && k !== 'uid' && k !== 'email').map(k => { const v = (k === 'senha' || k === 'pin') ? '••••••' : String(o[k]); return { campo: k, de: del ? v : '(Vazio)', para: del ? '(Removido)' : v }; }); }
     function auditarAcao(acao, detalhes, alteracoes = null) {
       const utilizador = localStorage.getItem('guepar_email') ? localStorage.getItem('guepar_email') : 'Sistema';
       db.logs.unshift({ data: new Date().toISOString(), utilizador: utilizador, acao: acao, detalhes: detalhes, alteracoes: alteracoes });
@@ -800,8 +1090,7 @@
     }
 
     async function salvarDB() {
-      try { localStorage.setItem('gueparDB', JSON.stringify(db)); } catch (e) { alert('⚠️ Memória do aparelho cheia (muitas fotos). Os dados seguem para a nuvem, mas remova fotos antigas ou tire fotos menores.'); }
-      Cloud.agendarEnvio();
+      Sync.enviar();   // guarda no aparelho e envia só o que mudou
       renderizarTabelas();
       atualizarListaEmprestimo();
       iniciarGraficos();
@@ -823,7 +1112,7 @@
     function exportarExcel(dadosArray, nomeFicheiro) {
       if (!dadosArray || dadosArray.length === 0) { alert('Não há dados para exportar.'); return; }
       let csv = '';
-      const camposFiltrados = Object.keys(dadosArray[0]).filter(k => k !== 'senha' && k !== 'indOriginal' && k !== 'alteracoes');
+      const camposFiltrados = Object.keys(dadosArray[0]).filter(k => k !== 'senha' && k !== 'indOriginal' && k !== 'alteracoes' && k[0] !== '_' && k !== 'uid' && k !== 'email' && k !== 'foto' && k !== 'foto2');
       csv += camposFiltrados.map(c => `"${c.toUpperCase()}"`).join(';') + '\n';
       
       dadosArray.forEach(obj => {
@@ -846,8 +1135,9 @@
       salvarDB();
     }
 
-    function exportarBackup() {
-      if (!ehSuper()) { alert('Acesso negado: o backup contém PINs e senhas, e só o administrador principal pode baixá-lo.'); return; }
+    async function exportarBackup() {
+      if (!ehSuper()) { alert('Acesso negado: o backup contém PINs, e só o administrador principal pode baixá-lo.'); return; }
+      await carregarFotosFaltando();   // inclui as fotos no arquivo
       const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(db));
       const link = document.createElement("a");
       link.setAttribute("href", dataStr);
@@ -867,14 +1157,14 @@
       reader.onload = function(e) {
         try {
           const importedDB = JSON.parse(e.target.result);
-          if (importedDB && importedDB.pecas && importedDB.guepar && importedDB.usuarios) {
-            db = importedDB;
+          if (importedDB && importedDB.pecas && importedDB.guepar) {
+            if (localStorage.getItem('guepar_role') !== 'admin') { alert('Acesso negado: só o administrador pode importar backup.'); return; }
+            COLS.forEach(k => { db[k] = arrDe(importedDB[k]); });   // os acessos (logins/senhas) não são alterados pelo backup
             auditarAcao('IMPORTACAO', 'Base de dados restaurada via backup.');
-            localStorage.setItem('gueparDB', JSON.stringify(db));
-            localStorage.setItem('guepar_dirty', '1');   // envia o backup restaurado para a nuvem
-            alert('Dados importados com sucesso! O sistema será recarregado.');
-            location.reload();
+            salvarDB();
+            alert('Dados importados com sucesso! Os acessos (logins, senhas e PINs) não foram alterados.');
           } else { alert('Ficheiro de backup inválido.'); }
+          event.target.value = '';
         } catch (err) { alert('Erro ao ler o ficheiro.'); }
       };
       reader.readAsText(file);
@@ -926,22 +1216,80 @@
     const fmtMoeda = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
     function formatarDataBR(d) { if(!d) return '-'; const [a,m,dia] = d.split('-'); return `${dia}/${m}/${a}`; }
 
-    function gerarRelatorio(tipo) {
-      const titulos = { pecas: 'Relatório de Peças', guepar: 'Relatório Guepar Uso', manutencoes: 'Relatório de Manutenções', auditoria: 'Relatório de Logs', tudo: 'Relatório Geral' };
-      const win = window.open('', '_blank');
+    // Impressão: cada tela imprime só o que é dela (Mecânica, Elétrica, Peças do Robô, Guepar…);
+    // o Command Center imprime o relatório completo de tudo.
+    async function gerarRelatorio(tipo) {
+      const win = window.open('', '_blank');   // abre já no clique para o navegador não bloquear
       if (!win) { alert('Permita pop-ups no navegador.'); return; }
-      
-      let html = `<html><head><title>${titulos[tipo]}</title><style>body { font-family: sans-serif; padding: 20px; } table { width: 100%; border-collapse: collapse; margin-top: 15px; } th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }</style></head><body><h1>${titulos[tipo]}</h1>`;
-      
-      if (tipo === 'pecas' || tipo === 'tudo') {
-        html += `<p>${db.pecas.length} peça(s) · ${db.pecas.filter(p => p.estoque < p.min).length} em estado crítico · emitido em ${new Date().toLocaleString('pt-BR')}</p>` + CATS.map(c => { const lista = db.pecas.filter(p => catDe(p) === c.id); if (!lista.length) return ''; return `<h2>${c.pt} (${lista.length})</h2><table><tr><th>Foto da peça</th><th>Código de barras</th><th>Cód.</th><th>Peça</th><th>Estoque</th><th>Mínimo</th><th>Reserva</th><th>Situação</th></tr>` + lista.map(p => `<tr style="page-break-inside:avoid"><td style="width:110px">${relFoto(p.foto)}</td><td style="width:160px">${relFoto(p.foto2, 150)}</td><td>${esc(p.cod || '')}</td><td><b>${esc(p.nome)}</b></td><td>${p.estoque}</td><td>${p.min}</td><td>${p.sobressalentes || 0}</td><td style="font-weight:bold;color:${p.estoque < p.min ? '#c00' : '#080'}">${p.estoque < p.min ? 'CRÍTICO' : 'OK'}</td></tr>`).join('') + `</table>`; }).join('');
-      }
-      if (tipo === 'guepar' || tipo === 'tudo') {
-        html += `<h2>Guepar</h2><table><tr><th>Item</th><th>Qtd</th></tr>` + db.guepar.map(g => `<tr><td>${esc(g.nome)}</td><td>${g.estoque}</td></tr>`).join('') + `</table>`;
-      }
-      if (tipo === 'manutencoes' || tipo === 'tudo') html += `<h2>Manutenções</h2><table><tr><th>Equipamento</th><th>Tipo</th><th>Última</th><th>Validade</th></tr>` + db.manutencoes.map(m => `<tr><td>${esc(m.equip)}</td><td>${esc(m.tipo)}</td><td>${formatarDataBR(m.ultima)}</td><td>${formatarDataBR(m.validade)}</td></tr>`).join('') + `</table>`;
-      html += `<script>window.print();<\/script></body></html>`;
-      win.document.write(html); win.document.close();
+      win.document.write('<p style="font-family:sans-serif;padding:20px">Preparando o relatório…</p>');
+      try { await carregarFotosFaltando(); } catch (e) { }
+
+      const adm = localStorage.getItem('guepar_role') === 'admin';
+      const quem = localStorage.getItem('guepar_email') || '';
+      const cat = CATS.find(c => c.id === catAtual) || CATS[0];
+      const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+      const diasPara = m => Math.round((new Date(m.validade + 'T00:00:00') - hoje) / 864e5);
+      const situacaoManu = m => { const d = diasPara(m); return isNaN(d) ? ['—', '#555'] : d < 0 ? [`VENCIDA há ${-d} dia(s)`, '#c00'] : d <= 15 ? [`Vence em ${d} dia(s)`, '#b26a00'] : ['Em dia', '#080']; };
+      const valorPecas = l => l.reduce((a, p) => a + ((p.estoque || 0) + (p.sobressalentes || 0)) * (p.custo || 0), 0);
+      const tit = { pecas: 'Relatório de Peças — ' + cat.pt, guepar: 'Relatório Guepar (Itens e Empréstimos)', manutencoes: 'Relatório de Manutenções', auditoria: 'Relatório de Auditoria', tudo: 'Relatório Geral — Command Center' }[tipo] || 'Relatório';
+
+      const blocoPecas = (c, quebra) => {
+        const lista = db.pecas.filter(p => catDe(p) === c.id), crit = lista.filter(p => p.estoque < p.min).length;
+        let h = `<section class="${quebra ? 'quebra' : ''}"><h2>${c.pt} <small>(${lista.length} peça(s) · ${crit} crítica(s)${adm ? ' · ' + fmtMoeda.format(valorPecas(lista)) : ''})</small></h2>`;
+        if (!lista.length) return h + `<p class="vazio">Nenhuma peça cadastrada em ${c.pt}.</p></section>`;
+        return h + `<table><tr><th>Foto da peça</th><th>Código de barras</th><th>Cód.</th><th>Peça</th><th>Estoque</th><th>Mínimo</th><th>Reserva</th>${adm ? '<th>Custo un.</th>' : ''}<th>Situação</th></tr>` +
+          lista.map(p => `<tr><td style="width:110px">${relFoto(p.foto)}</td><td style="width:160px">${relFoto(p.foto2, 150)}</td><td>${esc(p.cod || '')}</td><td><b>${esc(p.nome)}</b></td><td>${p.estoque}</td><td>${p.min}</td><td>${p.sobressalentes || 0}</td>${adm ? `<td>${fmtMoeda.format(p.custo || 0)}</td>` : ''}<td style="font-weight:bold;color:${p.estoque < p.min ? '#c00' : '#080'}">${p.estoque < p.min ? 'CRÍTICO' : 'OK'}</td></tr>`).join('') + `</table></section>`;
+      };
+      const blocoGuepar = quebra => `<section class="${quebra ? 'quebra' : ''}"><h2>Itens Guepar <small>(${db.guepar.length})</small></h2>` + (db.guepar.length
+        ? `<table><tr><th>Item</th><th>Marca</th><th>Quantidade</th>${adm ? '<th>Custo un.</th><th>Total</th>' : ''}</tr>` + db.guepar.map(g => `<tr><td><b>${esc(g.nome)}</b></td><td>${esc(g.marca || '')}</td><td>${g.estoque}</td>${adm ? `<td>${fmtMoeda.format(g.custo || 0)}</td><td>${fmtMoeda.format((g.estoque || 0) * (g.custo || 0))}</td>` : ''}</tr>`).join('') + `</table>`
+        : `<p class="vazio">Nenhum item cadastrado.</p>`) + `</section>`;
+      const blocoEmprestimos = () => `<section><h2>Empréstimos ativos <small>(${db.emprestimos.length})</small></h2>` + (db.emprestimos.length
+        ? `<table><tr><th>Pessoa</th><th>Ferramenta</th><th>Retirada</th><th>Tempo</th><th>Situação</th></tr>` + db.emprestimos.map(e => { const h = horasAtraso(e); return `<tr><td><b>${esc(e.pessoa)}</b></td><td>${esc(e.item)}</td><td>${e.dataHora ? new Date(e.dataHora).toLocaleString('pt-BR') : '—'}</td><td>${Math.floor(h)} h</td><td style="font-weight:bold;color:${h > 48 ? '#c00' : h > 24 ? '#b26a00' : '#080'}">${h > 48 ? 'ATRASADO' : h > 24 ? 'Atenção' : 'No prazo'}</td></tr>`; }).join('') + `</table>`
+        : `<p class="vazio">Nenhuma ferramenta emprestada.</p>`) + `</section>`;
+      const blocoManutencoes = quebra => `<section class="${quebra ? 'quebra' : ''}"><h2>Manutenções <small>(${db.manutencoes.length})</small></h2>` + (db.manutencoes.length
+        ? `<table><tr><th>Equipamento</th><th>Tipo</th><th>Última</th><th>Validade</th><th>Situação</th></tr>` + [...db.manutencoes].sort((a, b) => diasPara(a) - diasPara(b)).map(m => { const [s, cor] = situacaoManu(m); return `<tr><td><b>${esc(m.equip)}</b></td><td>${esc(m.tipo)}</td><td>${formatarDataBR(m.ultima)}</td><td>${formatarDataBR(m.validade)}</td><td style="font-weight:bold;color:${cor}">${s}</td></tr>`; }).join('') + `</table>`
+        : `<p class="vazio">Nenhuma manutenção cadastrada.</p>`) + `</section>`;
+      const blocoAuditoria = quebra => {
+        const filtro = tipo === 'auditoria' ? ((document.getElementById('filtro-auditoria') || {}).value || 'TODAS') : 'TODAS';
+        const logs = db.logs.filter(l => filtro === 'TODAS' || l.acao === filtro);
+        return `<section class="${quebra ? 'quebra' : ''}"><h2>Auditoria <small>(${logs.length} registro(s)${filtro !== 'TODAS' ? ' · filtro: ' + esc(filtro) : ''})</small></h2>` + (logs.length
+          ? `<table><tr><th>Data</th><th>Usuário</th><th>Ação</th><th>Detalhes</th></tr>` + logs.map(l => `<tr><td style="white-space:nowrap">${new Date(l.data).toLocaleString('pt-BR')}</td><td>${esc(l.utilizador)}</td><td><b>${esc(l.acao)}</b></td><td>${esc(l.detalhes)}</td></tr>`).join('') + `</table>`
+          : `<p class="vazio">Nenhum registro.</p>`) + `</section>`;
+      };
+      const blocoResumo = () => {
+        const crit = db.pecas.filter(p => p.estoque < p.min).length, atr = db.emprestimos.filter(e => horasAtraso(e) > 48).length;
+        const venc = db.manutencoes.filter(m => diasPara(m) < 0).length, prox = db.manutencoes.filter(m => { const d = diasPara(m); return d >= 0 && d <= 15; }).length;
+        const capPecas = valorPecas(db.pecas), capGuepar = db.guepar.reduce((a, g) => a + (g.estoque || 0) * (g.custo || 0), 0);
+        const linhas = [
+          ...CATS.map(c => { const l = db.pecas.filter(p => catDe(p) === c.id); return [`Peças — ${c.pt}`, `${l.length} cadastrada(s), ${l.filter(p => p.estoque < p.min).length} crítica(s)`]; }),
+          ['Peças em estado crítico (total)', `<b style="color:${crit ? '#c00' : '#080'}">${crit}</b>`],
+          ['Itens Guepar', db.guepar.length],
+          ['Empréstimos ativos', `${db.emprestimos.length}${atr ? ` (<b style="color:#c00">${atr} atrasado(s)</b>)` : ''}`],
+          ['Manutenções', `${db.manutencoes.length} · <b style="color:${venc ? '#c00' : '#080'}">${venc} vencida(s)</b> · ${prox} a vencer em 15 dias`],
+          ...(adm ? [['Capital em peças', fmtMoeda.format(capPecas)], ['Capital em itens Guepar', fmtMoeda.format(capGuepar)], ['<b>Capital total</b>', `<b>${fmtMoeda.format(capPecas + capGuepar)}</b>`]] : [])
+        ];
+        return `<section><h2>Resumo</h2><table class="resumo">` + linhas.map(([a, b]) => `<tr><th>${a}</th><td>${b}</td></tr>`).join('') + `</table></section>`;
+      };
+
+      let corpo = '';
+      if (tipo === 'pecas') corpo = blocoPecas(cat);
+      else if (tipo === 'guepar') corpo = blocoGuepar() + blocoEmprestimos();
+      else if (tipo === 'manutencoes') corpo = blocoManutencoes();
+      else if (tipo === 'auditoria') corpo = blocoAuditoria();
+      else if (tipo === 'tudo') corpo = blocoResumo() + CATS.map(c => blocoPecas(c, true)).join('') + blocoGuepar(true) + blocoEmprestimos() + blocoManutencoes(true) + (adm ? blocoAuditoria(true) : '');
+
+      const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>${tit}</title><style>
+        body { font-family: Arial, sans-serif; padding: 20px; color: #111; }
+        h1 { margin: 0 0 4px; font-size: 22px; } .meta { color: #555; font-size: 12px; margin-bottom: 18px; }
+        h2 { font-size: 17px; border-bottom: 2px solid #111; padding-bottom: 4px; margin: 22px 0 8px; page-break-after: avoid; }
+        h2 small { font-weight: normal; color: #555; font-size: 12px; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; } th, td { border: 1px solid #bbb; padding: 6px 8px; text-align: left; vertical-align: middle; }
+        th { background: #f0f2f5; } tr { page-break-inside: avoid; } .resumo th { width: 45%; } .vazio { color: #777; font-style: italic; }
+        @media print { body { padding: 0; } .quebra { page-break-before: always; } }
+      </style></head><body><h1>${tit}</h1><div class="meta">Guepar vs RobÔ · emitido em ${new Date().toLocaleString('pt-BR')}${quem ? ' por ' + esc(quem) : ''}</div>${corpo}
+      <script>window.onload = function () { setTimeout(function () { window.print(); }, 300); };<\/script></body></html>`;
+      win.document.open(); win.document.write(html); win.document.close();
+      auditarAcao('EXPORTACAO', `Imprimiu: ${tit}`); salvarDB();
     }
 
     function apagarRegistro(tipo, index) {
@@ -950,12 +1298,12 @@
         alert('Acesso negado: Apenas o Administrador pode excluir registos do sistema.');
         return;
       }
+      if (tipo === 'usuario') { apagarUsuario(index); return; }
       if (confirm('Tem a certeza que deseja apagar este registo? Esta ação não pode ser desfeita.')) {
         let nomeRegisto = "", apagado = null;
         if (tipo === 'peca') { apagado = db.pecas[index]; nomeRegisto = db.pecas[index].nome; db.pecas.splice(index, 1); }
         if (tipo === 'guepar') { apagado = db.guepar[index]; nomeRegisto = db.guepar[index].nome; db.guepar.splice(index, 1); }
         if (tipo === 'manutencao') { apagado = db.manutencoes[index]; nomeRegisto = db.manutencoes[index].equip; db.manutencoes.splice(index, 1); }
-        if (tipo === 'usuario') { apagado = db.usuarios[index]; nomeRegisto = db.usuarios[index].login; db.usuarios.splice(index, 1); }
         auditarAcao('EXCLUSAO', `Apagou o registo [${tipo}]: ${nomeRegisto}`, snap(apagado, true));
         salvarDB();
       }
@@ -1137,9 +1485,18 @@
         document.getElementById('manu-ultima').value = i.ultima; document.getElementById('manu-validade').value = i.validade; document.getElementById('titulo-modal-manu').textContent = "Editar Manutenção"; abrirModal('modal-add-manutencao');
       }
       if(tipo === 'usuario') {
-        const i = db.usuarios[index]; document.getElementById('user-edit-id').value = index; document.getElementById('user-login').value = i.login; document.getElementById('user-senha').value = i.senha; document.getElementById('user-pin').value = podeVerPin(i) ? (i.pin || '') : ''; document.getElementById('user-pin').placeholder = podeVerPin(i) ? 'Ex: 1234' : 'Oculto — deixe vazio para manter'; document.getElementById('user-role').value = i.role; abrirModal('modal-add-usuario');
+        const i = db.usuarios[index]; document.getElementById('user-edit-id').value = index; document.getElementById('user-login').value = i.login; document.getElementById('user-senha').value = ''; document.getElementById('user-senha').placeholder = 'Deixe vazio para manter a senha atual'; document.getElementById('user-pin').value = podeVerPin(i) ? (i.pin || '') : ''; document.getElementById('user-pin').placeholder = podeVerPin(i) ? 'Ex: 1234' : 'Oculto — deixe vazio para manter'; document.getElementById('user-role').value = i.role; abrirModal('modal-add-usuario');
       }
     }
+
+    // Botão de olho: mostra/esconde a senha que está sendo digitada
+    function verSenha(id, btn) {
+      const inp = document.getElementById(id), mostrar = inp.type === 'password';
+      inp.type = mostrar ? 'text' : 'password';
+      btn.innerHTML = `<i class="ph ph-${mostrar ? 'eye-slash' : 'eye'} text-lg"></i>`;
+      btn.title = mostrar ? 'Esconder senha' : 'Mostrar senha'; btn.setAttribute('aria-label', btn.title);
+    }
+    function esconderSenhas() { ['user-senha', 'login-senha'].forEach(id => { const i = document.getElementById(id); if (i && i.type === 'text') verSenha(id, i.nextElementSibling); }); }
 
     function abrirModal(id) { document.getElementById(id).classList.remove('hidden'); }
     function fecharModal(id) { 
@@ -1148,7 +1505,7 @@
       if(id === 'modal-add-peca') { document.getElementById('titulo-modal-peca').textContent = "Registar Peça"; mostrarFotos(); }
       if(id === 'modal-add-guepar') document.getElementById('titulo-modal-guepar').textContent = "Item Guepar";
       if(id === 'modal-add-manutencao') document.getElementById('titulo-modal-manu').textContent = "Ordem de Manutenção";
-      if(id === 'modal-add-usuario') document.getElementById('user-pin').placeholder = 'Ex: 1234';
+      if(id === 'modal-add-usuario') { document.getElementById('user-pin').placeholder = 'Ex: 1234'; document.getElementById('user-senha').placeholder = 'Mínimo 3 caracteres'; esconderSenhas(); }
     }
 
     document.getElementById('form-peca').addEventListener('submit', (e) => {
@@ -1173,25 +1530,73 @@
       salvarDB(); fecharModal('modal-add-manutencao');
     });
 
-    document.getElementById('form-usuario').addEventListener('submit', (e) => {
-      e.preventDefault(); 
+    // Contas de acesso: login e senha ficam no Firebase Authentication (não no banco de dados)
+    document.getElementById('form-usuario').addEventListener('submit', async (e) => {
+      e.preventDefault();
       const role = localStorage.getItem('guepar_role');
       if (role !== 'admin') {
         alert('Acesso negado: Apenas o Administrador pode criar ou editar contas de acesso.');
         return;
       }
-      
-      const id = document.getElementById('user-edit-id').value;
-      const data = { 
-        login: document.getElementById('user-login').value, 
-        senha: document.getElementById('user-senha').value, 
-        pin: document.getElementById('user-pin').value || (id !== '' && db.usuarios[id] ? (db.usuarios[id].pin || '') : ''),
-        role: document.getElementById('user-role').value 
-      };
+      if (!S.app || !navigator.onLine) { alert('É preciso estar com internet para criar ou alterar acessos.'); return; }
 
-      if(id === "") { db.usuarios.push(data); auditarAcao('CRIACAO', `Criou utilizador: ${data.login}`, snap(data)); } else { const dict = { login: 'Login de Acesso', senha: 'Palavra-passe', pin: 'PIN Rápido', role: 'Nível de Permissão' }; const diff = calcularDiff(db.usuarios[id], data, dict); db.usuarios[id] = data; auditarAcao('EDICAO', `Editou utilizador: ${data.login}`, diff); }
-      salvarDB(); fecharModal('modal-add-usuario');
+      const id = document.getElementById('user-edit-id').value, antes = id !== '' ? db.usuarios[id] : null;
+      const data = {
+        login: document.getElementById('user-login').value.trim(),
+        senha: document.getElementById('user-senha').value,
+        pin: document.getElementById('user-pin').value.trim() || (antes ? (antes.pin || '') : ''),
+        role: document.getElementById('user-role').value
+      };
+      if (!data.login) { alert('Digite o login.'); return; }
+      if (!antes && !data.senha) { alert('Defina uma senha para o novo acesso.'); return; }
+      if (data.senha && data.senha.length < 3) { alert('A senha precisa ter pelo menos 3 caracteres.'); return; }
+      if (data.pin && !/^\d{4}$/.test(data.pin)) { alert('O PIN precisa ter 4 números.'); return; }
+      if (db.usuarios.some(u => u !== antes && chaveLogin(u.login) === chaveLogin(data.login))) { alert('Já existe um acesso com esse login.'); return; }
+      if (data.pin && db.usuarios.some(u => u !== antes && u.pin === data.pin)) { alert('Esse PIN já é usado por outro acesso. Escolha outro.'); return; }
+
+      const btn = e.submitter; if (btn) { btn.disabled = true; btn.dataset.txt = btn.textContent; btn.textContent = 'Salvando…'; }
+      try {
+        let uid = antes ? antes.uid : null, email = antes ? antes.email : null;
+        const up = {};
+        if (!antes || data.senha) {   // novo acesso ou nova senha: cria a conta no Firebase
+          const c = await criarContaSecundaria(data.login, data.senha);
+          if (antes) { up['guepar_usuarios/' + antes.uid] = null; up['guepar_papeis/' + antes.uid] = null; up['guepar_pins/' + antes.uid] = null; }
+          uid = c.uid; email = c.email;
+        }
+        if (antes && chaveLogin(antes.login) !== chaveLogin(data.login)) up['guepar_logins/' + chaveLogin(antes.login)] = null;
+        up['guepar_usuarios/' + uid] = { login: data.login, role: data.role, email };
+        up['guepar_papeis/' + uid] = data.role;
+        up['guepar_logins/' + chaveLogin(data.login)] = { email };
+        up['guepar_pins/' + uid] = data.pin || null;
+        const souEu = antes && antes.uid === S.uid;
+        await S.app.database().ref().update(up);
+        if (souEu && data.senha) {   // trocou a própria senha: entra com a conta nova sem sair do painel
+          const cred = await S.app.auth().signInWithEmailAndPassword(email, SENHA_PREFIXO + data.senha);
+          S.uid = cred.user.uid; Sessao.atualizar(localStorage.getItem('guepar_sessao'), { uid: S.uid }); ouvirPapel();
+        }
+        if (souEu) { localStorage.setItem('guepar_email', data.login); Sessao.atualizar(localStorage.getItem('guepar_sessao'), { login: data.login, pinHash: data.pin ? await hashPin(S.uid, data.pin) : null }); }
+        if (!antes) auditarAcao('CRIACAO', `Criou utilizador: ${data.login}`, snap({ login: data.login, role: data.role, pin: data.pin }));
+        else {
+          const diff = calcularDiff({ login: antes.login, role: antes.role, pin: antes.pin }, { login: data.login, role: data.role, pin: data.pin }, { login: 'Login de Acesso', pin: 'PIN Rápido', role: 'Nível de Permissão' });
+          if (data.senha) diff.push({ campo: 'Palavra-passe', de: '••••••', para: '•••••• (alterada)' });
+          auditarAcao('EDICAO', `Editou utilizador: ${data.login}`, diff);
+        }
+        salvarDB(); fecharModal('modal-add-usuario');
+      } catch (err) {
+        alert('Não foi possível salvar o acesso: ' + msgErroLogin(err));
+      } finally { if (btn) { btn.disabled = false; btn.textContent = btn.dataset.txt; } }
     });
+
+    async function apagarUsuario(index) {
+      const u = db.usuarios[index]; if (!u) return;
+      if (u.uid === S.uid) { alert('Você não pode apagar o seu próprio acesso.'); return; }
+      if (!confirm(`Apagar o acesso de "${u.login}"? A pessoa não conseguirá mais entrar.`)) return;
+      try {
+        await S.app.database().ref().update({ ['guepar_usuarios/' + u.uid]: null, ['guepar_papeis/' + u.uid]: null, ['guepar_pins/' + u.uid]: null, ['guepar_logins/' + chaveLogin(u.login)]: null });
+        auditarAcao('EXCLUSAO', `Apagou o registo [usuario]: ${u.login}`, snap({ login: u.login, role: u.role }, true));
+        salvarDB();
+      } catch (err) { alert('Não foi possível apagar: ' + msgErroLogin(err)); }
+    }
 
     document.getElementById('form-emprestimo').addEventListener('submit', (e) => {
       e.preventDefault(); const selectValor = document.getElementById('emp-item-select').value;
@@ -1276,39 +1681,21 @@
       if(savedLang === 'en') setTimeout(() => mudarIdioma('en'), 300);
     }
 
-    window.addEventListener('DOMContentLoaded', () => {
-      if (localStorage.getItem('guepar_logado') === 'true') { arrancarSistema(localStorage.getItem('guepar_email'), localStorage.getItem('guepar_role')); }
-    });
+    // (a abertura automática de quem já estava logado agora é feita por retomarSessao())
 
-    document.getElementById('form-login').addEventListener('submit', (e) => {
+    document.getElementById('form-login').addEventListener('submit', async (e) => {
       e.preventDefault();
-      if (!nuvemPronta) { alert('Sincronizando com a nuvem... aguarde alguns segundos e tente de novo.'); return; }
-      const loginID = document.getElementById('login-id').value; const senha = document.getElementById('login-senha').value;
-      const user = db.usuarios.find(u => u.login.toLowerCase() === loginID.toLowerCase() && u.senha === senha);
-      if(user) { localStorage.setItem('guepar_logado', 'true'); localStorage.setItem('guepar_email', user.login); localStorage.setItem('guepar_role', user.role); arrancarSistema(user.login, user.role); } 
-      else { alert('Credenciais inválidas!'); }
+      const loginID = document.getElementById('login-id').value.trim(); const senha = document.getElementById('login-senha').value;
+      const btn = e.submitter; if (btn) btn.disabled = true;
+      try { await loginSenha(loginID, senha); document.getElementById('login-senha').value = ''; }
+      catch (err) { alert(msgErroLogin(err)); }
+      finally { if (btn) btn.disabled = false; }
     });
 
-    document.getElementById('btn-sair').addEventListener('click', () => {
-      localStorage.removeItem('guepar_logado'); localStorage.removeItem('guepar_email'); localStorage.removeItem('guepar_role'); location.reload();
-    });
+    document.getElementById('btn-sair').addEventListener('click', () => { sairLocal(true); });
 
-    // --- NOVA LÓGICA: LOGIN RÁPIDO POR PIN (4 DÍGITOS) ---
-    function loginPIN() {
-      if (!nuvemPronta) { alert('Sincronizando com a nuvem... aguarde alguns segundos e tente de novo.'); return; }
-      const pinInserido = prompt("Introduza o seu PIN de 4 dígitos:");
-      if (!pinInserido) return;
-
-      const user = db.usuarios.find(u => u.pin === pinInserido.trim());
-      if (user) {
-        localStorage.setItem('guepar_logado', 'true'); 
-        localStorage.setItem('guepar_email', user.login); 
-        localStorage.setItem('guepar_role', user.role); 
-        arrancarSistema(user.login, user.role);
-      } else {
-        alert("PIN incorreto ou não registado.");
-      }
-    }
+    // --- LOGIN RÁPIDO POR PIN (mantido por compatibilidade: usa o teclado de PIN da tela) ---
+    function loginPIN() { trocarLogin(false); }
 
     // --- GUEPAR COPILOT: IA local + Wikipédia + LLM opcional ---
     const IA_ENDPOINT = '';   // opcional: URL do seu proxy de LLM (POST {pergunta, contexto, historico} -> {resposta})
@@ -1501,13 +1888,25 @@
     function pinMsg(t, cor) { const m = document.getElementById('pin-msg'); m.textContent = t; m.className = 'text-center text-xs h-4 ' + cor; }
     function pinTecla(d) { if (pinBuf.length >= 4) return; pinBuf += d; if (navigator.vibrate) navigator.vibrate(10); pinRender(); if (pinBuf.length === 4) setTimeout(pinEntrar, 150); }
     function pinApagar(tudo) { pinBuf = tudo ? '' : pinBuf.slice(0, -1); pinRender(); }
-    function pinEntrar() {
-      if (!nuvemPronta) { pinMsg('☁ Sincronizando…', 'text-cyan-400'); return setTimeout(pinEntrar, 700); }
+    // O PIN abre a sessão de quem já entrou neste aparelho com login e senha (funciona offline)
+    async function entrarSessaoGuardada(s) {
+      if (!configOk()) { alert('O app ainda não está ligado ao Firebase.'); return false; }
+      const app = Sessao.app(s.chave), u = await Sessao.usuario(app);
+      if (!u) { pinMsg('Sessão expirada: entre com login e senha', 'text-amber-400'); trocarLogin(true); document.getElementById('login-id').value = s.login; return false; }
+      ativarSessao(app, { ...s, uid: u.uid });
+      // atualiza o PIN guardado (caso o administrador tenha mudado)
+      app.database().ref('guepar_pins/' + u.uid).get().then(async p => { const v = p.val(); Sessao.atualizar(s.chave, { pinHash: v ? await hashPin(u.uid, String(v)) : null }); }).catch(() => { });
+      return true;
+    }
+    async function pinEntrar() {
       if (Date.now() < pinBloq) { pinMsg('Muitas tentativas. Aguarde 30s.', 'text-amber-400'); pinBuf = ''; pinRender(); return; }
-      const u = db.usuarios.find(x => x.pin && x.pin === pinBuf);
-      if (u) { localStorage.setItem('guepar_logado', 'true'); localStorage.setItem('guepar_email', u.login); localStorage.setItem('guepar_role', u.role); pinBuf = ''; pinRender(); arrancarSistema(u.login, u.role); return; }
+      const pin = pinBuf, lista = Sessao.lista();
+      let achou = null;
+      for (const s of lista) { if (s.pinHash && s.pinHash === await hashPin(s.uid, pin)) { achou = s; break; } }
+      if (achou) { pinBuf = ''; pinRender(); await entrarSessaoGuardada(achou); return; }
       if (++pinFalhas >= 5) { pinBloq = Date.now() + 30000; pinFalhas = 0; }
-      pinMsg('PIN incorreto', 'text-red-400'); if (navigator.vibrate) navigator.vibrate([60, 40, 60]);
+      pinMsg(lista.length ? 'PIN incorreto' : '1º acesso neste aparelho: entre com login e senha', lista.length ? 'text-red-400' : 'text-amber-400');
+      if (navigator.vibrate) navigator.vibrate([60, 40, 60]);
       setTimeout(() => { pinBuf = ''; pinRender(); }, 400);
     }
     function trocarLogin(email) { document.getElementById('login-pin').classList.toggle('hidden', email); document.getElementById('form-login').classList.toggle('hidden', !email); }
@@ -1540,14 +1939,12 @@
     async function entrarBiometria() {
       const bio = JSON.parse(localStorage.getItem('guepar_bio') || 'null');
       if (!bio) { alert('Entre uma vez com o PIN e toque em "Ativar facial neste aparelho" no menu.'); return; }
-      if (!nuvemPronta) { alert('Sincronizando com a nuvem... tente de novo em alguns segundos.'); return; }
+      const s = Sessao.lista().find(x => String(x.login).toLowerCase() === String(bio.login).toLowerCase());
+      if (!s) { alert('Por segurança, entre uma vez com login e senha neste aparelho. Depois a facial volta a funcionar.'); trocarLogin(true); document.getElementById('login-id').value = bio.login; return; }
       try {
         await navigator.credentials.get({ publicKey: { challenge: crypto.getRandomValues(new Uint8Array(32)), rpId: location.hostname,
           allowCredentials: [{ type: 'public-key', id: unb64(bio.id), transports: ['internal'] }], userVerification: 'required', timeout: 60000 } });
-        const u = db.usuarios.find(x => x.login === bio.login);
-        if (!u) { localStorage.removeItem('guepar_bio'); alert('Este usuário não existe mais.'); return; }
-        localStorage.setItem('guepar_logado', 'true'); localStorage.setItem('guepar_email', u.login); localStorage.setItem('guepar_role', u.role);
-        arrancarSistema(u.login, u.role);
+        await entrarSessaoGuardada(s);
       } catch (e) { if (e.name !== 'NotAllowedError') alert('Falha na biometria: ' + e.message); }
     }
     window.addEventListener('DOMContentLoaded', () => bioSuportada().then(ok => {
@@ -1561,10 +1958,16 @@
     const ehSuper = () => SUPER_ADMINS.includes(logado()) && localStorage.getItem('guepar_role') === 'admin';
     const podeVerPin = u => ehSuper() || String(u.login || '').toLowerCase() === logado();
     const mk = (alt, v) => (/senha|palavra/i.test(alt.campo) || (/pin/i.test(alt.campo) && !ehSuper())) ? '••••' : v;
-    function meuPin() {
-      const u = db.usuarios.find(x => String(x.login).toLowerCase() === logado()), b = document.getElementById('btn-meu-pin'); if (!u) return;
-      const abrir = b.dataset.v !== '1'; b.dataset.v = abrir ? '1' : '0';
-      b.textContent = abrir ? '🔑 PIN: ' + (u.pin || 'não definido') : '🔑 Ver meu PIN';
+    async function meuPin() {
+      const b = document.getElementById('btn-meu-pin');
+      const abrir = b.dataset.v !== '1';
+      let pin = '';
+      if (abrir) {
+        try { pin = (await S.app.database().ref('guepar_pins/' + S.uid).get()).val() || ''; }
+        catch (e) { alert('Sem conexão: não foi possível consultar o PIN agora.'); return; }
+      }
+      b.dataset.v = abrir ? '1' : '0';
+      b.textContent = abrir ? '🔑 PIN: ' + (pin || 'não definido') : '🔑 Ver meu PIN';
       if (abrir) setTimeout(() => { b.dataset.v = '0'; b.textContent = '🔑 Ver meu PIN'; }, 8000);
     }
 
