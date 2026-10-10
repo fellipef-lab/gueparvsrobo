@@ -1974,22 +1974,33 @@
       if (n === 'SecurityError') return 'Abra o app pelo endereço oficial (https://…github.io/…). A facial não funciona por arquivo no computador nem por endereço sem https.';
       if (n === 'InvalidStateError') return ativando ? 'A facial já está cadastrada neste aparelho.' : 'Cadastro da facial inválido neste aparelho. Ative de novo pelo menu.';
       if (n === 'AbortError') return 'A leitura foi interrompida. Tente de novo.';
+      if (n === 'UnknownError' || /credential manager/i.test(String(e && e.message)))
+        return 'o celular não deixou salvar a biometria.\n\nNo Android, confira:\n' +
+          '1) Bloqueio de tela com DIGITAL cadastrada (em muitos Android o desbloqueio facial não é aceito por apps; use a digital).\n' +
+          '2) Configurações → Google → Preenchimento automático (ou "Senhas e contas"): deixe o "Google" como serviço preferido.\n' +
+          '3) Uma conta Google conectada no celular.\n' +
+          '4) Chrome e "Google Play Services" atualizados na Play Store.\n' +
+          '5) Se o Chrome estiver no perfil de "Trabalho" da empresa, ela pode bloquear: tente no Chrome pessoal.';
       return (e && e.message) || 'Erro desconhecido.';
     }
     function ativarBiometria() {
       const login = localStorage.getItem('guepar_email'); if (!login) return;
       if (!bioApi()) { alert('Este navegador não permite facial/biometria. Use o Chrome (Android/PC) ou o Safari (iPhone), abrindo o app pelo endereço https.'); return; }
       if (BIO_PLATAFORMA === false && !confirm('Este aparelho não informou ter leitor de rosto/digital próprio.\n\nVocê pode tentar mesmo assim (no computador, o navegador pode oferecer usar o celular para confirmar). Continuar?')) return;
-      const publicKey = {
+      const opcoes = residentKey => ({ publicKey: {
         challenge: crypto.getRandomValues(new Uint8Array(32)),
         rp: { name: 'Guepar vs RobÔ', id: location.hostname },
         user: { id: crypto.getRandomValues(new Uint8Array(16)), name: login, displayName: login },
         pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
-        authenticatorSelection: { userVerification: 'required', residentKey: 'preferred', ...(BIO_PLATAFORMA ? { authenticatorAttachment: 'platform' } : {}) },
+        authenticatorSelection: { userVerification: 'required', residentKey, requireResidentKey: residentKey === 'required', ...(BIO_PLATAFORMA ? { authenticatorAttachment: 'platform' } : {}) },
         timeout: 60000
-      };
-      // chamado direto no toque (sem esperar nada antes), senão o iPhone bloqueia
-      navigator.credentials.create({ publicKey }).then(cred => {
+      } });
+      // 1º: modo simples (só neste aparelho, não depende do gerenciador de senhas do Google);
+      // se o aparelho recusar, tenta como "chave de acesso" (passkey).
+      // Chamado direto no toque (sem esperar nada antes), senão o iPhone bloqueia.
+      navigator.credentials.create(opcoes('discouraged'))
+        .catch(e => { if (e && (e.name === 'NotAllowedError' || e.name === 'SecurityError')) throw e; return navigator.credentials.create(opcoes('preferred')); })
+        .then(cred => {
         let transports = [];
         try { transports = (cred.response.getTransports && cred.response.getTransports()) || []; } catch (e) { }
         localStorage.setItem('guepar_bio', JSON.stringify({ id: b64(cred.rawId), login, transports }));
