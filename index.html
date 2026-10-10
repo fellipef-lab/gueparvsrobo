@@ -130,6 +130,14 @@
           <a href="#" data-aba="manutencoes" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-xl font-semibold text-sm text-gray-400 border border-transparent hover:text-white hover:bg-slate-800 transition" onclick="toggleMenu(true)">
             <i class="ph ph-wrench text-xl"></i><span class="text-translate" data-pt="Manutenções Pred." data-en="Maintenance">Manutenções Pred.</span>
           </a>
+          <a href="#" data-aba="ordens" class="nav-link flex items-center justify-between px-4 py-3 rounded-xl font-semibold text-sm text-gray-400 border border-transparent hover:text-white hover:bg-slate-800 transition" onclick="toggleMenu(true)">
+            <div class="flex items-center space-x-3"><i class="ph ph-clipboard-text text-xl"></i><span>Ordens de Serviço</span></div>
+            <span id="badge-os" class="badge-alerta bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 hidden">0</span>
+          </a>
+          <a href="#" data-aba="compras" class="nav-link flex items-center justify-between px-4 py-3 rounded-xl font-semibold text-sm text-gray-400 border border-transparent hover:text-white hover:bg-slate-800 transition" onclick="toggleMenu(true)">
+            <div class="flex items-center space-x-3"><i class="ph ph-shopping-cart text-xl"></i><span>Compras</span></div>
+            <span id="badge-compras" class="badge-alerta bg-amber-500/20 text-amber-400 border border-amber-500/50 hidden">0</span>
+          </a>
           <a href="#" data-aba="usuarios" class="nav-link req-admin hidden items-center space-x-3 px-4 py-3 rounded-xl font-semibold text-sm text-gray-400 border border-transparent hover:text-white hover:bg-slate-800 transition" onclick="toggleMenu(true)">
             <i class="ph ph-users-three text-xl"></i><span class="text-translate" data-pt="Acessos & Utilizadores" data-en="Users & Access">Acessos & Utilizadores</span>
           </a>
@@ -242,6 +250,14 @@
                 <h2 class="text-3xl font-black text-white" id="kpi-manu">0</h2>
                 <p class="text-[10px] text-cyan-400 mt-1 font-semibold flex items-center gap-1"><i class="ph ph-shield-check"></i> <span class="text-translate" data-pt="Vencidas ou a vencer em 15 dias" data-en="Overdue or due in 15 days">Vencidas ou a vencer em 15 dias</span></p>
               </div>
+            </div>
+
+            <div class="bento-card col-span-1 md:col-span-4 lg:col-span-12 p-6">
+              <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
+                <h3 class="text-sm font-bold text-white flex items-center gap-2"><i class="ph ph-hourglass-medium text-amber-400"></i> Previsão de compra <span class="text-[11px] font-normal text-gray-400">(aviso com no mínimo 30 dias de antecedência)</span></h3>
+                <button onclick="irParaAba('compras')" class="text-xs font-bold text-amber-300 bg-amber-500/10 border border-amber-500/30 px-3 py-1.5 rounded-lg cursor-pointer hover:bg-amber-500/20">Ir para Compras →</button>
+              </div>
+              <div id="lista-previsao" class="text-sm text-gray-300"></div>
             </div>
 
             <div class="bento-card col-span-1 md:col-span-4 lg:col-span-6 p-6">
@@ -381,6 +397,97 @@
           </div>
         </section>
 
+        <!-- ABA: ORDENS DE SERVIÇO -->
+        <section id="aba-ordens" class="aba-conteudo hidden space-y-6">
+          <header class="flex flex-wrap justify-between items-end gap-4">
+            <div>
+              <h1 class="text-3xl font-black text-white tracking-tight">Ordens de Serviço</h1>
+              <p class="text-sm text-gray-400 mt-1">Corretivas e preventivas · tempo de máquina parada · MTBF e MTTR</p>
+            </div>
+            <div class="flex gap-2">
+              <button onclick="exportarExcel(osParaCsv(), 'Ordens_de_Servico')" class="bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white px-4 py-2.5 rounded-xl text-sm font-bold border border-emerald-500/30 transition cursor-pointer flex items-center gap-2"><i class="ph ph-file-csv text-lg"></i> CSV</button>
+              <button onclick="gerarRelatorio('os')" class="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold border border-slate-700 flex items-center gap-2 cursor-pointer"><i class="ph ph-printer text-lg"></i></button>
+              <button onclick="novaOS()" class="req-vis1 hidden bg-cyan-600 hover:bg-cyan-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-cyan-900/50 flex items-center gap-2 cursor-pointer"><i class="ph ph-plus-circle text-lg"></i> Nova OS</button>
+            </div>
+          </header>
+          <div id="kpis-os" class="grid grid-cols-2 lg:grid-cols-5 gap-4"></div>
+          <div class="flex flex-wrap gap-2 items-center">
+            <select id="filtro-os" onchange="renderOperacoes()" class="bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-cyan-500">
+              <option value="abertas">Abertas e em andamento</option>
+              <option value="todas">Todas</option>
+              <option value="concluidas">Concluídas</option>
+            </select>
+          </div>
+          <div class="bento-card overflow-x-auto">
+            <table class="w-full text-left border-collapse min-w-[820px]">
+              <thead>
+                <tr class="bg-slate-800/30 text-xs text-gray-400 uppercase tracking-wider border-b border-slate-700/50">
+                  <th class="p-4">Nº</th><th class="p-4">Equipamento</th><th class="p-4">Tipo</th><th class="p-4">Técnico</th><th class="p-4">Abertura</th><th class="p-4">Duração</th><th class="p-4">Status</th><th class="p-4 text-right">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="tabela-os" class="text-sm text-white"></tbody>
+            </table>
+          </div>
+          <div class="bento-card overflow-x-auto">
+            <h3 class="p-5 pb-1 text-sm font-bold text-white flex items-center gap-2"><i class="ph ph-chart-bar text-cyan-400"></i> Indicadores por equipamento</h3>
+            <p class="px-5 text-[11px] text-gray-500">MTBF = tempo médio entre falhas (quanto maior, melhor) · MTTR = tempo médio de reparo (quanto menor, melhor). Calculados pelas OS corretivas.</p>
+            <table class="w-full text-left border-collapse min-w-[700px] mt-2">
+              <thead>
+                <tr class="bg-slate-800/30 text-xs text-gray-400 uppercase tracking-wider border-b border-slate-700/50">
+                  <th class="p-4">Equipamento</th><th class="p-4">Falhas</th><th class="p-4">MTBF</th><th class="p-4">MTTR</th><th class="p-4">Tempo parado</th><th class="p-4">Última falha</th>
+                </tr>
+              </thead>
+              <tbody id="tabela-indicadores" class="text-sm text-white"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ABA: COMPRAS -->
+        <section id="aba-compras" class="aba-conteudo hidden space-y-6">
+          <header class="flex flex-wrap justify-between items-end gap-4">
+            <div>
+              <h1 class="text-3xl font-black text-white tracking-tight">Compras</h1>
+              <p class="text-sm text-gray-400 mt-1">Sugestão automática · pedidos · fornecedores</p>
+            </div>
+            <div class="flex gap-2">
+              <button onclick="gerarRelatorio('compras')" class="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold border border-slate-700 flex items-center gap-2 cursor-pointer"><i class="ph ph-printer text-lg"></i></button>
+              <button onclick="novoPedido()" class="req-vis1 hidden bg-slate-800 hover:bg-slate-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold border border-slate-700 flex items-center gap-2 cursor-pointer"><i class="ph ph-plus text-lg"></i> Pedido manual</button>
+            </div>
+          </header>
+          <div class="bento-card p-6">
+            <div class="flex flex-wrap justify-between items-center gap-3 mb-3">
+              <h3 class="text-sm font-bold text-white flex items-center gap-2"><i class="ph ph-lightbulb text-amber-400"></i> O que comprar agora</h3>
+              <button onclick="gerarPedidos()" class="req-vis1 hidden bg-amber-600 hover:bg-amber-500 text-white px-4 py-2 rounded-xl text-sm font-bold cursor-pointer flex items-center gap-2"><i class="ph ph-magic-wand"></i> Gerar pedidos</button>
+            </div>
+            <div id="lista-sugestao" class="text-sm text-gray-300"></div>
+          </div>
+          <div class="bento-card overflow-x-auto">
+            <h3 class="p-5 pb-2 text-sm font-bold text-white flex items-center gap-2"><i class="ph ph-receipt text-cyan-400"></i> Pedidos de compra</h3>
+            <table class="w-full text-left border-collapse min-w-[820px]">
+              <thead>
+                <tr class="bg-slate-800/30 text-xs text-gray-400 uppercase tracking-wider border-b border-slate-700/50">
+                  <th class="p-4">Nº</th><th class="p-4">Fornecedor</th><th class="p-4">Itens</th><th class="p-4">Total</th><th class="p-4">Status</th><th class="p-4">Data</th><th class="p-4 text-right">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="tabela-pedidos" class="text-sm text-white"></tbody>
+            </table>
+          </div>
+          <div class="bento-card overflow-x-auto">
+            <div class="flex flex-wrap justify-between items-center gap-3 p-5 pb-2">
+              <h3 class="text-sm font-bold text-white flex items-center gap-2"><i class="ph ph-storefront text-emerald-400"></i> Fornecedores</h3>
+              <button onclick="novoFornecedor()" class="req-vis1 hidden bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-sm font-bold cursor-pointer flex items-center gap-2"><i class="ph ph-plus"></i> Fornecedor</button>
+            </div>
+            <table class="w-full text-left border-collapse min-w-[700px]">
+              <thead>
+                <tr class="bg-slate-800/30 text-xs text-gray-400 uppercase tracking-wider border-b border-slate-700/50">
+                  <th class="p-4">Nome</th><th class="p-4">Contato</th><th class="p-4">WhatsApp</th><th class="p-4">E-mail</th><th class="p-4">Peças</th><th class="p-4 text-right">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="tabela-fornecedores" class="text-sm text-white"></tbody>
+            </table>
+          </div>
+        </section>
+
         <!-- ABA: USUÁRIOS -->
         <section id="aba-usuarios" class="aba-conteudo hidden space-y-6">
           <header class="flex flex-wrap justify-between items-end gap-4">
@@ -487,6 +594,10 @@
               <div><label class="block text-xs font-bold text-gray-400 mb-1 text-translate" data-pt="Mínimo" data-en="Minimum">Mínimo</label><input type="number" id="peca-min" min="0" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none"></div>
               <div><label class="block text-xs font-bold text-emerald-400 mb-1 text-translate" data-pt="Reserva (Kits)" data-en="Spares">Reserva (Kits)</label><input type="number" id="peca-sobre" min="0" value="0" class="w-full bg-slate-950 border border-emerald-700/50 rounded-xl px-3 py-2 text-white outline-none"></div>
               <div><label class="block text-xs font-bold text-cyan-400 mb-1 text-translate" data-pt="Custo Unit. (R$)" data-en="Unit Cost ($)">Custo Unit. (R$)</label><input type="number" id="peca-custo" min="0" step="0.01" value="0" class="w-full bg-slate-950 border border-cyan-700/50 rounded-xl px-3 py-2 text-white outline-none"></div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div><label class="block text-xs font-bold text-amber-400 mb-1">Fornecedor</label><select id="peca-fornecedor" class="w-full bg-slate-950 border border-amber-700/40 rounded-xl px-3 py-2 text-white outline-none"><option value="">— nenhum —</option></select></div>
+              <div><label class="block text-xs font-bold text-amber-400 mb-1">Prazo de entrega (dias)</label><input type="number" id="peca-prazo" min="0" placeholder="Ex: 15" class="w-full bg-slate-950 border border-amber-700/40 rounded-xl px-3 py-2 text-white outline-none"></div>
             </div>
             <div class="text-xs text-gray-400"><span class="text-translate" data-pt="Categoria" data-en="Category">Categoria</span>: <b id="peca-cat-rotulo" class="text-cyan-400">Mecânica</b><input type="hidden" id="peca-cat" value="mecanica"><button type="button" id="btn-mover-edit" onclick="moverPeca(parseInt(document.getElementById('peca-edit-id').value), true)" class="hidden ml-3 text-amber-400 font-bold cursor-pointer"><i class="ph ph-arrows-left-right"></i> Mover</button></div>
             <div class="space-y-3">
@@ -608,6 +719,109 @@
         </div>
       </div>
 
+      <!-- MOVIMENTAR ESTOQUE -->
+      <div id="modal-movimento" class="fixed inset-0 bg-black/60 backdrop-blur-md z-50 hidden flex items-center justify-center modal-overlay">
+        <div class="bento-card p-8 w-full max-w-md mx-4 relative max-h-[90vh] overflow-y-auto">
+          <button onclick="fecharModal('modal-movimento')" class="absolute top-4 right-4 text-gray-400 hover:text-white cursor-pointer"><i class="ph ph-x text-xl"></i></button>
+          <h2 class="text-xl font-bold text-white mb-1 flex items-center gap-2"><i class="ph ph-arrows-down-up text-emerald-400"></i> Movimentar estoque</h2>
+          <p id="mov-peca-nome" class="text-sm text-cyan-300 mb-5"></p>
+          <form id="form-movimento" class="space-y-4">
+            <div class="grid grid-cols-2 gap-2">
+              <label class="cursor-pointer"><input type="radio" name="mov-tipo" value="saida" class="peer hidden" checked><div class="text-center py-3 rounded-xl border border-slate-700 bg-slate-900 peer-checked:bg-red-600/30 peer-checked:border-red-500 font-bold text-white">➖ Saída</div></label>
+              <label class="cursor-pointer"><input type="radio" name="mov-tipo" value="entrada" class="peer hidden"><div class="text-center py-3 rounded-xl border border-slate-700 bg-slate-900 peer-checked:bg-emerald-600/30 peer-checked:border-emerald-500 font-bold text-white">➕ Entrada</div></label>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div><label class="block text-xs font-bold text-gray-400 mb-1">Quantidade</label><input type="number" id="mov-qtd" min="1" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none"></div>
+              <div><label class="block text-xs font-bold text-gray-400 mb-1">Motivo</label><select id="mov-motivo" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none"></select></div>
+            </div>
+            <div><label class="block text-xs font-bold text-gray-400 mb-1">Máquina / equipamento (opcional)</label><input type="text" id="mov-maquina" list="lista-equip" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none"></div>
+            <div><label class="block text-xs font-bold text-gray-400 mb-1">Observação (opcional)</label><input type="text" id="mov-obs" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none"></div>
+            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl cursor-pointer">Registrar</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- HISTÓRICO DA PEÇA -->
+      <div id="modal-historico" class="fixed inset-0 bg-black/60 backdrop-blur-md z-50 hidden flex items-center justify-center modal-overlay">
+        <div class="bento-card p-8 w-full max-w-2xl mx-4 relative max-h-[90vh] overflow-y-auto">
+          <button onclick="fecharModal('modal-historico')" class="absolute top-4 right-4 text-gray-400 hover:text-white cursor-pointer"><i class="ph ph-x text-xl"></i></button>
+          <h2 class="text-xl font-bold text-white mb-4 flex items-center gap-2"><i class="ph ph-clock-counter-clockwise text-cyan-400"></i> <span id="hist-titulo">Histórico</span></h2>
+          <div id="hist-resumo" class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4"></div>
+          <div class="overflow-x-auto rounded-xl border border-slate-700">
+            <table class="w-full text-left border-collapse text-sm min-w-[520px]">
+              <thead><tr class="bg-slate-800/80 text-xs text-gray-400 uppercase"><th class="p-3">Data</th><th class="p-3">Movimento</th><th class="p-3">Saldo</th><th class="p-3">Motivo</th><th class="p-3">Quem</th></tr></thead>
+              <tbody id="hist-lista" class="text-gray-200"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ORDEM DE SERVIÇO -->
+      <div id="modal-os" class="fixed inset-0 bg-black/60 backdrop-blur-md z-50 hidden flex items-center justify-center modal-overlay">
+        <div class="bento-card p-8 w-full max-w-2xl mx-4 relative max-h-[92vh] overflow-y-auto">
+          <button onclick="fecharModal('modal-os')" class="absolute top-4 right-4 text-gray-400 hover:text-white cursor-pointer"><i class="ph ph-x text-xl"></i></button>
+          <h2 class="text-xl font-bold text-white mb-5 flex items-center gap-2"><i class="ph ph-clipboard-text text-cyan-400"></i> Ordem de Serviço <span id="os-num" class="text-cyan-300 font-mono text-base"></span></h2>
+          <form id="form-os" class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div><label class="block text-xs font-bold text-gray-400 mb-1">Equipamento / máquina</label><input type="text" id="os-equip" list="lista-equip" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-cyan-500" placeholder="Ex: Robô Alpha"></div>
+              <div><label class="block text-xs font-bold text-gray-400 mb-1">Tipo</label><select id="os-tipo" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none"><option>Corretiva</option><option>Preventiva</option><option>Preditiva</option></select></div>
+              <div><label class="block text-xs font-bold text-gray-400 mb-1">Técnico responsável</label><input type="text" id="os-tecnico" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none"></div>
+              <div><label class="block text-xs font-bold text-gray-400 mb-1">Status</label><select id="os-status" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none"><option>Aberta</option><option>Em andamento</option><option>Concluída</option></select></div>
+              <div><label class="block text-xs font-bold text-gray-400 mb-1">Abertura (início da falha)</label><input type="datetime-local" id="os-abertura" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none"></div>
+              <div><label class="block text-xs font-bold text-gray-400 mb-1">Fim do reparo</label><input type="datetime-local" id="os-fim" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none"></div>
+            </div>
+            <label class="flex items-center gap-2 text-sm text-white cursor-pointer"><input type="checkbox" id="os-parada" class="w-4 h-4"> Máquina ficou parada (conta no tempo parado)</label>
+            <div><label class="block text-xs font-bold text-gray-400 mb-1">Defeito / serviço a fazer</label><textarea id="os-descricao" required rows="2" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none"></textarea></div>
+            <div><label class="block text-xs font-bold text-gray-400 mb-1">Solução / o que foi feito</label><textarea id="os-solucao" rows="2" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none"></textarea></div>
+            <div class="space-y-2">
+              <div class="flex justify-between items-center"><label class="text-xs font-bold text-emerald-400">Peças usadas (saem do estoque ao concluir)</label><button type="button" onclick="osAddPeca()" class="text-xs font-bold text-emerald-300 cursor-pointer">+ Adicionar peça</button></div>
+              <div id="os-pecas" class="space-y-2"></div>
+              <p id="os-baixado" class="hidden text-[11px] text-amber-400">✔ As peças desta OS já foram baixadas do estoque.</p>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div class="text-center"><p class="text-xs font-bold text-gray-400 mb-1">Foto antes</p><div class="h-28 rounded-xl bg-slate-950 border border-dashed border-slate-700 overflow-hidden flex items-center justify-center mb-1"><img id="os-foto1-prev" class="hidden w-full h-full object-cover" alt=""><i id="os-foto1-vazio" class="ph ph-camera text-3xl text-gray-600"></i></div><button type="button" onclick="document.getElementById('os-foto1-in').click()" class="w-full bg-slate-800 hover:bg-slate-700 text-gray-200 text-xs font-bold py-2 rounded-xl cursor-pointer">📷 Foto</button><input type="file" id="os-foto1-in" accept="image/*" capture="environment" class="hidden" onchange="osFoto(this, 1)"></div>
+              <div class="text-center"><p class="text-xs font-bold text-gray-400 mb-1">Foto depois</p><div class="h-28 rounded-xl bg-slate-950 border border-dashed border-slate-700 overflow-hidden flex items-center justify-center mb-1"><img id="os-foto2-prev" class="hidden w-full h-full object-cover" alt=""><i id="os-foto2-vazio" class="ph ph-camera text-3xl text-gray-600"></i></div><button type="button" onclick="document.getElementById('os-foto2-in').click()" class="w-full bg-slate-800 hover:bg-slate-700 text-gray-200 text-xs font-bold py-2 rounded-xl cursor-pointer">📷 Foto</button><input type="file" id="os-foto2-in" accept="image/*" capture="environment" class="hidden" onchange="osFoto(this, 2)"></div>
+            </div>
+            <button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3 rounded-xl cursor-pointer">Salvar OS</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- FORNECEDOR -->
+      <div id="modal-fornecedor" class="fixed inset-0 bg-black/60 backdrop-blur-md z-50 hidden flex items-center justify-center modal-overlay">
+        <div class="bento-card p-8 w-full max-w-md mx-4 relative max-h-[90vh] overflow-y-auto">
+          <button onclick="fecharModal('modal-fornecedor')" class="absolute top-4 right-4 text-gray-400 hover:text-white cursor-pointer"><i class="ph ph-x text-xl"></i></button>
+          <h2 class="text-xl font-bold text-white mb-5 flex items-center gap-2"><i class="ph ph-storefront text-emerald-400"></i> Fornecedor</h2>
+          <form id="form-fornecedor" class="space-y-4">
+            <div><label class="block text-xs font-bold text-gray-400 mb-1">Nome da empresa</label><input type="text" id="forn-nome" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none"></div>
+            <div><label class="block text-xs font-bold text-gray-400 mb-1">Pessoa de contato</label><input type="text" id="forn-contato" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none"></div>
+            <div><label class="block text-xs font-bold text-gray-400 mb-1">WhatsApp (com DDD)</label><input type="tel" id="forn-telefone" inputmode="tel" placeholder="Ex: 11 91234-5678" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none"></div>
+            <div><label class="block text-xs font-bold text-gray-400 mb-1">E-mail</label><input type="email" id="forn-email" inputmode="email" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none"></div>
+            <div><label class="block text-xs font-bold text-gray-400 mb-1">Observações</label><input type="text" id="forn-obs" placeholder="Ex: entrega em 10 dias, pedido mínimo R$ 300" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none"></div>
+            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl cursor-pointer">Salvar fornecedor</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- PEDIDO DE COMPRA -->
+      <div id="modal-pedido" class="fixed inset-0 bg-black/60 backdrop-blur-md z-50 hidden flex items-center justify-center modal-overlay">
+        <div class="bento-card p-8 w-full max-w-2xl mx-4 relative max-h-[92vh] overflow-y-auto">
+          <button onclick="fecharModal('modal-pedido')" class="absolute top-4 right-4 text-gray-400 hover:text-white cursor-pointer"><i class="ph ph-x text-xl"></i></button>
+          <h2 class="text-xl font-bold text-white mb-5 flex items-center gap-2"><i class="ph ph-receipt text-cyan-400"></i> Pedido de compra <span id="ped-num" class="text-cyan-300 font-mono text-base"></span> <span id="ped-status" class="text-xs"></span></h2>
+          <form id="form-pedido" class="space-y-4">
+            <div><label class="block text-xs font-bold text-gray-400 mb-1">Fornecedor</label><select id="ped-fornecedor" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none"></select></div>
+            <div class="space-y-2">
+              <div class="flex justify-between items-center"><label class="text-xs font-bold text-gray-400">Itens</label><button type="button" onclick="pedAddItem()" class="text-xs font-bold text-cyan-300 cursor-pointer">+ Adicionar item</button></div>
+              <div id="ped-itens" class="space-y-2"></div>
+              <p class="text-right text-sm text-white">Total estimado: <b id="ped-total">R$ 0,00</b></p>
+            </div>
+            <div><label class="block text-xs font-bold text-gray-400 mb-1">Observações para o fornecedor</label><input type="text" id="ped-obs" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none"></div>
+            <button type="submit" id="ped-salvar" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3 rounded-xl cursor-pointer">Salvar pedido</button>
+          </form>
+        </div>
+      </div>
+      <datalist id="lista-equip"></datalist>
+
       <div id="modal-diff" class="fixed inset-0 bg-black/60 backdrop-blur-md z-50 hidden flex items-center justify-center modal-overlay">
         <div class="bento-card p-8 w-full max-w-xl mx-4 relative max-h-[90vh] overflow-y-auto">
           <button onclick="fecharModal('modal-diff')" class="absolute top-4 right-4 text-gray-400 hover:text-white cursor-pointer"><i class="ph ph-x text-xl"></i></button>
@@ -652,7 +866,7 @@
       appId: '1:78804181086:web:f76b1845c0de2253dad4cf'
     };
     const configOk = () => typeof firebase !== 'undefined' && FIREBASE_CONFIG.apiKey && !FIREBASE_CONFIG.apiKey.startsWith('COLE');
-    const COLS = ['pecas', 'guepar', 'emprestimos', 'manutencoes', 'logs'];          // sincronizadas em /guepar2
+    const COLS = ['pecas', 'guepar', 'emprestimos', 'manutencoes', 'logs', 'movimentos', 'ordens', 'fornecedores', 'pedidos'];   // sincronizadas em /guepar2
     const PODE_ESCREVER = { admin: COLS, visitante1: COLS, visitante: ['logs'] };   // igual às regras do Firebase
     const DOMINIO_LOGIN = '@usuarios.gueparvsrobo.app';                            // e-mail técnico de cada acesso
     const SENHA_PREFIXO = 'gp:';   // o Firebase exige 6+ caracteres; assim as senhas curtas atuais continuam valendo
@@ -1265,7 +1479,7 @@
       const diasPara = m => Math.round((new Date(m.validade + 'T00:00:00') - hoje) / 864e5);
       const situacaoManu = m => { const d = diasPara(m); return isNaN(d) ? ['—', '#555'] : d < 0 ? [`VENCIDA há ${-d} dia(s)`, '#c00'] : d <= 15 ? [`Vence em ${d} dia(s)`, '#b26a00'] : ['Em dia', '#080']; };
       const valorPecas = l => l.reduce((a, p) => a + ((p.estoque || 0) + (p.sobressalentes || 0)) * (p.custo || 0), 0);
-      const tit = { pecas: 'Relatório de Peças — ' + cat.pt, guepar: 'Relatório Guepar (Itens e Empréstimos)', manutencoes: 'Relatório de Manutenções', auditoria: 'Relatório de Auditoria', tudo: 'Relatório Geral — Command Center' }[tipo] || 'Relatório';
+      const tit = { pecas: 'Relatório de Peças — ' + cat.pt, guepar: 'Relatório Guepar (Itens e Empréstimos)', manutencoes: 'Relatório de Manutenções', auditoria: 'Relatório de Auditoria', os: 'Relatório de Ordens de Serviço', compras: 'Relatório de Compras', tudo: 'Relatório Geral — Command Center' }[tipo] || 'Relatório';
 
       const blocoPecas = (c, quebra) => {
         const lista = db.pecas.filter(p => catDe(p) === c.id), crit = lista.filter(p => p.estoque < p.min).length;
@@ -1310,7 +1524,9 @@
       else if (tipo === 'guepar') corpo = blocoGuepar() + blocoEmprestimos();
       else if (tipo === 'manutencoes') corpo = blocoManutencoes();
       else if (tipo === 'auditoria') corpo = blocoAuditoria();
-      else if (tipo === 'tudo') corpo = blocoResumo() + CATS.map(c => blocoPecas(c, true)).join('') + blocoGuepar(true) + blocoEmprestimos() + blocoManutencoes(true) + (adm ? blocoAuditoria(true) : '');
+      else if (tipo === 'os') corpo = relOS(false);
+      else if (tipo === 'compras') corpo = relCompras(false);
+      else if (tipo === 'tudo') corpo = blocoResumo() + relPrevisao() + CATS.map(c => blocoPecas(c, true)).join('') + blocoGuepar(true) + blocoEmprestimos() + blocoManutencoes(true) + relOS(true) + relCompras(true) + (adm ? blocoAuditoria(true) : '');
 
       const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>${tit}</title><style>
         body { font-family: Arial, sans-serif; padding: 20px; color: #111; }
@@ -1379,12 +1595,13 @@
         return `
           <tr class="border-b border-slate-800/30 hover:bg-slate-800/50">
             <td class="p-3">${miniFotos(p, i)}</td>
-            <td class="p-4">${esc(p.nome)}<div class="text-[10px] text-gray-500 font-mono">${esc(p.cod || '')}</div></td>
+            <td class="p-4">${esc(p.nome)}<div class="text-[10px] text-gray-500 font-mono">${esc(p.cod || '')} <button onclick="verHistorico(${i})" class="ml-1 text-cyan-400 hover:text-white cursor-pointer font-sans" title="Histórico e previsão"><i class="ph ph-clock-counter-clockwise"></i> histórico</button></div>${previsaoHtml(p)}</td>
             <td class="p-4 ${critico ? 'text-red-400 font-bold' : 'text-white'}">${p.estoque}</td>
             <td class="p-4 text-gray-400">${p.min}</td>
             <td class="p-4"><span class="bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded text-xs border border-emerald-500/20">${p.sobressalentes} Kits</span></td>
             <td class="p-4 text-right req-vis1 ${isVis1 ? '' : 'hidden'}">
               <div class="flex justify-end gap-3">
+                <button onclick="abrirMovimento(${i})" class="text-emerald-400 hover:text-white transition" title="Entrada / saída"><i class="ph ph-arrows-down-up text-lg"></i></button>
                 <button onclick="moverPeca(${i})" class="text-amber-400 hover:text-white transition" title="Mover de categoria"><i class="ph ph-arrows-left-right text-lg"></i></button>
                 <button onclick="prepararEdicao('peca', ${i})" class="text-cyan-400 hover:text-white transition" title="Editar"><i class="ph ph-pencil-simple text-lg"></i></button>
                 <button onclick="apagarRegistro('peca', ${i})" class="text-red-500 hover:text-white transition ${isAdm ? '' : 'hidden'}" title="Apagar"><i class="ph ph-trash text-lg"></i></button>
@@ -1507,7 +1724,7 @@
 
     function prepararEdicao(tipo, index) {
       if(tipo === 'peca') {
-        const i = db.pecas[index]; document.getElementById('peca-edit-id').value = index; document.getElementById('peca-nome').value = i.nome; document.getElementById('peca-atual').value = i.estoque; document.getElementById('peca-min').value = i.min; document.getElementById('peca-sobre').value = i.sobressalentes; document.getElementById('peca-custo').value = i.custo ? i.custo : 0; mostrarFotos(i.foto, i.foto2); setCat(catDe(i)); document.getElementById('btn-mover-edit').classList.remove('hidden'); document.getElementById('titulo-modal-peca').textContent = "Editar Peça"; abrirModal('modal-add-peca');
+        const i = db.pecas[index]; document.getElementById('peca-edit-id').value = index; document.getElementById('peca-nome').value = i.nome; document.getElementById('peca-atual').value = i.estoque; document.getElementById('peca-min').value = i.min; document.getElementById('peca-sobre').value = i.sobressalentes; document.getElementById('peca-custo').value = i.custo ? i.custo : 0; preencherFornecedores('peca-fornecedor', i.fornecedorId || ''); document.getElementById('peca-prazo').value = i.prazoEntrega || ''; mostrarFotos(i.foto, i.foto2); setCat(catDe(i)); document.getElementById('btn-mover-edit').classList.remove('hidden'); document.getElementById('titulo-modal-peca').textContent = "Editar Peça"; abrirModal('modal-add-peca');
       }
       if(tipo === 'guepar') {
         const i = db.guepar[index]; document.getElementById('guepar-edit-id').value = index; document.getElementById('guepar-nome').value = i.nome; document.getElementById('guepar-marca').value = i.marca; document.getElementById('guepar-qtd').value = i.estoque; document.getElementById('guepar-custo').value = i.custo ? i.custo : 0; document.getElementById('titulo-modal-guepar').textContent = "Editar Item Guepar"; abrirModal('modal-add-guepar');
@@ -1544,8 +1761,8 @@
 
     document.getElementById('form-peca').addEventListener('submit', (e) => {
       e.preventDefault(); const id = document.getElementById('peca-edit-id').value;
-      const data = { nome: document.getElementById('peca-nome').value, estoque: parseInt(document.getElementById('peca-atual').value), min: parseInt(document.getElementById('peca-min').value), sobressalentes: parseInt(document.getElementById('peca-sobre').value) || 0, custo: parseFloat(document.getElementById('peca-custo').value) || 0, foto: fotos[0], foto2: fotos[1], cat: document.getElementById('peca-cat').value, cod: (id !== '' && db.pecas[id] && db.pecas[id].cod) || proximoCod(document.getElementById('peca-cat').value) };
-      if(id === "") { db.pecas.push(data); auditarAcao('CRIACAO', `Criou peça: ${data.nome}`, snap(data)); } else { const dict = { nome: 'Nome', estoque: 'Estoque Atual', min: 'Stock Mínimo', sobressalentes: 'Reserva', custo: 'Custo (R$)', cat: 'Categoria' }; const antes = db.pecas[id]; const diff = calcularDiff(semFoto(antes), semFoto(data), dict); [['foto', 'Foto da peça'], ['foto2', 'Foto do código de barras']].forEach(([k, nm]) => { if ((antes[k] || '') !== (data[k] || '')) diff.push({ campo: nm, de: antes[k] ? 'Com foto' : 'Sem foto', para: data[k] ? 'Com foto' : 'Sem foto' }); }); db.pecas[id] = data; auditarAcao('EDICAO', `Editou peça: ${data.nome}`, diff); }
+      const data = { nome: document.getElementById('peca-nome').value, estoque: parseInt(document.getElementById('peca-atual').value), min: parseInt(document.getElementById('peca-min').value), sobressalentes: parseInt(document.getElementById('peca-sobre').value) || 0, custo: parseFloat(document.getElementById('peca-custo').value) || 0, foto: fotos[0], foto2: fotos[1], cat: document.getElementById('peca-cat').value, cod: (id !== '' && db.pecas[id] && db.pecas[id].cod) || proximoCod(document.getElementById('peca-cat').value), fornecedorId: document.getElementById('peca-fornecedor').value || '', prazoEntrega: parseInt(document.getElementById('peca-prazo').value) || 0 };
+      if(id === "") { db.pecas.push(data); registrarMov(data, data.estoque, 'Entrada inicial'); auditarAcao('CRIACAO', `Criou peça: ${data.nome}`, snap(data)); } else { const dict = { nome: 'Nome', estoque: 'Estoque Atual', min: 'Stock Mínimo', sobressalentes: 'Reserva', custo: 'Custo (R$)', cat: 'Categoria', fornecedorId: 'Fornecedor', prazoEntrega: 'Prazo de entrega (dias)' }; const antes = db.pecas[id]; data._id = antes._id; data._ord = antes._ord; const diff = calcularDiff(semFoto({ fornecedorId: '', prazoEntrega: 0, ...antes, _id: undefined, _ord: undefined }), semFoto(data), dict).filter(d => d.campo !== '_id' && d.campo !== '_ord'); traduzirFornecedorDiff(diff); if ((data.estoque || 0) !== (antes.estoque || 0)) registrarMov(data, (data.estoque || 0) - (antes.estoque || 0), data.estoque > antes.estoque ? 'Entrada (ajuste na edição)' : 'Saída (ajuste na edição)'); [['foto', 'Foto da peça'], ['foto2', 'Foto do código de barras']].forEach(([k, nm]) => { if ((antes[k] || '') !== (data[k] || '')) diff.push({ campo: nm, de: antes[k] ? 'Com foto' : 'Sem foto', para: data[k] ? 'Com foto' : 'Sem foto' }); }); db.pecas[id] = data; auditarAcao('EDICAO', `Editou peça: ${data.nome}`, diff); }
       salvarDB(); fecharModal('modal-add-peca');
     });
 
@@ -2126,11 +2343,11 @@
     function IAexecutar(p) {
       if (p.tipo === 'peca') {
         const d = { nome: p.d.nome, estoque: p.d.estoque || 0, min: p.d.min || 0, sobressalentes: p.d.sobre || 0, custo: p.d.custo || 0, foto: '', foto2: '', cat: p.d.cat || catAtual, cod: proximoCod(p.d.cat || catAtual) };
-        db.pecas.push(d); auditarAcao('CRIACAO', `Criou peça: ${d.nome} (por voz)`, snap(d)); salvarDB(); renderizarTabelas();
+        db.pecas.push(d); registrarMov(d, d.estoque, 'Entrada inicial'); auditarAcao('CRIACAO', `Criou peça: ${d.nome} (por voz)`, snap(d)); salvarDB(); renderizarTabelas();
         return `✅ Peça <b>${esc(d.nome)}</b> cadastrada em <b>${catNome(d.cat)}</b> com o código <b>${d.cod}</b>. Depois abra a edição para tirar a foto. 📷`;
       }
       const pc = db.pecas.find(x => x.nome === p.nome); if (!pc) return 'Essa peça não existe mais.';
-      const a = pc.estoque; pc.estoque += p.qtd;
+      const a = pc.estoque; pc.estoque += p.qtd; registrarMov(pc, p.qtd, p.qtd > 0 ? 'Compra / reposição' : 'Uso / manutenção', { obs: 'por voz' });
       auditarAcao('EDICAO', `Estoque de ${pc.nome} alterado por voz`, [{ campo: 'Estoque Atual', de: String(a), para: String(pc.estoque) }]); salvarDB(); renderizarTabelas();
       return `✅ Feito! <b>${esc(pc.nome)}</b> agora tem <b>${pc.estoque}</b> em estoque.`;
     }
@@ -2149,7 +2366,7 @@
       return pref + '-' + String(Math.max(0, ...db.pecas.filter(p => String(p.cod || '').startsWith(pref + '-')).map(p => parseInt(String(p.cod).replace(/\D/g, '')) || 0)) + 1).padStart(3, '0');
     }
     function setCat(c) { document.getElementById('peca-cat').value = c; document.getElementById('peca-cat-rotulo').textContent = catNome(c); }
-    function novaPeca() { setCat(catAtual); document.getElementById('btn-mover-edit').classList.add('hidden'); abrirModal('modal-add-peca'); }
+    function novaPeca() { setCat(catAtual); preencherFornecedores('peca-fornecedor', ''); document.getElementById('btn-mover-edit').classList.add('hidden'); abrirModal('modal-add-peca'); }
     function cabecalhoPecas() {
       const c = CATS.find(x => x.id === catAtual) || CATS[0], h = document.querySelector('#aba-pecas h1');
       if (h) { h.dataset.pt = c.pt; h.dataset.en = c.en; h.textContent = localStorage.getItem('guepar_lang') === 'en' ? c.en : c.pt; }
@@ -2186,6 +2403,504 @@
           .catch(err => console.error('Erro no Service Worker PWA', err));
       });
     }
+  </script>
+
+  <script>
+    /* =====================================================================
+       OPERAÇÕES
+       • Histórico de estoque (toda entrada/saída fica registrada) + previsão de compra:
+         avisa com NO MÍNIMO 30 dias de antecedência (ou o prazo de entrega, se for maior)
+       • Ordens de Serviço com tempo parado, MTBF e MTTR
+       • Pedidos de compra com fornecedores (imprimir/PDF, WhatsApp, e-mail, receber)
+       ===================================================================== */
+    const ANTECEDENCIA_MIN = 30;
+    const MOTIVOS = {
+      saida: ['Uso / manutenção', 'Perda / avaria', 'Correção de inventário', 'Outro'],
+      entrada: ['Compra / reposição', 'Devolução', 'Correção de inventário', 'Outro']
+    };
+    const opP2 = n => String(n).padStart(2, '0');
+    const opPode = () => ['admin', 'visitante1'].includes(localStorage.getItem('guepar_role'));
+    const opAdmin = () => localStorage.getItem('guepar_role') === 'admin';
+    const opEmail = () => localStorage.getItem('guepar_email') || '';
+    const dataHoraBR = iso => iso ? new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—';
+    const paraInputData = iso => { if (!iso) return ''; const d = new Date(iso); return `${d.getFullYear()}-${opP2(d.getMonth() + 1)}-${opP2(d.getDate())}T${opP2(d.getHours())}:${opP2(d.getMinutes())}`; };
+    const deInputData = v => v ? new Date(v).toISOString() : null;
+    const fmtHoras = h => h == null || !isFinite(h) ? '—' : h < 1 ? Math.round(h * 60) + ' min' : h < 48 ? h.toFixed(1).replace('.', ',') + ' h' : (h / 24).toFixed(1).replace('.', ',') + ' dias';
+    const fmtNum = n => (Math.round(n * 10) / 10).toLocaleString('pt-BR');
+    const linkWhats = (tel, msg) => { let d = String(tel || '').replace(/\D/g, ''); if (d && d.length <= 11) d = '55' + d; return `https://wa.me/${d}?text=${encodeURIComponent(msg || '')}`; };
+    const proximoNum = (lista, pref) => pref + '-' + String(Math.max(0, ...lista.map(x => parseInt(String(x.num || '').replace(/\D/g, '')) || 0)) + 1).padStart(4, '0');
+    const fornecedorDe = id => (id && db.fornecedores.find(f => f._id === id)) || null;
+    const nomeFornecedor = id => (fornecedorDe(id) || {}).nome || (id ? '(fornecedor removido)' : '—');
+    const garantirIdsPecas = () => db.pecas.forEach(p => { if (!p._id) p._id = novoId(); });
+    function irParaAba(aba) { const l = document.querySelector(`.nav-link[data-aba="${aba}"]`); if (l) l.click(); }
+    function traduzirFornecedorDiff(diff) { diff.forEach(d => { if (d.campo === 'Fornecedor') { if (d.de !== '(Vazio)') d.de = nomeFornecedor(d.de); if (d.para !== '(Vazio)') d.para = nomeFornecedor(d.para); } }); }
+    function preencherFornecedores(selId, valor) {
+      const s = document.getElementById(selId); if (!s) return;
+      s.innerHTML = `<option value="">— nenhum —</option>` + [...db.fornecedores].sort((a, b) => String(a.nome).localeCompare(String(b.nome))).map(f => `<option value="${esc(f._id)}">${esc(f.nome)}</option>`).join('');
+      s.value = valor || '';
+    }
+    function comprimirFoto(file, max, q) {
+      return new Promise((ok, erro) => {
+        const img = new Image(), url = URL.createObjectURL(file);
+        img.onload = () => { const k = Math.min(1, max / Math.max(img.width, img.height)), c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url); ok(c.toDataURL('image/jpeg', q)); };
+        img.onerror = () => { URL.revokeObjectURL(url); erro(new Error('Imagem inválida')); };
+        img.src = url;
+      });
+    }
+    const REL_CSS = `body { font-family: Arial, sans-serif; padding: 20px; color: #111; } h1 { margin: 0 0 4px; font-size: 22px; } .meta { color: #555; font-size: 12px; margin-bottom: 18px; }
+      h2 { font-size: 17px; border-bottom: 2px solid #111; padding-bottom: 4px; margin: 22px 0 8px; page-break-after: avoid; } h2 small { font-weight: normal; color: #555; font-size: 12px; }
+      table { width: 100%; border-collapse: collapse; font-size: 12px; } th, td { border: 1px solid #bbb; padding: 6px 8px; text-align: left; vertical-align: top; } th { background: #f0f2f5; } tr { page-break-inside: avoid; }
+      .vazio { color: #777; font-style: italic; } .assin { display: flex; gap: 40px; margin-top: 50px; } .assin div { flex: 1; border-top: 1px solid #111; text-align: center; padding-top: 4px; font-size: 12px; }
+      @media print { body { padding: 0; } .quebra { page-break-before: always; } }`;
+    function abrirImpressao(titulo, corpo) {
+      const win = window.open('', '_blank'); if (!win) { alert('Permita pop-ups no navegador.'); return; }
+      win.document.open();
+      win.document.write(`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>${esc(titulo)}</title><style>${REL_CSS}</style></head><body><h1>${esc(titulo)}</h1><div class="meta">Guepar vs RobÔ · emitido em ${new Date().toLocaleString('pt-BR')}${opEmail() ? ' por ' + esc(opEmail()) : ''}</div>${corpo}<script>window.onload = function () { setTimeout(function () { window.print(); }, 300); };<\/script></body></html>`);
+      win.document.close();
+    }
+
+    /* ---------- HISTÓRICO DE ESTOQUE E PREVISÃO ---------- */
+    function registrarMov(p, qtd, motivo, extra) {
+      qtd = Number(qtd) || 0;
+      if (!p || !qtd) return;
+      if (!p._id) p._id = novoId();
+      db.movimentos.push({ data: new Date().toISOString(), pecaId: p._id, peca: p.nome, cod: p.cod || '', qtd, saldo: Number(p.estoque) || 0, motivo, usuario: opEmail(), ...(extra || {}) });
+    }
+    // consumo médio dos últimos 90 dias (mínimo 14 dias de janela) e quando a peça chega no estoque mínimo
+    function previsao(p) {
+      if (!p || !p._id) return null;
+      const movs = db.movimentos.filter(m => m.pecaId === p._id);
+      if (!movs.length) return null;
+      const agora = Date.now(), desde = agora - 90 * 864e5;
+      const antecedencia = Math.max(ANTECEDENCIA_MIN, Number(p.prazoEntrega) || 0);
+      const saidas = movs.filter(m => m.qtd < 0 && m.motivo !== 'Correção de inventário' && Date.parse(m.data) >= desde);
+      if (!saidas.length) return { consumoDia: 0, consumoMes: 0, diasMin: null, antecedencia, alerta: false };
+      const primeiro = Math.min(...movs.map(m => Date.parse(m.data)).filter(isFinite));
+      const janela = Math.max(14, (agora - Math.max(primeiro, desde)) / 864e5);
+      const consumoDia = saidas.reduce((a, m) => a - m.qtd, 0) / janela;
+      const estoque = Number(p.estoque) || 0, min = Number(p.min) || 0;
+      const diasMin = Math.max(0, (estoque - min) / consumoDia);
+      return { consumoDia, consumoMes: consumoDia * 30, diasMin, diasZero: estoque / consumoDia, antecedencia, alerta: estoque >= min && diasMin <= antecedencia };
+    }
+    function previsaoHtml(p) {
+      const pv = previsao(p);
+      if (!pv || !pv.consumoDia) return '';
+      if ((Number(p.estoque) || 0) < (Number(p.min) || 0)) return `<div class="text-[11px] text-red-400 font-bold mt-0.5">⛔ abaixo do mínimo · consumo ~${fmtNum(pv.consumoMes)}/mês</div>`;
+      if (pv.alerta) return `<div class="text-[11px] text-amber-400 font-bold mt-0.5">⏳ chega no mínimo em ~${Math.round(pv.diasMin)} dias · comece a comprar</div>`;
+      return `<div class="text-[11px] text-gray-500 mt-0.5">~${Math.round(pv.diasMin)} dias até o mínimo · ${fmtNum(pv.consumoMes)}/mês</div>`;
+    }
+    function pecasParaComprar() {
+      return db.pecas.map(p => {
+        const pv = previsao(p), critico = (Number(p.estoque) || 0) < (Number(p.min) || 0);
+        if (!critico && !(pv && pv.alerta)) return null;
+        const alvo = pv && pv.consumoDia > 0 ? Math.ceil(pv.consumoDia * (pv.antecedencia + 30) + (Number(p.min) || 0)) : Math.ceil((Number(p.min) || 0) * 1.5);
+        return { p, pv, critico, dias: critico ? -1 : pv.diasMin, qtd: Math.max(1, alvo - (Number(p.estoque) || 0)) };
+      }).filter(Boolean).sort((a, b) => a.dias - b.dias);
+    }
+    const emPedidoAberto = pecaId => !!pecaId && db.pedidos.some(o => ['Rascunho', 'Enviado'].includes(o.status) && arrDe(o.itens).some(i => i.pecaId === pecaId));
+
+    let movPecaIdx = null;
+    function atualizarMotivos() { const t = (document.querySelector('input[name="mov-tipo"]:checked') || {}).value || 'saida'; document.getElementById('mov-motivo').innerHTML = MOTIVOS[t].map(m => `<option>${m}</option>`).join(''); }
+    function abrirMovimento(i) {
+      const p = db.pecas[i]; if (!p) return;
+      if (!opPode()) { alert('Seu acesso não permite movimentar o estoque.'); return; }
+      movPecaIdx = i;
+      document.getElementById('form-movimento').reset();
+      document.getElementById('mov-peca-nome').textContent = `${p.cod ? p.cod + ' · ' : ''}${p.nome} — estoque atual: ${p.estoque}`;
+      atualizarListaEquip(); atualizarMotivos(); abrirModal('modal-movimento');
+    }
+    document.querySelectorAll('input[name="mov-tipo"]').forEach(r => r.addEventListener('change', atualizarMotivos));
+    document.getElementById('form-movimento').addEventListener('submit', e => {
+      e.preventDefault();
+      const p = db.pecas[movPecaIdx]; if (!p) return;
+      const tipo = document.querySelector('input[name="mov-tipo"]:checked').value, qtd = parseInt(document.getElementById('mov-qtd').value) || 0;
+      if (qtd <= 0) { alert('Informe a quantidade.'); return; }
+      const antes = Number(p.estoque) || 0;
+      if (tipo === 'saida' && qtd > antes) { alert(`Só há ${antes} em estoque.`); return; }
+      const delta = tipo === 'saida' ? -qtd : qtd;
+      p.estoque = antes + delta;
+      registrarMov(p, delta, document.getElementById('mov-motivo').value, { maquina: document.getElementById('mov-maquina').value.trim(), obs: document.getElementById('mov-obs').value.trim() });
+      auditarAcao('EDICAO', `${tipo === 'saida' ? 'Saída' : 'Entrada'} de ${qtd} un. — ${p.nome}`, [{ campo: 'Estoque Atual', de: String(antes), para: String(p.estoque) }]);
+      salvarDB(); fecharModal('modal-movimento');
+    });
+    function verHistorico(i) {
+      const p = db.pecas[i]; if (!p) return;
+      const pv = previsao(p), critico = (Number(p.estoque) || 0) < (Number(p.min) || 0);
+      const movs = db.movimentos.filter(m => p._id && m.pecaId === p._id).sort((a, b) => Date.parse(b.data) - Date.parse(a.data));
+      const card = (t, v, cor) => `<div class="bg-slate-900/70 border border-slate-700 rounded-xl p-3"><p class="text-[10px] uppercase text-gray-400 font-bold">${t}</p><p class="text-lg font-black ${cor || 'text-white'}">${v}</p></div>`;
+      document.getElementById('hist-titulo').textContent = `${p.cod ? p.cod + ' · ' : ''}${p.nome}`;
+      document.getElementById('hist-resumo').innerHTML =
+        card('Estoque / mínimo', `${p.estoque} / ${p.min}`, critico ? 'text-red-400' : 'text-white') +
+        card('Consumo médio', pv && pv.consumoDia ? fmtNum(pv.consumoMes) + '/mês' : '—') +
+        card('Chega no mínimo', critico ? 'JÁ ABAIXO' : pv && pv.consumoDia ? `~${Math.round(pv.diasMin)} dias` : '—', critico ? 'text-red-400' : pv && pv.alerta ? 'text-amber-400' : 'text-emerald-400') +
+        card('Avisar com', `${Math.max(ANTECEDENCIA_MIN, Number(p.prazoEntrega) || 0)} dias`, 'text-cyan-300');
+      document.getElementById('hist-lista').innerHTML = movs.length ? movs.map(m => `<tr class="border-t border-slate-800"><td class="p-3 text-xs text-gray-400 whitespace-nowrap">${dataHoraBR(m.data)}</td><td class="p-3 font-bold ${m.qtd < 0 ? 'text-red-400' : 'text-emerald-400'}">${m.qtd > 0 ? '+' : ''}${m.qtd}</td><td class="p-3">${m.saldo ?? '—'}</td><td class="p-3">${esc(m.motivo || '')}${m.ref ? ` <span class="text-cyan-300">${esc(m.ref)}</span>` : ''}${m.maquina ? `<div class="text-[11px] text-gray-500">${esc(m.maquina)}</div>` : ''}${m.obs ? `<div class="text-[11px] text-gray-500">${esc(m.obs)}</div>` : ''}</td><td class="p-3 text-xs text-gray-400">${esc(String(m.usuario || '').split('@')[0])}</td></tr>`).join('')
+        : `<tr><td colspan="5" class="p-6 text-center text-gray-500">Ainda não há movimentações. Use o botão ⇅ (entrada/saída), edite o estoque ou conclua uma OS: tudo passa a ficar registrado aqui e a previsão aparece sozinha.</td></tr>`;
+      abrirModal('modal-historico');
+    }
+    function linhaCompra(x, comQtd) {
+      const { p, pv, critico } = x;
+      const status = critico ? `<span class="text-red-400 font-bold">⛔ abaixo do mínimo</span>` : `<span class="text-amber-400 font-bold">⏳ mínimo em ~${Math.round(pv.diasMin)} dias</span>`;
+      const pedido = emPedidoAberto(p._id) ? ' <span class="text-[10px] bg-cyan-500/10 text-cyan-300 px-1.5 py-0.5 rounded">já em pedido</span>' : '';
+      return `<div class="flex flex-wrap justify-between gap-2 bg-slate-900/60 border border-slate-800 rounded-xl px-4 py-2.5"><div><b class="text-white">${esc(p.nome)}</b> <span class="text-[11px] text-gray-500">${esc(p.cod || '')} · ${catNome(catDe(p))}</span>${pedido}<div class="text-[11px] text-gray-400">Estoque ${p.estoque} · mínimo ${p.min}${pv && pv.consumoDia ? ' · consumo ~' + fmtNum(pv.consumoMes) + '/mês' : ''} · fornecedor: ${esc(nomeFornecedor(p.fornecedorId))}${p.prazoEntrega ? ' (entrega em ' + p.prazoEntrega + ' dias)' : ''}</div></div><div class="text-right text-xs">${status}${comQtd ? `<div class="text-gray-300">sugerido: <b>${x.qtd}</b> un.</div>` : ''}</div></div>`;
+    }
+    function renderPrevisao() {
+      const el = document.getElementById('lista-previsao'); if (!el) return;
+      const l = pecasParaComprar();
+      if (!l.length) { el.innerHTML = `<p class="text-emerald-400">✅ Nenhuma peça vai chegar no mínimo nos próximos ${ANTECEDENCIA_MIN} dias.</p>${db.movimentos.some(m => m.qtd < 0) ? '' : '<p class="text-[11px] text-gray-500 mt-1">A previsão aparece conforme as saídas de estoque forem registradas (botão ⇅ nas peças, edição do estoque ou peças usadas nas Ordens de Serviço).</p>'}`; return; }
+      el.innerHTML = `<div class="space-y-2">${l.slice(0, 8).map(x => linhaCompra(x)).join('')}</div>` + (l.length > 8 ? `<p class="text-xs text-gray-500 mt-2">+ ${l.length - 8} peça(s). Veja todas em Compras.</p>` : '');
+    }
+
+    /* ---------- FORNECEDORES E PEDIDOS DE COMPRA ---------- */
+    const totalPedido = o => arrDe(o.itens).reduce((a, i) => a + (Number(i.qtd) || 0) * (Number(i.custo) || 0), 0);
+    function renderCompras() {
+      const sug = document.getElementById('lista-sugestao'); if (!sug) return;
+      const l = pecasParaComprar(), ed = opPode(), adm = opAdmin();
+      sug.innerHTML = l.length ? `<div class="space-y-2">${l.map(x => linhaCompra(x, true)).join('')}</div>`
+        : `<p class="text-emerald-400">✅ Nada para comprar agora.</p><p class="text-[11px] text-gray-500 mt-1">Aparecem aqui as peças abaixo do mínimo e as que vão chegar no mínimo em até ${ANTECEDENCIA_MIN} dias (ou no prazo de entrega do fornecedor, se for maior).</p>`;
+      const cor = { Rascunho: 'bg-slate-700 text-gray-200', Enviado: 'bg-cyan-500/20 text-cyan-300', Recebido: 'bg-emerald-500/20 text-emerald-300', Cancelado: 'bg-red-500/20 text-red-300' };
+      const peds = [...db.pedidos].sort((a, b) => (Date.parse(b.criado) || 0) - (Date.parse(a.criado) || 0));
+      document.getElementById('tabela-pedidos').innerHTML = peds.length ? peds.map(o => {
+        const i = db.pedidos.indexOf(o), aberto = ['Rascunho', 'Enviado'].includes(o.status), forn = o.fornecedorId ? nomeFornecedor(o.fornecedorId) : 'Sem fornecedor';
+        return `<tr class="border-b border-slate-800/30 hover:bg-slate-800/50">
+          <td class="p-4 font-mono text-cyan-300">${esc(o.num)}</td><td class="p-4">${esc(forn)}</td><td class="p-4 text-gray-300">${arrDe(o.itens).length} item(ns)</td>
+          <td class="p-4">${fmtMoeda.format(totalPedido(o))}</td><td class="p-4"><span class="text-xs font-bold px-2 py-1 rounded ${cor[o.status] || ''}">${esc(o.status)}</span></td>
+          <td class="p-4 text-xs text-gray-400">${dataHoraBR(o.recebido || o.enviado || o.criado)}</td>
+          <td class="p-4"><div class="flex justify-end gap-3 flex-wrap">
+            <button onclick="abrirPedido(${i})" title="Abrir / editar" class="text-cyan-400 hover:text-white cursor-pointer"><i class="ph ph-pencil-simple text-lg"></i></button>
+            <button onclick="imprimirPedido(${i})" title="Imprimir / salvar em PDF" class="text-gray-300 hover:text-white cursor-pointer"><i class="ph ph-printer text-lg"></i></button>
+            ${ed && aberto ? `<button onclick="enviarPedido(${i}, 'whats')" title="Enviar por WhatsApp" class="text-emerald-400 hover:text-white cursor-pointer"><i class="ph ph-whatsapp-logo text-lg"></i></button><button onclick="enviarPedido(${i}, 'email')" title="Enviar por e-mail" class="text-sky-400 hover:text-white cursor-pointer"><i class="ph ph-envelope-simple text-lg"></i></button><button onclick="receberPedido(${i})" title="Recebi: dar entrada no estoque" class="text-amber-400 hover:text-white cursor-pointer"><i class="ph ph-package text-lg"></i></button><button onclick="cancelarPedido(${i})" title="Cancelar pedido" class="text-gray-400 hover:text-red-400 cursor-pointer"><i class="ph ph-prohibit text-lg"></i></button>` : ''}
+            ${adm ? `<button onclick="apagarPedido(${i})" title="Apagar" class="text-red-500 hover:text-white cursor-pointer"><i class="ph ph-trash text-lg"></i></button>` : ''}
+          </div></td></tr>`;
+      }).join('') : `<tr><td colspan="7" class="p-8 text-center text-gray-500">Nenhum pedido ainda. Use "Gerar pedidos" acima ou "Pedido manual".</td></tr>`;
+      const forns = [...db.fornecedores].sort((a, b) => String(a.nome).localeCompare(String(b.nome)));
+      document.getElementById('tabela-fornecedores').innerHTML = forns.length ? forns.map(f => {
+        const i = db.fornecedores.indexOf(f), n = db.pecas.filter(p => p.fornecedorId === f._id).length;
+        return `<tr class="border-b border-slate-800/30 hover:bg-slate-800/50"><td class="p-4 font-bold">${esc(f.nome)}${f.obs ? `<div class="text-[11px] text-gray-500 font-normal">${esc(f.obs)}</div>` : ''}</td><td class="p-4 text-gray-300">${esc(f.contato || '—')}</td><td class="p-4">${f.telefone ? `<a class="text-emerald-400" target="_blank" rel="noopener" href="${linkWhats(f.telefone, '')}">${esc(f.telefone)}</a>` : '—'}</td><td class="p-4">${f.email ? `<a class="text-sky-400" href="mailto:${esc(f.email)}">${esc(f.email)}</a>` : '—'}</td><td class="p-4 text-gray-300">${n}</td><td class="p-4"><div class="flex justify-end gap-3">${ed ? `<button onclick="abrirFornecedor(${i})" class="text-cyan-400 hover:text-white cursor-pointer" title="Editar"><i class="ph ph-pencil-simple text-lg"></i></button>` : ''}${adm ? `<button onclick="apagarFornecedor(${i})" class="text-red-500 hover:text-white cursor-pointer" title="Apagar"><i class="ph ph-trash text-lg"></i></button>` : ''}</div></td></tr>`;
+      }).join('') : `<tr><td colspan="6" class="p-8 text-center text-gray-500">Nenhum fornecedor. Cadastre aqui e depois escolha o fornecedor de cada peça (em Editar peça).</td></tr>`;
+    }
+
+    let fornIdx = null;
+    function novoFornecedor() { if (!opPode()) return; fornIdx = null; document.getElementById('form-fornecedor').reset(); abrirModal('modal-fornecedor'); }
+    function abrirFornecedor(i) {
+      const f = db.fornecedores[i]; if (!f) return; fornIdx = i;
+      [['forn-nome', 'nome'], ['forn-contato', 'contato'], ['forn-telefone', 'telefone'], ['forn-email', 'email'], ['forn-obs', 'obs']].forEach(([id, k]) => { document.getElementById(id).value = f[k] || ''; });
+      abrirModal('modal-fornecedor');
+    }
+    document.getElementById('form-fornecedor').addEventListener('submit', e => {
+      e.preventDefault();
+      const v = id => document.getElementById(id).value.trim();
+      const dados = { nome: v('forn-nome'), contato: v('forn-contato'), telefone: v('forn-telefone'), email: v('forn-email'), obs: v('forn-obs') };
+      if (!dados.nome) { alert('Digite o nome do fornecedor.'); return; }
+      if (fornIdx === null) { db.fornecedores.push({ _id: novoId(), ...dados }); auditarAcao('CRIACAO', `Cadastrou fornecedor: ${dados.nome}`, snap(dados)); }
+      else { const f = db.fornecedores[fornIdx]; const diff = calcularDiff(f, dados, { nome: 'Nome', contato: 'Contato', telefone: 'WhatsApp', email: 'E-mail', obs: 'Observações' }); Object.assign(f, dados); auditarAcao('EDICAO', `Editou fornecedor: ${dados.nome}`, diff); }
+      salvarDB(); fecharModal('modal-fornecedor');
+    });
+    function apagarFornecedor(i) {
+      const f = db.fornecedores[i]; if (!f || !opAdmin()) return;
+      if (!confirm(`Apagar o fornecedor "${f.nome}"? As peças ligadas a ele ficam sem fornecedor.`)) return;
+      db.pecas.forEach(p => { if (p.fornecedorId === f._id) p.fornecedorId = ''; });
+      db.fornecedores.splice(i, 1); auditarAcao('EXCLUSAO', `Apagou fornecedor: ${f.nome}`); salvarDB();
+    }
+
+    function gerarPedidos() {
+      if (!opPode()) return;
+      const l = pecasParaComprar().filter(x => !emPedidoAberto(x.p._id));
+      if (!l.length) { alert('Nada novo para pedir: as peças sugeridas já estão em pedidos abertos (ou não há sugestões).'); return; }
+      garantirIdsPecas();
+      const grupos = {};
+      l.forEach(x => { const k = x.p.fornecedorId || ''; (grupos[k] = grupos[k] || []).push(x); });
+      const nums = [];
+      Object.entries(grupos).forEach(([fid, xs]) => {
+        const o = { _id: novoId(), num: proximoNum(db.pedidos, 'PC'), fornecedorId: fid, status: 'Rascunho', criado: new Date().toISOString(), criadoPor: opEmail(), obs: '',
+          itens: xs.map(x => ({ pecaId: x.p._id, nome: x.p.nome, cod: x.p.cod || '', qtd: x.qtd, custo: Number(x.p.custo) || 0 })) };
+        db.pedidos.push(o); nums.push(o.num);
+      });
+      auditarAcao('CRIACAO', `Gerou pedido(s) de compra: ${nums.join(', ')}`); salvarDB();
+      alert(`✅ ${nums.length} pedido(s) criado(s) como rascunho: ${nums.join(', ')}.\n\nConfira as quantidades (ícone de lápis) e depois envie por WhatsApp ou e-mail.`);
+    }
+    let pedIdx = null;
+    function opcoesPecas(sel, nomeExtra) {
+      const achou = db.pecas.some(p => p._id === sel);
+      return `<option value="">— escolha a peça —</option>` + (sel && !achou ? `<option value="${esc(sel)}" selected>${esc(nomeExtra || 'Peça removida')} (removida)</option>` : '') +
+        [...db.pecas].sort((a, b) => String(a.nome).localeCompare(String(b.nome))).map(p => `<option value="${esc(p._id)}" ${p._id === sel ? 'selected' : ''}>${esc(p.nome)}${p.cod ? ' (' + esc(p.cod) + ')' : ''}</option>`).join('');
+    }
+    function novoPedido() { if (!opPode()) return; pedIdx = null; abrirPedidoForm({ num: proximoNum(db.pedidos, 'PC'), fornecedorId: '', itens: [], status: 'Rascunho', obs: '' }); }
+    function abrirPedido(i) { const o = db.pedidos[i]; if (!o) return; pedIdx = i; abrirPedidoForm(o); }
+    function abrirPedidoForm(o) {
+      garantirIdsPecas();
+      document.getElementById('ped-num').textContent = o.num;
+      document.getElementById('ped-status').innerHTML = `<span class="px-2 py-0.5 rounded bg-slate-700 text-gray-200">${esc(o.status)}</span>`;
+      preencherFornecedores('ped-fornecedor', o.fornecedorId || '');
+      document.getElementById('ped-obs').value = o.obs || '';
+      document.getElementById('ped-itens').innerHTML = '';
+      const itens = arrDe(o.itens);
+      itens.forEach(it => pedAddItem(it, true)); if (!itens.length) pedAddItem(null, true);
+      const editavel = ['Rascunho', 'Enviado'].includes(o.status) && opPode();
+      document.getElementById('ped-salvar').classList.toggle('hidden', !editavel);
+      document.querySelectorAll('#form-pedido input, #form-pedido select, #ped-itens button').forEach(x => { x.disabled = !editavel; });
+      pedTotal(); abrirModal('modal-pedido');
+    }
+    function pedAddItem(it, forcar) {
+      if (!forcar && document.getElementById('ped-salvar').classList.contains('hidden')) return;
+      it = it || {};
+      const row = document.createElement('div'); row.className = 'grid grid-cols-12 gap-2 items-center ped-item';
+      row.innerHTML = `<select class="col-span-6 bg-slate-950 border border-slate-800 rounded-xl px-2 py-2 text-white text-sm outline-none">${opcoesPecas(it.pecaId, it.nome)}</select>
+        <input type="number" min="1" value="${Number(it.qtd) || 1}" title="Quantidade" class="col-span-2 bg-slate-950 border border-slate-800 rounded-xl px-2 py-2 text-white text-sm outline-none">
+        <input type="number" min="0" step="0.01" value="${it.custo != null ? Number(it.custo) : ''}" placeholder="R$ un." title="Custo unitário (R$)" class="col-span-3 bg-slate-950 border border-slate-800 rounded-xl px-2 py-2 text-white text-sm outline-none">
+        <button type="button" class="col-span-1 text-red-400 hover:text-white cursor-pointer" title="Remover"><i class="ph ph-x"></i></button>`;
+      const sel = row.querySelector('select'), [q, c] = row.querySelectorAll('input'), rm = row.querySelector('button');
+      sel.onchange = () => { const p = db.pecas.find(x => x._id === sel.value); if (p && !c.value) c.value = Number(p.custo) || 0; pedTotal(); };
+      q.oninput = pedTotal; c.oninput = pedTotal; rm.onclick = () => { row.remove(); pedTotal(); };
+      document.getElementById('ped-itens').appendChild(row);
+    }
+    function lerItensPedido() {
+      return [...document.querySelectorAll('#ped-itens .ped-item')].map(r => {
+        const sel = r.querySelector('select'), [q, c] = r.querySelectorAll('input'), p = db.pecas.find(x => x._id === sel.value);
+        if (!sel.value) return null;
+        return { pecaId: sel.value, nome: p ? p.nome : String((sel.options[sel.selectedIndex] || {}).text || '').replace(' (removida)', ''), cod: p ? (p.cod || '') : '', qtd: parseInt(q.value) || 0, custo: parseFloat(c.value) || 0 };
+      }).filter(x => x && x.qtd > 0);
+    }
+    function pedTotal() { document.getElementById('ped-total').textContent = fmtMoeda.format(lerItensPedido().reduce((a, i) => a + i.qtd * i.custo, 0)); }
+    document.getElementById('form-pedido').addEventListener('submit', e => {
+      e.preventDefault();
+      const itens = lerItensPedido();
+      if (!itens.length) { alert('Adicione pelo menos um item com quantidade.'); return; }
+      const dados = { fornecedorId: document.getElementById('ped-fornecedor').value || '', itens, obs: document.getElementById('ped-obs').value.trim() };
+      if (pedIdx === null) { const o = { _id: novoId(), num: document.getElementById('ped-num').textContent, status: 'Rascunho', criado: new Date().toISOString(), criadoPor: opEmail(), ...dados }; db.pedidos.push(o); auditarAcao('CRIACAO', `Criou pedido de compra ${o.num}`); }
+      else { const o = db.pedidos[pedIdx]; Object.assign(o, dados); auditarAcao('EDICAO', `Editou pedido de compra ${o.num}`); }
+      salvarDB(); fecharModal('modal-pedido');
+    });
+    function textoPedido(o) {
+      const f = fornecedorDe(o.fornecedorId);
+      return `Olá${f && f.contato ? ' ' + f.contato : ''}! Segue o pedido de compra ${o.num} da Guepar:\n\n` + arrDe(o.itens).map(i => `• ${i.qtd} un — ${i.nome}${i.cod ? ' (' + i.cod + ')' : ''}`).join('\n') + (o.obs ? `\n\nObs.: ${o.obs}` : '') + `\n\nPor favor, confirme o valor e o prazo de entrega. Obrigado!`;
+    }
+    function enviarPedido(i, via) {
+      const o = db.pedidos[i]; if (!o) return;
+      const f = fornecedorDe(o.fornecedorId), txt = textoPedido(o);
+      if (via === 'whats') window.open(f && f.telefone ? linkWhats(f.telefone, txt) : `https://wa.me/?text=${encodeURIComponent(txt)}`, '_blank');
+      else {
+        if ((!f || !f.email) && !confirm('Este fornecedor não tem e-mail cadastrado. Abrir o e-mail mesmo assim (você escolhe o destinatário)?')) return;
+        location.href = `mailto:${f && f.email ? f.email : ''}?subject=${encodeURIComponent('Pedido de compra ' + o.num)}&body=${encodeURIComponent(txt)}`;
+      }
+      setTimeout(() => {
+        if (o.status === 'Rascunho' && confirm(`Marcar o pedido ${o.num} como ENVIADO?`)) { o.status = 'Enviado'; o.enviado = new Date().toISOString(); auditarAcao('EDICAO', `Enviou pedido ${o.num} por ${via === 'whats' ? 'WhatsApp' : 'e-mail'}`); salvarDB(); }
+      }, 1200);
+    }
+    function receberPedido(i) {
+      const o = db.pedidos[i]; if (!o || !opPode()) return;
+      if (!confirm(`Confirmar o recebimento do pedido ${o.num}?\n\nAs quantidades vão entrar no estoque e o custo de cada peça será atualizado com o valor do pedido.`)) return;
+      const faltando = [];
+      arrDe(o.itens).forEach(it => {
+        const p = db.pecas.find(x => x._id === it.pecaId); if (!p) { faltando.push(it.nome); return; }
+        p.estoque = (Number(p.estoque) || 0) + (Number(it.qtd) || 0);
+        if (Number(it.custo) > 0) p.custo = Number(it.custo);
+        registrarMov(p, Number(it.qtd) || 0, 'Compra / reposição', { ref: o.num });
+      });
+      o.status = 'Recebido'; o.recebido = new Date().toISOString();
+      auditarAcao('EDICAO', `Recebeu pedido ${o.num} (entrada no estoque)`); salvarDB();
+      alert('✅ Estoque atualizado.' + (faltando.length ? '\n\n⚠️ Não encontrei estas peças (foram apagadas): ' + faltando.join(', ') : ''));
+    }
+    function cancelarPedido(i) { const o = db.pedidos[i]; if (!o || !confirm(`Cancelar o pedido ${o.num}?`)) return; o.status = 'Cancelado'; auditarAcao('EDICAO', `Cancelou pedido ${o.num}`); salvarDB(); }
+    function apagarPedido(i) { const o = db.pedidos[i]; if (!o || !opAdmin() || !confirm(`Apagar o pedido ${o.num}?`)) return; db.pedidos.splice(i, 1); auditarAcao('EXCLUSAO', `Apagou pedido ${o.num}`); salvarDB(); }
+    function imprimirPedido(i) {
+      const o = db.pedidos[i]; if (!o) return;
+      const f = fornecedorDe(o.fornecedorId), itens = arrDe(o.itens);
+      abrirImpressao(`Pedido de compra ${o.num}`,
+        `<table><tr><th style="width:30%">Fornecedor</th><td>${esc(f ? f.nome : 'Sem fornecedor')}</td></tr>${f && f.contato ? `<tr><th>Contato</th><td>${esc(f.contato)}</td></tr>` : ''}${f && f.telefone ? `<tr><th>Telefone / WhatsApp</th><td>${esc(f.telefone)}</td></tr>` : ''}${f && f.email ? `<tr><th>E-mail</th><td>${esc(f.email)}</td></tr>` : ''}<tr><th>Data</th><td>${dataHoraBR(o.criado)}</td></tr><tr><th>Status</th><td>${esc(o.status)}</td></tr></table>
+         <h2>Itens</h2><table><tr><th>Cód.</th><th>Peça</th><th>Qtd</th><th>Custo un.</th><th>Total</th></tr>${itens.map(it => `<tr><td>${esc(it.cod || '')}</td><td><b>${esc(it.nome)}</b></td><td>${it.qtd}</td><td>${fmtMoeda.format(Number(it.custo) || 0)}</td><td>${fmtMoeda.format((Number(it.qtd) || 0) * (Number(it.custo) || 0))}</td></tr>`).join('')}<tr><th colspan="4" style="text-align:right">Total estimado</th><th>${fmtMoeda.format(totalPedido(o))}</th></tr></table>
+         ${o.obs ? `<p><b>Observações:</b> ${esc(o.obs)}</p>` : ''}<div class="assin"><div>Solicitado por</div><div>Aprovado por</div></div>`);
+    }
+
+    /* ---------- ORDENS DE SERVIÇO (MTBF / MTTR) ---------- */
+    let osIdx = null, osFotos = ['', ''], osBaixado = false;
+    const duracaoH = o => Math.max(0, ((o.fim ? Date.parse(o.fim) : Date.now()) - Date.parse(o.abertura)) / 36e5);
+    function atualizarListaEquip() {
+      const nomes = new Set([...db.manutencoes.map(m => m.equip), ...db.ordens.map(o => o.equip), ...db.movimentos.map(m => m.maquina)].filter(Boolean));
+      document.getElementById('lista-equip').innerHTML = [...nomes].sort().map(n => `<option value="${esc(n)}">`).join('');
+    }
+    function novaOS() {
+      if (!opPode()) return;
+      osIdx = null;
+      preencherOS({ num: proximoNum(db.ordens, 'OS'), tipo: 'Corretiva', status: 'Aberta', abertura: new Date().toISOString(), parada: true, pecas: [] });
+    }
+    function editarOS(i) { const o = db.ordens[i]; if (!o) return; osIdx = i; preencherOS(o); }
+    function preencherOS(o) {
+      garantirIdsPecas(); atualizarListaEquip();
+      document.getElementById('form-os').reset();
+      document.getElementById('os-num').textContent = o.num;
+      const set = (id, v) => { document.getElementById(id).value = v || ''; };
+      set('os-equip', o.equip); set('os-tipo', o.tipo || 'Corretiva'); set('os-tecnico', o.tecnico); set('os-status', o.status || 'Aberta');
+      set('os-abertura', paraInputData(o.abertura)); set('os-fim', paraInputData(o.fim)); set('os-descricao', o.descricao); set('os-solucao', o.solucao);
+      document.getElementById('os-parada').checked = !!o.parada;
+      osFotos = [o.fotoAntes || '', o.fotoDepois || '']; mostrarFotoOS(1); mostrarFotoOS(2);
+      osBaixado = !!o.baixado; document.getElementById('os-baixado').classList.toggle('hidden', !osBaixado);
+      document.getElementById('os-pecas').innerHTML = ''; arrDe(o.pecas).forEach(x => osAddPeca(x));
+      abrirModal('modal-os');
+    }
+    function osAddPeca(x) {
+      x = x || {};
+      const row = document.createElement('div'); row.className = 'grid grid-cols-12 gap-2 items-center os-peca';
+      row.innerHTML = `<select class="col-span-8 bg-slate-950 border border-slate-800 rounded-xl px-2 py-2 text-white text-sm outline-none">${opcoesPecas(x.pecaId, x.nome)}</select>
+        <input type="number" min="1" value="${Number(x.qtd) || 1}" title="Quantidade" class="col-span-3 bg-slate-950 border border-slate-800 rounded-xl px-2 py-2 text-white text-sm outline-none">
+        <button type="button" class="col-span-1 text-red-400 hover:text-white cursor-pointer" title="Remover"><i class="ph ph-x"></i></button>`;
+      row.querySelector('button').onclick = () => row.remove();
+      if (osBaixado) row.querySelectorAll('select, input, button').forEach(el => { el.disabled = true; });
+      document.getElementById('os-pecas').appendChild(row);
+    }
+    const lerPecasOS = () => [...document.querySelectorAll('#os-pecas .os-peca')].map(r => {
+      const sel = r.querySelector('select'), p = db.pecas.find(x => x._id === sel.value);
+      return sel.value ? { pecaId: sel.value, nome: p ? p.nome : String((sel.options[sel.selectedIndex] || {}).text || '').replace(' (removida)', ''), qtd: parseInt(r.querySelector('input').value) || 0 } : null;
+    }).filter(x => x && x.qtd > 0);
+    async function osFoto(inp, n) {
+      const f = inp.files && inp.files[0]; inp.value = ''; if (!f) return;
+      try { osFotos[n - 1] = await comprimirFoto(f, 900, 0.6); mostrarFotoOS(n); } catch (e) { alert('Não consegui abrir essa imagem.'); }
+    }
+    function mostrarFotoOS(n) {
+      const ok = fotoOk(osFotos[n - 1]), im = document.getElementById(`os-foto${n}-prev`), vz = document.getElementById(`os-foto${n}-vazio`);
+      if (ok) im.src = osFotos[n - 1]; else im.removeAttribute('src');
+      im.classList.toggle('hidden', !ok); vz.classList.toggle('hidden', ok);
+    }
+    function baixarPecasOS(o) {
+      const avisos = [];
+      arrDe(o.pecas).forEach(x => {
+        const p = db.pecas.find(y => y._id === x.pecaId); if (!p) { avisos.push(`⚠️ ${x.nome}: peça não encontrada no estoque.`); return; }
+        const antes = Number(p.estoque) || 0, q = Math.min(antes, Number(x.qtd) || 0);
+        if (q < x.qtd) avisos.push(`⚠️ ${p.nome}: só havia ${antes} em estoque (baixei ${q}).`);
+        if (q > 0) { p.estoque = antes - q; registrarMov(p, -q, 'Uso / manutenção', { ref: o.num, maquina: o.equip }); }
+      });
+      if (arrDe(o.pecas).length) avisos.unshift('✅ Peças usadas na OS foram baixadas do estoque.');
+      return avisos;
+    }
+    document.getElementById('form-os').addEventListener('submit', e => {
+      e.preventDefault();
+      const v = id => document.getElementById(id).value.trim(), agora = new Date().toISOString();
+      const o = { num: document.getElementById('os-num').textContent, equip: v('os-equip'), tipo: v('os-tipo'), tecnico: v('os-tecnico'), status: v('os-status'),
+        abertura: deInputData(v('os-abertura')) || agora, fim: deInputData(v('os-fim')), parada: document.getElementById('os-parada').checked,
+        descricao: v('os-descricao'), solucao: v('os-solucao'), pecas: osBaixado && osIdx !== null ? arrDe(db.ordens[osIdx].pecas) : lerPecasOS(),
+        fotoAntes: osFotos[0], fotoDepois: osFotos[1], baixado: osBaixado };
+      if (!o.equip || !o.descricao) { alert('Preencha o equipamento e o defeito/serviço.'); return; }
+      if (o.status === 'Concluída' && !o.fim) o.fim = agora;
+      if (o.fim && Date.parse(o.fim) < Date.parse(o.abertura)) { alert('O fim do reparo não pode ser antes da abertura.'); return; }
+      const msgs = o.status === 'Concluída' && !o.baixado ? baixarPecasOS(o) : [];
+      if (o.status === 'Concluída') o.baixado = true;
+      if (osIdx === null) { o._id = novoId(); o.criado = agora; o.criadoPor = opEmail(); db.ordens.push(o); auditarAcao('CRIACAO', `Abriu ${o.num}: ${o.equip} — ${o.descricao}`); }
+      else {
+        const antes = db.ordens[osIdx];
+        Object.assign(o, { _id: antes._id, _ord: antes._ord, criado: antes.criado, criadoPor: antes.criadoPor });
+        auditarAcao('EDICAO', `Editou ${o.num}: ${o.equip}`, calcularDiff({ status: antes.status, tecnico: antes.tecnico, equip: antes.equip, tipo: antes.tipo }, { status: o.status, tecnico: o.tecnico, equip: o.equip, tipo: o.tipo }, { status: 'Status', tecnico: 'Técnico', equip: 'Equipamento', tipo: 'Tipo' }));
+        db.ordens[osIdx] = o;
+      }
+      salvarDB(); fecharModal('modal-os');
+      if (msgs.length) alert(msgs.join('\n'));
+    });
+    function concluirOS(i) {
+      const o = db.ordens[i]; if (!o || !opPode() || !confirm(`Concluir a ${o.num} (${o.equip})?`)) return;
+      const msgs = o.baixado ? [] : baixarPecasOS(o);
+      o.status = 'Concluída'; o.fim = o.fim || new Date().toISOString(); o.baixado = true;
+      auditarAcao('EDICAO', `Concluiu ${o.num}: ${o.equip}`); salvarDB();
+      if (msgs.length) alert(msgs.join('\n'));
+    }
+    function apagarOS(i) { const o = db.ordens[i]; if (!o || !opAdmin() || !confirm(`Apagar a ${o.num}? (as peças já baixadas NÃO voltam ao estoque)`)) return; db.ordens.splice(i, 1); auditarAcao('EXCLUSAO', `Apagou ${o.num}: ${o.equip}`); salvarDB(); }
+    function indicadoresOS() {
+      const porEquip = {};
+      db.ordens.forEach(o => { const k = o.equip || '—'; (porEquip[k] = porEquip[k] || []).push(o); });
+      const todosReparos = [], todosEntre = [];
+      const linhas = Object.entries(porEquip).map(([equip, l]) => {
+        const falhas = l.filter(o => o.tipo === 'Corretiva' && Date.parse(o.abertura)).sort((a, b) => Date.parse(a.abertura) - Date.parse(b.abertura));
+        const reparos = falhas.filter(o => o.status === 'Concluída' && o.fim).map(duracaoH);
+        const entre = []; for (let i = 1; i < falhas.length; i++) entre.push(Math.max(0, (Date.parse(falhas[i].abertura) - Date.parse(falhas[i - 1].fim || falhas[i - 1].abertura)) / 36e5));
+        todosReparos.push(...reparos); todosEntre.push(...entre);
+        const media = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : null;
+        return { equip, falhas: falhas.length, mtbf: media(entre), mttr: media(reparos), parado: l.filter(o => o.parada).reduce((a, o) => a + duracaoH(o), 0), ultima: falhas.length ? falhas[falhas.length - 1].abertura : null };
+      }).sort((a, b) => b.falhas - a.falhas || b.parado - a.parado);
+      const media = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : null;
+      const desde30 = Date.now() - 30 * 864e5;
+      return {
+        linhas, mttr: media(todosReparos), mtbf: media(todosEntre),
+        parado30: db.ordens.filter(o => o.parada).reduce((a, o) => { const ini = Math.max(Date.parse(o.abertura), desde30), fim = o.fim ? Date.parse(o.fim) : Date.now(); return a + Math.max(0, (fim - ini) / 36e5); }, 0),
+        abertas: db.ordens.filter(o => o.status === 'Aberta').length, andamento: db.ordens.filter(o => o.status === 'Em andamento').length
+      };
+    }
+    function renderOS() {
+      const tb = document.getElementById('tabela-os'); if (!tb) return;
+      const ind = indicadoresOS(), ed = opPode(), adm = opAdmin();
+      const kpi = (t, v, cor, sub) => `<div class="bento-card p-4"><p class="text-[10px] uppercase font-bold text-gray-400">${t}</p><p class="text-2xl font-black ${cor}">${v}</p><p class="text-[10px] text-gray-500">${sub}</p></div>`;
+      document.getElementById('kpis-os').innerHTML = kpi('Abertas', ind.abertas, 'text-amber-400', 'aguardando atendimento') + kpi('Em andamento', ind.andamento, 'text-cyan-300', 'em reparo agora') +
+        kpi('MTTR', fmtHoras(ind.mttr), 'text-white', 'tempo médio de reparo') + kpi('MTBF', fmtHoras(ind.mtbf), 'text-white', 'tempo médio entre falhas') + kpi('Tempo parado', fmtHoras(ind.parado30), 'text-red-400', 'últimos 30 dias');
+      const filtro = (document.getElementById('filtro-os') || {}).value || 'abertas';
+      const cor = { 'Aberta': 'bg-amber-500/20 text-amber-300', 'Em andamento': 'bg-cyan-500/20 text-cyan-300', 'Concluída': 'bg-emerald-500/20 text-emerald-300' };
+      const lista = db.ordens.map((o, i) => ({ o, i })).filter(({ o }) => filtro === 'todas' || (filtro === 'concluidas' ? o.status === 'Concluída' : o.status !== 'Concluída')).sort((a, b) => (Date.parse(b.o.abertura) || 0) - (Date.parse(a.o.abertura) || 0));
+      tb.innerHTML = lista.length ? lista.map(({ o, i }) => `<tr class="border-b border-slate-800/30 hover:bg-slate-800/50">
+          <td class="p-4 font-mono text-cyan-300">${esc(o.num)}</td><td class="p-4 font-bold">${esc(o.equip)}${o.parada ? ' <span class="text-[10px] text-red-400" title="Máquina parada">⛔ parada</span>' : ''}<div class="text-[11px] text-gray-500 font-normal">${esc(o.descricao || '')}</div></td>
+          <td class="p-4 text-xs">${esc(o.tipo)}</td><td class="p-4 text-gray-300">${esc(o.tecnico || '—')}</td><td class="p-4 text-xs text-gray-400">${dataHoraBR(o.abertura)}</td>
+          <td class="p-4 text-sm">${fmtHoras(duracaoH(o))}</td><td class="p-4"><span class="text-xs font-bold px-2 py-1 rounded ${cor[o.status] || ''}">${esc(o.status)}</span></td>
+          <td class="p-4"><div class="flex justify-end gap-3">
+            ${ed ? `<button onclick="editarOS(${i})" title="Abrir / editar" class="text-cyan-400 hover:text-white cursor-pointer"><i class="ph ph-pencil-simple text-lg"></i></button>` : ''}
+            ${ed && o.status !== 'Concluída' ? `<button onclick="concluirOS(${i})" title="Concluir" class="text-emerald-400 hover:text-white cursor-pointer"><i class="ph ph-check-circle text-lg"></i></button>` : ''}
+            <button onclick="imprimirOS(${i})" title="Imprimir / PDF" class="text-gray-300 hover:text-white cursor-pointer"><i class="ph ph-printer text-lg"></i></button>
+            ${adm ? `<button onclick="apagarOS(${i})" title="Apagar" class="text-red-500 hover:text-white cursor-pointer"><i class="ph ph-trash text-lg"></i></button>` : ''}
+          </div></td></tr>`).join('') : `<tr><td colspan="8" class="p-8 text-center text-gray-500">${filtro === 'abertas' ? 'Nenhuma OS aberta. 👍' : 'Nenhuma OS.'}</td></tr>`;
+      document.getElementById('tabela-indicadores').innerHTML = ind.linhas.length ? ind.linhas.map(l => `<tr class="border-b border-slate-800/30"><td class="p-4 font-bold">${esc(l.equip)}</td><td class="p-4">${l.falhas}</td><td class="p-4">${fmtHoras(l.mtbf)}</td><td class="p-4">${fmtHoras(l.mttr)}</td><td class="p-4 text-red-300">${fmtHoras(l.parado)}</td><td class="p-4 text-xs text-gray-400">${dataHoraBR(l.ultima)}</td></tr>`).join('')
+        : `<tr><td colspan="6" class="p-8 text-center text-gray-500">Os indicadores aparecem conforme as OS corretivas forem registradas.</td></tr>`;
+    }
+    function imprimirOS(i) {
+      const o = db.ordens[i]; if (!o) return;
+      const linha = (t, v) => `<tr><th style="width:30%">${t}</th><td>${v}</td></tr>`;
+      abrirImpressao(`Ordem de Serviço ${o.num}`,
+        `<table>${linha('Equipamento', `<b>${esc(o.equip)}</b>`)}${linha('Tipo', esc(o.tipo))}${linha('Status', esc(o.status))}${linha('Técnico', esc(o.tecnico || '—'))}${linha('Abertura', dataHoraBR(o.abertura))}${linha('Fim do reparo', dataHoraBR(o.fim))}${linha('Duração', fmtHoras(duracaoH(o)))}${linha('Máquina parada', o.parada ? 'Sim' : 'Não')}</table>
+         <h2>Defeito / serviço</h2><p>${esc(o.descricao || '—')}</p><h2>Solução</h2><p>${esc(o.solucao || '—')}</p>
+         <h2>Peças usadas</h2>${arrDe(o.pecas).length ? `<table><tr><th>Peça</th><th>Qtd</th></tr>${arrDe(o.pecas).map(x => `<tr><td>${esc(x.nome)}</td><td>${x.qtd}</td></tr>`).join('')}</table>` : '<p class="vazio">Nenhuma.</p>'}
+         ${fotoOk(o.fotoAntes) || fotoOk(o.fotoDepois) ? `<h2>Fotos</h2><table><tr><th>Antes</th><th>Depois</th></tr><tr><td>${relFoto(o.fotoAntes, 280)}</td><td>${relFoto(o.fotoDepois, 280)}</td></tr></table>` : ''}
+         <div class="assin"><div>Técnico</div><div>Responsável</div></div>`);
+    }
+    const osParaCsv = () => db.ordens.map(o => ({ numero: o.num, equipamento: o.equip, tipo: o.tipo, tecnico: o.tecnico || '', status: o.status, abertura: dataHoraBR(o.abertura), fim: dataHoraBR(o.fim), duracao_horas: duracaoH(o).toFixed(1).replace('.', ','), maquina_parada: o.parada ? 'Sim' : 'Não', defeito: o.descricao || '', solucao: o.solucao || '', pecas: arrDe(o.pecas).map(x => `${x.qtd}x ${x.nome}`).join(', ') }));
+
+    /* ---------- blocos para os relatórios impressos ---------- */
+    function relPrevisao() {
+      const l = pecasParaComprar();
+      return `<section><h2>Previsão de compra <small>(${l.length} peça(s) · aviso com ${ANTECEDENCIA_MIN}+ dias)</small></h2>` + (l.length
+        ? `<table><tr><th>Peça</th><th>Estoque / mín.</th><th>Consumo/mês</th><th>Situação</th><th>Fornecedor</th><th>Sugerido</th></tr>${l.map(x => `<tr><td><b>${esc(x.p.nome)}</b> ${esc(x.p.cod || '')}</td><td>${x.p.estoque} / ${x.p.min}</td><td>${x.pv && x.pv.consumoDia ? fmtNum(x.pv.consumoMes) : '—'}</td><td style="font-weight:bold;color:${x.critico ? '#c00' : '#b26a00'}">${x.critico ? 'ABAIXO DO MÍNIMO' : 'mínimo em ~' + Math.round(x.pv.diasMin) + ' dias'}</td><td>${esc(nomeFornecedor(x.p.fornecedorId))}</td><td>${x.qtd} un.</td></tr>`).join('')}</table>`
+        : `<p class="vazio">Nenhuma peça vai chegar no mínimo nos próximos ${ANTECEDENCIA_MIN} dias.</p>`) + `</section>`;
+    }
+    function relOS(quebra) {
+      const ind = indicadoresOS(), lista = [...db.ordens].sort((a, b) => (Date.parse(b.abertura) || 0) - (Date.parse(a.abertura) || 0));
+      return `<section class="${quebra ? 'quebra' : ''}"><h2>Ordens de Serviço <small>(${db.ordens.length} · ${ind.abertas} aberta(s) · ${ind.andamento} em andamento)</small></h2>
+        <table><tr><th>MTTR (reparo médio)</th><td>${fmtHoras(ind.mttr)}</td><th>MTBF (entre falhas)</th><td>${fmtHoras(ind.mtbf)}</td><th>Parado (30 dias)</th><td>${fmtHoras(ind.parado30)}</td></tr></table>` +
+        (ind.linhas.length ? `<h2>Indicadores por equipamento</h2><table><tr><th>Equipamento</th><th>Falhas</th><th>MTBF</th><th>MTTR</th><th>Tempo parado</th></tr>${ind.linhas.map(l => `<tr><td><b>${esc(l.equip)}</b></td><td>${l.falhas}</td><td>${fmtHoras(l.mtbf)}</td><td>${fmtHoras(l.mttr)}</td><td>${fmtHoras(l.parado)}</td></tr>`).join('')}</table>` : '') +
+        (lista.length ? `<h2>Lista de OS</h2><table><tr><th>Nº</th><th>Equipamento</th><th>Tipo</th><th>Técnico</th><th>Abertura</th><th>Duração</th><th>Status</th><th>Defeito</th></tr>${lista.map(o => `<tr><td>${esc(o.num)}</td><td><b>${esc(o.equip)}</b></td><td>${esc(o.tipo)}</td><td>${esc(o.tecnico || '')}</td><td>${dataHoraBR(o.abertura)}</td><td>${fmtHoras(duracaoH(o))}</td><td>${esc(o.status)}</td><td>${esc(o.descricao || '')}</td></tr>`).join('')}</table>` : '<p class="vazio">Nenhuma OS registrada.</p>') + `</section>`;
+    }
+    function relCompras(quebra) {
+      const peds = [...db.pedidos].sort((a, b) => (Date.parse(b.criado) || 0) - (Date.parse(a.criado) || 0));
+      return (quebra ? '' : relPrevisao()) + `<section class="${quebra ? 'quebra' : ''}"><h2>Pedidos de compra <small>(${peds.length})</small></h2>` +
+        (peds.length ? `<table><tr><th>Nº</th><th>Fornecedor</th><th>Itens</th><th>Total</th><th>Status</th><th>Data</th></tr>${peds.map(o => `<tr><td>${esc(o.num)}</td><td>${esc(o.fornecedorId ? nomeFornecedor(o.fornecedorId) : 'Sem fornecedor')}</td><td>${arrDe(o.itens).map(i => `${i.qtd}x ${esc(i.nome)}`).join('<br>')}</td><td>${fmtMoeda.format(totalPedido(o))}</td><td>${esc(o.status)}</td><td>${dataHoraBR(o.recebido || o.enviado || o.criado)}</td></tr>`).join('')}</table>` : '<p class="vazio">Nenhum pedido.</p>') +
+        `<h2>Fornecedores <small>(${db.fornecedores.length})</small></h2>` + (db.fornecedores.length ? `<table><tr><th>Nome</th><th>Contato</th><th>WhatsApp</th><th>E-mail</th></tr>${db.fornecedores.map(f => `<tr><td><b>${esc(f.nome)}</b></td><td>${esc(f.contato || '')}</td><td>${esc(f.telefone || '')}</td><td>${esc(f.email || '')}</td></tr>`).join('')}</table>` : '<p class="vazio">Nenhum fornecedor.</p>') + `</section>`;
+    }
+
+    /* ---------- ligação com o restante do app ---------- */
+    function renderOperacoes() {
+      try {
+        renderPrevisao(); renderCompras(); renderOS();
+        const bOS = document.getElementById('badge-os'), nOS = db.ordens.filter(o => o.status !== 'Concluída').length;
+        if (bOS) { bOS.textContent = nOS; bOS.classList.toggle('hidden', !nOS); }
+        const bC = document.getElementById('badge-compras'), nC = pecasParaComprar().filter(x => !emPedidoAberto(x.p._id)).length;
+        if (bC) { bC.textContent = nC; bC.classList.toggle('hidden', !nC); }
+      } catch (e) { console.error('Operações:', e); }
+    }
+    const _renderSemOperacoes = renderizarTabelas;
+    renderizarTabelas = function () { _renderSemOperacoes(); renderOperacoes(); };
+    // aviso no celular (1 vez por dia) quando alguma peça vai chegar no mínimo em até 30 dias
+    const _notificacoesSemPrevisao = verificarNotificacoesPush;
+    verificarNotificacoesPush = function () {
+      _notificacoesSemPrevisao();
+      const n = pecasParaComprar().filter(x => !x.critico && !emPedidoAberto(x.p._id)).length;
+      if (n && localStorage.getItem('noti_prev') !== new Date().toDateString()) {
+        dispararPush('Previsão de compra', `${n} peça(s) vão chegar no estoque mínimo em até ${ANTECEDENCIA_MIN} dias. Comece a procurar fornecedor.`);
+        localStorage.setItem('noti_prev', new Date().toDateString());
+      }
+    };
+    const _arrancarSemOperacoes = arrancarSistema;
+    arrancarSistema = function (...a) { _arrancarSemOperacoes(...a); setTimeout(() => { try { renderOperacoes(); verificarNotificacoesPush(); } catch (e) { } }, 1500); };
   </script>
 </body>
 </html>
