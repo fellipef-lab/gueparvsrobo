@@ -34,7 +34,7 @@
     "guepar2": {
       ".read": "auth != null && root.child('guepar_papeis').child(auth.uid).exists()",
       "$col": {
-        ".write": "auth != null && (root.child('guepar_papeis').child(auth.uid).val() === 'admin' || (root.child('guepar_papeis').child(auth.uid).val() === 'visitante1' && ($col === 'pecas' || $col === 'guepar' || $col === 'emprestimos' || $col === 'manutencoes' || $col === 'logs')) || ($col === 'logs' && root.child('guepar_papeis').child(auth.uid).exists()))"
+        ".write": "auth != null && (root.child('guepar_papeis').child(auth.uid).val() === 'admin' || root.child('guepar_papeis').child(auth.uid).val() === 'visitante1' || ($col === 'logs' && root.child('guepar_papeis').child(auth.uid).exists()))"
       }
     },
     "guepar_fotos": {
